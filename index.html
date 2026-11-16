@@ -98,57 +98,76 @@
         </div>
       </div>
 
-      <!-- 数据管理 -->
+      <!-- 数据管理（重新排版） -->
       <div class="page" id="pageData">
         <div class="navbar"><button class="back" id="backFromData">‹</button><div class="title">数据管理</div></div>
+        
         <div class="card-list" style="padding: 15px;">
           <div class="setting-group">
             <div class="setting-row"><label>占用空间</label><span id="dataSize">0 KB</span></div>
             <div class="setting-row"><label>聊天消息条数</label><span id="dataMsgCount">0 条</span></div>
             <div class="setting-row"><label>字卡总数</label><span id="dataCardCount">0 项</span></div>
           </div>
+
+          <!-- 模式切换区块 -->
           <div class="setting-group">
-            <div class="setting-row clickable" id="exportData"><label>📤 导出全部数据</label><span>›</span></div>
-            <div class="setting-row clickable" id="importAllBtn"><label>📥 导入全部数据</label><span>›</span></div>
-            <div class="setting-row clickable" id="exportCardsOnly"><label>📝 导出字卡/表情库</label><span>›</span></div>
-            <div class="setting-row clickable" id="importCardsBtn"><label>📝 导入字卡/表情库</label><span>›</span></div>
-            <div class="setting-row clickable" id="exportChatOnly"><label>💬 导出聊天记录</label><span>›</span></div>
-            <div class="setting-row clickable" id="importChatBtn"><label>💬 导入聊天记录</label><span>›</span></div>
-            <div class="setting-row clickable" id="exportSettingsOnly"><label>⚙️ 导出设置</label><span>›</span></div>
-            <div class="setting-row clickable" id="importSettingsBtn"><label>⚙️ 导入设置</label><span>›</span></div>
+            <div class="setting-row" style="padding: 16px; align-items: center; justify-content: center; gap: 10px;">
+              <button class="btn-plain primary" id="modeFileBtn" style="flex:1; height: 40px; border-radius: 12px; font-size: 14px;">📁 文件模式</button>
+              <button class="btn-plain" id="modeTextBtn" style="flex:1; height: 40px; border-radius: 12px; font-size: 14px;">📝 文本模式</button>
+            </div>
           </div>
+
+          <!-- 导入导出功能区块 -->
           <div class="setting-group">
-            <div class="setting-row clickable" id="clearHistoryBtn" style="color:#fa5151;"><label>🗑️ 清空聊天记录</label><span>›</span></div>
+            <div class="setting-row">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:18px;">📦</span>
+                <label>全部数据</label>
+              </div>
+              <div style="display:flex; gap: 8px;">
+                <button class="btn-small-outline primary" data-action="export" data-type="all">导出</button>
+                <button class="btn-small-outline" data-action="import" data-type="all">导入</button>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:18px;">📇</span>
+                <label>字卡/表情库</label>
+              </div>
+              <div style="display:flex; gap: 8px;">
+                <button class="btn-small-outline primary" data-action="export" data-type="cards">导出</button>
+                <button class="btn-small-outline" data-action="import" data-type="cards">导入</button>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:18px;">💬</span>
+                <label>聊天记录</label>
+              </div>
+              <div style="display:flex; gap: 8px;">
+                <button class="btn-small-outline primary" data-action="export" data-type="chat">导出</button>
+                <button class="btn-small-outline" data-action="import" data-type="chat">导入</button>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:18px;">⚙️</span>
+                <label>聊天设置</label>
+              </div>
+              <div style="display:flex; gap: 8px;">
+                <button class="btn-small-outline primary" data-action="export" data-type="settings">导出</button>
+                <button class="btn-small-outline" data-action="import" data-type="settings">导入</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <div class="setting-row clickable" id="clearHistoryBtn" style="color:#fa5151; border-bottom: none;"><label>🗑️ 清空聊天记录</label><span>›</span></div>
             <div class="setting-row clickable" id="clearAllBtn" style="color:#fa5151;"><label>💥 清空所有数据</label><span>›</span></div>
           </div>
         </div>
       </div>
       <input type="file" id="importFile" accept=".json" style="display:none;">
-            <!-- 导出数据弹窗（手机安全版） -->
-      <div class="modal" id="exportDataModal">
-        <div class="panel">
-          <h3>导出数据</h3>
-          <p style="font-size:12px; color:#888; margin:0; text-align:center;">请全选下方文本复制，并保存到你安全的地方（如备忘录、网盘）。</p>
-          <textarea id="exportDataText" style="height:200px; font-size:12px; font-family:monospace;" readonly></textarea>
-          <div class="btns">
-            <button class="btn-cancel" onclick="document.getElementById('exportDataModal').classList.remove('show')">关闭</button>
-            <button class="btn-save" id="copyExportBtn">一键复制</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 导入数据弹窗（手机安全版） -->
-      <div class="modal" id="importDataModal">
-        <div class="panel">
-          <h3>导入数据</h3>
-          <p style="font-size:12px; color:#fa5151; margin:0; text-align:center;">⚠️ 警告：导入将覆盖当前所有数据，请确认已备份当前数据！</p>
-          <textarea id="importDataText" style="height:200px; font-size:12px; font-family:monospace;" placeholder="请在此粘贴你备份的代码文本..."></textarea>
-          <div class="btns">
-            <button class="btn-cancel" onclick="document.getElementById('importDataModal').classList.remove('show')">取消</button>
-            <button class="btn-save" id="parseImportBtn">确认导入</button>
-          </div>
-        </div>
-      </div>
 
       <!-- 内容库 -->
       <div class="page" id="pageCards">
@@ -340,6 +359,32 @@
         </div>
       </div>
 
+      <!-- 导出数据弹窗（文本模式） -->
+      <div class="modal" id="exportDataModal">
+        <div class="panel">
+          <h3>导出数据</h3>
+          <p style="font-size:12px; color:#888; margin:0; text-align:center;">请全选下方文本复制，并保存到你安全的地方（如备忘录、网盘）。</p>
+          <textarea id="exportDataText" style="height:200px; font-size:12px; font-family:monospace;" readonly></textarea>
+          <div class="btns">
+            <button class="btn-cancel" onclick="document.getElementById('exportDataModal').classList.remove('show')">关闭</button>
+            <button class="btn-save" id="copyExportBtn">一键复制</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 导入数据弹窗（文本模式） -->
+      <div class="modal" id="importDataModal">
+        <div class="panel">
+          <h3>导入数据</h3>
+          <p style="font-size:12px; color:#fa5151; margin:0; text-align:center;">⚠️ 警告：导入将覆盖当前所有数据，请确认已备份当前数据！</p>
+          <textarea id="importDataText" style="height:200px; font-size:12px; font-family:monospace;" placeholder="请在此粘贴你备份的代码文本..."></textarea>
+          <div class="btns">
+            <button class="btn-cancel" onclick="document.getElementById('importDataModal').classList.remove('show')">取消</button>
+            <button class="btn-save" id="parseImportBtn">确认导入</button>
+          </div>
+        </div>
+      </div>
+
       <div class="modal" id="giftOpenModal">
         <div class="panel" style="text-align:center; background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg-color) 100%);">
           <h3 style="font-size: 24px; color: #fa5151; margin-bottom:10px;" id="giftOpenTitle">🎉 拆开啦！</h3>
@@ -400,6 +445,7 @@
         <div class="sticker-content" id="tab-his"><div class="sticker-grid" id="hisStickerList"></div></div>
       </div>
     </div>
+    
     <div id="toast" class="toast"></div>
 
     <script src="data.js"></script>
