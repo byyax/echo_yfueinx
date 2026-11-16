@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>echo_yfueinx</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app" id="appContainer">
+      <!-- 聊天页 -->
+      <div class="page active" id="pageChat">
+        <div class="navbar">
+          <div class="title" id="chatTitle">陆昀霏</div>
+          <div class="status-bar">
+            <span id="networkIcon" class="icon">📶 WiFi</span>
+            <span id="batteryIcon" class="icon">🔋 80%</span>
+          </div>
+          <div class="nav-actions">
+            <button id="themeToggleBtn" class="icon-btn" title="切换模式">🌙</button>
+            <button id="pcToggleBtn" class="icon-btn" title="PC模式">🖥️</button>
+            <button id="openManagerBtn" class="icon-btn">⋮</button>
+          </div>
+        </div>
+        <div class="signature-wrapper">
+          <div class="signature-bar" id="signatureBar">这个人很懒，什么都没留下</div>
+        </div>
+        <div class="chat" id="chat"><div class="sys">你已添加对方为好友，现在可以开始聊天了</div></div>
+        
+        <div class="quote-preview" id="quotePreview" style="display:none;">
+          <div class="quote-content">
+            <span id="quoteSender">正在回复：</span>
+            <span id="quoteText"></span>
+          </div>
+          <button id="cancelQuoteBtn">✕</button>
+        </div>
+
+        <div class="inputbar">
+          <input id="msgInput" placeholder="输入你想说的..." />
+          <div class="chat-icons">
+            <button id="sendStickerBtn" class="icon-btn">😄</button>
+            <button id="plusBtn" class="icon-btn">＋</button>
+          </div>
+          <button id="proactiveBtn" class="icon-btn" title="让他主动发消息">💌</button>
+          <button id="sendBtn">发送</button>
+        </div>
+        
+        <div class="tool-panel" id="toolPanel">
+          <div class="tool-grid">
+            <div class="tool-item" id="toolImg"><div class="tool-icon">🖼️</div><span>图片</span></div>
+            <div class="tool-item" id="toolCall"><div class="tool-icon">📞</div><span>语音通话</span></div>
+            <div class="tool-item" id="toolLoc"><div class="tool-icon">📍</div><span>他在哪</span></div>
+            <div class="tool-item" id="toolRed"><div class="tool-icon">🧧</div><span>红包</span></div>
+            <div class="tool-item" id="toolGift"><div class="tool-icon">🎁</div><span>送礼物</span></div>
+            <div class="tool-item" id="toolTrans"><div class="tool-icon">💰</div><span>转账</span></div>
+            <div class="tool-item" id="toolPat"><div class="tool-icon">👉</div><span>拍一拍</span></div>
+          </div>
+        </div>
+        <input type="file" id="imageInput" accept="image/*" style="display: none;">
+      </div>
+
+      <!-- 通话组件 -->
+      <div class="call-widget" id="callWidget">
+        <div class="call-large-view" id="callLargeView">
+          <div class="call-header"><button id="callMinimizeBtn" class="btn-mini">↙</button></div>
+          <div class="call-body">
+            <div class="avatar-glow"><img id="callAvatar" class="call-avatar-big" src=""></div>
+            <h2 id="callNameLarge">陆昀霏</h2>
+            <p id="callTimeLarge">00:00</p>
+            <p class="call-status">正在通话中...</p>
+          </div>
+          <div class="call-footer">
+            <div class="ctrl-btn" id="callMuteBtn"><div class="ctrl-icon">🎤</div><span>静音</span></div>
+            <div class="ctrl-btn hangup" id="callHangupBtn"><div class="ctrl-icon">📵</div><span>挂断</span></div>
+            <div class="ctrl-btn" id="callVideoBtn"><div class="ctrl-icon">📷</div><span>摄像头</span></div>
+          </div>
+        </div>
+        <div class="call-small-view" id="callSmallView" style="display:none;">
+          <div class="pip-drag-area">
+            <img id="callAvatarSmall" class="small-avatar" src="">
+            <div class="small-info"><h3 id="callNameSmall">陆昀霏</h3><p id="callTimeSmall">00:00</p></div>
+          </div>
+          <div class="small-controls">
+            <button id="callMaximizeBtn" class="small-btn">⤢</button>
+            <button id="callHangupSmallBtn" class="small-btn hangup">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 大后台 -->
+      <div class="page" id="pageManager">
+        <div class="navbar"><button class="back" id="backFromManager">‹</button><div class="title">后台管理</div></div>
+        <div class="manager-grid">
+          <div class="manager-card" id="menuSettings"><div class="icon">⚙️</div><span>聊天设置</span></div>
+          <div class="manager-card" id="menuHistory"><div class="icon">💬</div><span>聊天记录</span></div>
+          <div class="manager-card" id="menuCards"><div class="icon">📇</div><span>自定义回复</span></div>
+          <div class="manager-card" id="menuData"><div class="icon">📊</div><span>数据管理</span></div>
+        </div>
+      </div>
+
+      <!-- 数据管理 -->
+      <div class="page" id="pageData">
+        <div class="navbar"><button class="back" id="backFromData">‹</button><div class="title">数据管理</div></div>
+        <div class="card-list" style="padding: 15px;">
+          <div class="setting-group">
+            <div class="setting-row"><label>占用空间</label><span id="dataSize">0 KB</span></div>
+            <div class="setting-row"><label>聊天消息条数</label><span id="dataMsgCount">0 条</span></div>
+            <div class="setting-row"><label>字卡总数</label><span id="dataCardCount">0 项</span></div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-row clickable" id="exportData"><label>📤 导出全部数据</label><span>›</span></div>
+            <div class="setting-row clickable" id="importAllBtn"><label>📥 导入全部数据</label><span>›</span></div>
+            <div class="setting-row clickable" id="exportCardsOnly"><label>📝 导出字卡/表情库</label><span>›</span></div>
+            <div class="setting-row clickable" id="importCardsBtn"><label>📝 导入字卡/表情库</label><span>›</span></div>
+            <div class="setting-row clickable" id="exportChatOnly"><label>💬 导出聊天记录</label><span>›</span></div>
+            <div class="setting-row clickable" id="importChatBtn"><label>💬 导入聊天记录</label><span>›</span></div>
+            <div class="setting-row clickable" id="exportSettingsOnly"><label>⚙️ 导出设置</label><span>›</span></div>
+            <div class="setting-row clickable" id="importSettingsBtn"><label>⚙️ 导入设置</label><span>›</span></div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-row clickable" id="clearHistoryBtn" style="color:#fa5151;"><label>🗑️ 清空聊天记录</label><span>›</span></div>
+            <div class="setting-row clickable" id="clearAllBtn" style="color:#fa5151;"><label>💥 清空所有数据</label><span>›</span></div>
+          </div>
+        </div>
+      </div>
+      <input type="file" id="importFile" accept=".json" style="display:none;">
+
+      <!-- 内容库 -->
+      <div class="page" id="pageCards">
+        <div class="navbar">
+          <button class="back" id="backToManagerFromCards">‹</button>
+          <div class="title">自定义回复</div>
+          <div class="nav-actions"></div>
+        </div>
+        <div class="main-lib-nav">
+          <button class="main-lib-btn active" data-mainlib="cards">字卡库</button>
+          <button class="main-lib-btn" data-mainlib="status">状态库</button>
+        </div>
+        <div class="lib-nav-wrapper">
+          <div class="lib-nav" id="subLibNav"><button class="lib-btn active" data-lib="text">字卡</button><button class="lib-btn" data-lib="emoji">Emoji</button><button class="lib-btn" data-lib="image">表情包</button></div>
+        </div>
+        
+        <div class="tag-bar" id="tagBar"></div>
+        
+        <div class="card-toolbar">
+          <div class="search-row"><input type="search" id="searchInput" placeholder="搜索内容..." /></div>
+          <div class="ops">
+            <button class="btn-plain primary" id="batchToggleBtn">批量管理</button>
+            <div id="batchActions" style="display:none; gap:8px; align-items:center;">
+              <button class="btn-plain" id="selectAllBtn">全选</button>
+              <button class="btn-del" id="batchDeleteBtn">删除</button>
+              <button class="btn-plain" id="batchMoveBtn" style="color:#1890ff;">移动</button>
+            </div>
+            <button class="btn-plain" id="openTagManagerBtn" style="display:none;">🏷️ 标签</button>
+            <span id="countLabel" style="font-size:13px; color:#888; margin-left:auto; white-space:nowrap;"></span>
+          </div>
+        </div>
+        <div class="card-list" id="cardList"></div>
+        <button id="openAddModal" class="fab-btn">＋ 新建</button>
+      </div>
+
+      <!-- 聊天记录 -->
+      <div class="page" id="pageHistory">
+        <div class="navbar"><button class="back" id="backToManagerFromHistory">‹</button><div class="title">聊天记录</div></div>
+        <div class="main-lib-nav">
+          <button class="main-lib-btn active" data-historytab="history">聊天记录</button>
+          <button class="main-lib-btn" data-historytab="cards">字卡统计</button>
+        </div>
+        <div class="history-tab-content" id="historyTab-history">
+          <div class="history-search-bar">
+            <input type="text" id="historyTextSearch" placeholder="搜索聊天内容..." />
+            <div class="date-filter" id="dateFilter">
+              <input type="date" id="historyDateSearch" title="按日期筛选" />
+            </div>
+          </div>
+          <div class="card-list" id="historyList" style="padding: 15px; background:var(--bg-color); padding-bottom: 30px;"></div>
+        </div>
+        <div class="history-tab-content" id="historyTab-cards" style="display:none;">
+          <div class="card-list" id="cardStatsList" style="padding: 15px; background:var(--bg-color); padding-bottom: 30px;"></div>
+        </div>
+      </div>
+
+      <!-- 聊天设置 -->
+      <div class="page" id="pageSettings">
+        <div class="navbar">
+          <button class="back" id="backFromSettings">‹</button>
+          <div class="title">聊天设置</div>
+          <button id="saveSettingsBtn" class="text-btn primary">保存</button>
+        </div>
+        <div class="card-list" style="padding: 15px;">
+          <div class="setting-group">
+            <div class="setting-row"><label>对方备注名</label><input type="text" id="setOtherName"></div>
+            <div class="setting-row"><label>我的名字</label><input type="text" id="setMyName"></div>
+            <div class="setting-row-col">
+              <label>我拍对方（双击对方头像触发）</label>
+              <div class="pat-config">
+                <span class="pat-label">你(<span id="patMyNameShow">你</span>)</span>
+                <input type="text" id="setMyPatAction" placeholder="拍了拍" class="pat-input">
+                <span class="pat-label">对方(<span id="patOtherNameShow">对方</span>)</span>
+                <input type="text" id="setMyPatSuffix" placeholder="的后背" class="pat-input">
+              </div>
+              <div class="pat-preview">效果预览：<span id="patPreviewText" style="color:var(--primary-dark);">你 拍了拍 对方 的后背</span></div>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-row-col">
+              <label>气泡颜色主题（仅白天模式生效）</label>
+              <div class="theme-selector" id="themeSelector">
+                <div class="theme-option active" data-bubble-theme="default">
+                  <div class="color-preview"><span style="background:#ffffff; border:1px solid #ddd;"></span><span style="background:#9ACD32;"></span></div>
+                  <span>橄榄绿 / 白</span>
+                </div>
+                <div class="theme-option" data-bubble-theme="wechat">
+                  <div class="color-preview"><span style="background:#ffffff; border:1px solid #ddd;"></span><span style="background:#95ec69;"></span></div>
+                  <span>经典微信 / 白</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-row"><label>对方头像</label><input type="file" id="setOtherAvatar" accept="image/*"></div>
+            <div class="setting-row"><label>我的头像</label><input type="file" id="setMyAvatar" accept="image/*"></div>
+            <div class="setting-row"><label>聊天壁纸</label><input type="file" id="setWallpaper" accept="image/*"></div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-row-col">
+              <label>回复延迟: <span id="delayText" class="highlight-text">0.5 分钟</span></label>
+              <input type="range" id="setReplyDelay" min="0.1" max="5.0" step="0.1">
+            </div>
+            <div class="setting-row-col">
+              <label>主动回复条数: <span id="countText" class="highlight-text">1 条</span></label>
+              <input type="range" id="setReplyCount" min="1" max="5" step="1">
+            </div>
+            <div class="setting-row-col">
+              <label>签名自动切换(分钟): <span id="sigTimeText" class="highlight-text">5 分钟</span></label>
+              <input type="range" id="setSigTimer" min="1" max="30" step="1">
+            </div>
+            <div class="setting-row-col">
+              <label>自动回复间隔(分钟，0为关闭): <span id="autoReplyTimeText" class="highlight-text">0 分钟</span></label>
+              <input type="range" id="setAutoReplyTime" min="0" max="60" step="1">
+            </div>
+            <div class="setting-row-col">
+              <label>自动回复条数: <span id="autoReplyCountText" class="highlight-text">1 条</span></label>
+              <input type="range" id="setAutoReplyCount" min="1" max="5" step="1">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 弹窗区 -->
+      <div class="modal" id="tagManagerModal">
+        <div class="panel" style="height: 70vh; padding: 0; display: flex; flex-direction: column;">
+          <div style="padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin:0;">标签管理</h3>
+            <button class="close-btn" id="closeTagManagerBtn">✕</button>
+          </div>
+          <div id="tagManageList" style="flex:1; overflow-y:auto; padding: 15px;"></div>
+          <div style="padding: 16px; border-top: 1px solid var(--border-color);">
+            <button class="btn-save" id="openCreateTagBtn" style="width:100%; height:44px; border-radius:12px; background:var(--primary); color:#fff; border:none; font-size:15px; cursor:pointer;">＋ 新建标签</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="addModal">
+        <div class="panel">
+          <h3 id="addModalTitle">添加</h3>
+          <input type="hidden" id="editItemId">
+          <div id="textAddArea"><textarea id="newCardsText" placeholder="一行一条"></textarea></div>
+          <div id="stickerAddArea" style="display:none;"><input type="file" id="newStickersInput" accept="image/*" multiple style="width:100%;"></div>
+          <div class="select-row" id="addTagRow">
+            <label>所属标签</label>
+            <select id="contentTagSelect" class="custom-select"></select>
+          </div>
+          <div class="btns"><button class="btn-cancel" id="cancelAdd">取消</button><button class="btn-save" id="saveAdd">保存</button></div>
+        </div>
+      </div>
+
+      <div class="modal" id="tagModal">
+        <div class="panel">
+          <h3>新建标签</h3>
+          <div class="setting-row"><label>名字</label><input type="text" id="tagNameInput"></div>
+          <div style="margin-top:10px;"><label style="font-size:14px; color:#666;">颜色</label><div class="color-picker" id="colorPicker"></div></div>
+          <div class="btns"><button class="btn-cancel" id="cancelTagBtn">取消</button><button class="btn-save" id="saveTagBtn">保存</button></div>
+        </div>
+      </div>
+
+      <div class="modal" id="moveModal">
+        <div class="panel">
+          <h3>移动选中的项到</h3>
+          <select id="moveTagSelect" class="custom-select" style="margin-top:15px;"></select>
+          <div class="btns"><button class="btn-cancel" id="cancelMoveBtn">取消</button><button class="btn-save" id="saveMoveBtn">确认</button></div>
+        </div>
+      </div>
+
+      <div class="modal" id="confirmModal">
+        <div class="panel" style="text-align:center;">
+          <h3 id="confirmTitle" style="margin-bottom:10px;">提示</h3>
+          <p id="confirmMsg" style="font-size:15px; color:#555; margin-bottom:20px; line-height:1.5;"></p>
+          <div class="btns">
+            <button class="btn-cancel" id="cancelConfirm">取消</button>
+            <button class="btn-save" id="confirmOkBtn">确定</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="deleteBubbleModal">
+        <div class="panel" style="text-align:center;">
+          <div style="font-size: 56px; margin-bottom: 4px;">🗑️</div>
+          <h3 style="margin-bottom: 8px;">删除这条消息？</h3>
+          <p style="font-size:14px; color:#888; margin-bottom: 20px; line-height:1.5;">删除后将无法恢复，确定要删除吗？</p>
+          <div class="btns">
+            <button class="btn-cancel" id="cancelDeleteBubble">再想想</button>
+            <button class="btn-save" id="confirmDeleteBubble" style="background:#fa5151; box-shadow:0 4px 12px rgba(250,81,81,0.3);">删除</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="giftOpenModal">
+        <div class="panel" style="text-align:center; background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg-color) 100%);">
+          <h3 style="font-size: 24px; color: #fa5151; margin-bottom:10px;" id="giftOpenTitle">🎉 拆开啦！</h3>
+          <div id="giftOpenIcon" style="font-size: 80px; margin: 20px 0; animation: bounce 0.5s infinite alternate;">🎁</div>
+          <h4 id="giftOpenName" style="font-size: 18px; color: var(--text-main); margin-bottom: 10px;">收到了礼物</h4>
+          <div id="giftOpenAmount" style="font-size: 32px; font-weight: bold; color: #fa5151; display: none; margin-bottom: 15px;">¥0.00</div>
+          <div class="btns" style="margin-top:10px;">
+            <button class="btn-save" id="confirmOpenGiftBtn" style="background: #fa5151;">开心收下</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="moneyModal">
+        <div class="panel">
+          <h3 id="moneyTitle">转账</h3>
+          <div style="text-align:center; margin: 10px 0;"><span style="font-size:20px; font-weight:bold;">¥ </span><input type="number" id="moneyAmount" style="font-size:24px; width:120px; border:none; border-bottom:1px solid #ccc; outline:none; text-align:center; background:transparent; color:var(--text-main);" placeholder="0.00"></div>
+          <input type="text" id="moneyNote" placeholder="添加备注..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); outline:none; margin-bottom:10px; background:var(--bg-color); color:var(--text-main);">
+          <div class="btns"><button class="btn-cancel" id="cancelMoney">取消</button><button class="btn-save" id="confirmMoney">确认</button></div>
+        </div>
+      </div>
+
+      <div class="modal" id="passModal">
+        <div class="panel" style="padding:20px;">
+          <h3>请输入支付密码</h3>
+          <div class="pay-dots" id="payDots"><div></div><div></div><div></div><div></div><div></div><div></div></div>
+          <div class="keyboard" id="keyboard"></div>
+          <div class="btns"><button class="btn-cancel" id="cancelPay">取消</button></div>
+        </div>
+      </div>
+
+      <div class="modal" id="giftModal">
+        <div class="panel" style="height: 75vh; padding: 0; overflow: hidden; display: flex; flex-direction: column; background: var(--bg-color);">
+          <div style="padding: 16px; background: var(--card-bg); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin:0; font-size: 18px;">挑选礼物</h3><button id="closeGiftModal" class="text-btn" style="border:none; background:var(--bg-color);">关闭</button>
+          </div>
+          <div class="gift-tabs">
+            <button class="active" data-type="food">🍱 餐饮外卖</button><button data-type="daily">🧻 日用品</button><button data-type="formal">🌹 正式礼物</button>
+          </div>
+          <div id="giftList" class="gift-grid"></div>
+        </div>
+      </div>
+
+      <div class="modal" id="imagePreviewModal" style="background:rgba(0,0,0,0.8);"><img id="previewImg" style="max-width:90%;max-height:90%;border-radius:12px;"></div>
+
+      <div class="bubble-menu" id="bubbleMenu">
+        <button id="bubbleQuoteBtn">💬 引用</button>
+        <button id="bubbleDeleteBtn" class="danger">🗑️ 删除</button>
+      </div>
+
+      <div class="sticker-panel" id="stickerPanel">
+        <div class="sticker-nav">
+          <button class="sticker-nav-btn active" data-tab="emoji">Emoji</button>
+          <button class="sticker-nav-btn" data-tab="my">我的表情</button>
+          <button class="sticker-nav-btn" data-tab="his">他的表情</button>
+        </div>
+        <div class="sticker-content active" id="tab-emoji"><div class="emoji-grid" id="emojiList"></div></div>
+        <div class="sticker-content" id="tab-my"><div style="display:flex; justify-content:flex-end; padding-bottom:10px;"><button id="manageMyStickersBtn" class="text-btn" style="font-size:12px; padding:4px 8px;">批量管理</button></div><div class="sticker-grid" id="myStickerList"></div></div>
+        <div class="sticker-content" id="tab-his"><div class="sticker-grid" id="hisStickerList"></div></div>
+      </div>
+    </div>
+    <div id="toast" class="toast"></div>
+
+    <script src="data.js"></script>
+    <script src="chat_core.js"></script>
+    <script src="chat_stickers.js"></script>
+    <script src="chat_tools.js"></script>
+    <script src="chat_call.js"></script>
+    <script src="chat_money.js"></script>
+    <script src="manage_cards.js"></script>
+    <script src="manage_settings.js"></script>
+    <script src="manage_history.js"></script>
+    <script src="manage_data.js"></script>
+    <script src="router.js"></script>
+</body>
+</html>
