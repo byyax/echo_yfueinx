@@ -50,7 +50,8 @@ function downloadJSON(data, filename) {
 }
 
 function showExportModal(dataObj) {
-  const str = JSON.stringify(dataObj, null, 2);
+  // 去掉了格式化空格，直接压缩成一行，大幅减少复制长度
+  const str = JSON.stringify(dataObj); 
   const textArea = document.getElementById('exportDataText');
   if (textArea) {
     textArea.value = str;
@@ -98,6 +99,7 @@ function performExport(type) {
 
 // ================= 导入功能 =================
 const importFile = document.getElementById('importFile');
+const txtImportFile = document.getElementById('txtImportFile');
 let currentImportType = 'all';
 
 function triggerImport(type) {
@@ -105,6 +107,8 @@ function triggerImport(type) {
   if (currentDataMode === 'file') {
     importFile.click();
   } else {
+    // 打开文本模式弹窗前，清空之前的残留，防止干扰
+    document.getElementById('importDataText').value = '';
     document.getElementById('importDataModal').classList.add('show');
   }
 }
@@ -151,10 +155,10 @@ function processImportedData(data) {
   }, 500);
 }
 
-// 文本导入确认按钮
+// 1. 点击“确认导入”按钮
 document.getElementById('parseImportBtn').onclick = () => {
   const rawText = document.getElementById('importDataText').value.trim();
-  if (!rawText) return showToast('请先粘贴数据');
+  if (!rawText) return showToast('请先粘贴数据或读取文件');
   try {
     const data = JSON.parse(rawText);
     processImportedData(data);
@@ -164,7 +168,32 @@ document.getElementById('parseImportBtn').onclick = () => {
   }
 };
 
-// 文件导入
+// 2. 点击“读取 TXT”按钮
+const selectTxtBtn = document.getElementById('selectTxtBtn');
+if (selectTxtBtn) {
+  selectTxtBtn.onclick = () => {
+    txtImportFile.click();
+  };
+}
+
+// 3. 读取 TXT 后，将内容填入框内
+if (txtImportFile) {
+  txtImportFile.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    showToast('正在读取文件...');
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      document.getElementById('importDataText').value = ev.target.result;
+      showToast('✅ TXT 读取成功！请点击下方“确认导入”');
+    };
+    reader.readAsText(file);
+    e.target.value = ''; 
+  };
+}
+
+// 4. 文件模式：选择 JSON 文件直接导入
 if (importFile) {
   importFile.onchange = (e) => {
     const file = e.target.files[0]; 
