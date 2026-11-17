@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 加入 viewport-fit=cover，解决手机浏览器底部工具栏遮挡问题 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>echo_yfueinx</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -98,7 +99,7 @@
         </div>
       </div>
 
-      <!-- 数据管理（重新排版） -->
+      <!-- 数据管理 -->
       <div class="page" id="pageData">
         <div class="navbar"><button class="back" id="backFromData">‹</button><div class="title">数据管理</div></div>
         
@@ -372,12 +373,15 @@
         </div>
       </div>
 
-      <!-- 导入数据弹窗（文本模式） -->
+      <!-- 导入数据弹窗（文本模式，带 TXT 读取） -->
+            <!-- 导入数据弹窗（纯文本） -->
       <div class="modal" id="importDataModal">
         <div class="panel">
           <h3>导入数据</h3>
           <p style="font-size:12px; color:#fa5151; margin:0; text-align:center;">⚠️ 警告：导入将覆盖当前所有数据，请确认已备份当前数据！</p>
+          
           <textarea id="importDataText" style="height:200px; font-size:12px; font-family:monospace;" placeholder="请在此粘贴你备份的代码文本..."></textarea>
+          
           <div class="btns">
             <button class="btn-cancel" onclick="document.getElementById('importDataModal').classList.remove('show')">取消</button>
             <button class="btn-save" id="parseImportBtn">确认导入</button>

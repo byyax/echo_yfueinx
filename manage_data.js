@@ -50,7 +50,8 @@ function downloadJSON(data, filename) {
 }
 
 function showExportModal(dataObj) {
-  const str = JSON.stringify(dataObj, null, 2);
+  // 压缩成一行，避免换行符在手机上引起问题
+  const str = JSON.stringify(dataObj); 
   const textArea = document.getElementById('exportDataText');
   if (textArea) {
     textArea.value = str;
@@ -103,8 +104,13 @@ let currentImportType = 'all';
 function triggerImport(type) {
   currentImportType = type;
   if (currentDataMode === 'file') {
-    importFile.click();
+    // 加入 setTimeout 规避某些手机自带浏览器点击立刻闪退的 Bug
+    setTimeout(() => {
+      importFile.click();
+    }, 100);
   } else {
+    // 文本模式，纯粹展示输入框
+    document.getElementById('importDataText').value = '';
     document.getElementById('importDataModal').classList.add('show');
   }
 }
@@ -151,7 +157,7 @@ function processImportedData(data) {
   }, 500);
 }
 
-// 文本导入确认按钮
+// 1. 文本模式：粘贴完毕后点击“确认导入”
 document.getElementById('parseImportBtn').onclick = () => {
   const rawText = document.getElementById('importDataText').value.trim();
   if (!rawText) return showToast('请先粘贴数据');
@@ -164,7 +170,7 @@ document.getElementById('parseImportBtn').onclick = () => {
   }
 };
 
-// 文件导入
+// 2. 文件模式：选择 JSON 文件直接导入
 if (importFile) {
   importFile.onchange = (e) => {
     const file = e.target.files[0]; 
