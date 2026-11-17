@@ -1,11 +1,62 @@
-let callTimer = null, callSeconds = 0;
+let callTimer = null, callSeconds = 0, callTimeout = null;
+let callDirection = 'out'; // 'in' = 他打给我, 'out' = 我打给他
 const callWidget = document.getElementById('callWidget');
 const callLargeView = document.getElementById('callLargeView');
 const callSmallView = document.getElementById('callSmallView');
 const appContainer = document.getElementById('appContainer');
 
+const callAvatar = document.getElementById('callAvatar');
+const callAvatarSmall = document.getElementById('callAvatarSmall');
+const callNameLarge = document.getElementById('callNameLarge');
+const callNameSmall = document.getElementById('callNameSmall');
+const callStatusLarge = document.getElementById('callStatusLarge');
+const callTimeLarge = document.getElementById('callTimeLarge');
+const callTimeSmall = document.getElementById('callTimeSmall');
+
+const incomingActions = document.getElementById('incomingActions');
+const callMuteBtn = document.getElementById('callMuteBtn');
+const callVideoBtn = document.getElementById('callVideoBtn');
+const callHangupBtn = document.getElementById('callHangupBtn');
+const acceptCallBtn = document.getElementById('acceptCallBtn');
+const rejectCallBtn = document.getElementById('rejectCallBtn');
+
+// 生成柔和铃声
+let ringtoneCtx = null;
+let ringInterval = null;
+function playRingtone() {
+  if (!window.AudioContext && !window.webkitAudioContext) return;
+  if (!ringtoneCtx) ringtoneCtx = new (window.AudioContext || window.webkitAudioContext)();
+  
+  const playBeep = () => {
+    if (ringtoneCtx.state === 'suspended') ringtoneCtx.resume();
+    const osc = ringtoneCtx.createOscillator();
+    const gain = ringtoneCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, ringtoneCtx.currentTime); // A4
+    osc.frequency.exponentialRampToValueAtTime(880, ringtoneCtx.currentTime + 0.1);
+    
+    gain.gain.setValueAtTime(0, ringtoneCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.1, ringtoneCtx.currentTime + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.01, ringtoneCtx.currentTime + 0.5);
+    
+    osc.connect(gain);
+    gain.connect(ringtoneCtx.destination);
+    osc.start();
+    osc.stop(ringtoneCtx.currentTime + 0.5);
+  };
+  
+  playBeep();
+  ringInterval = setInterval(playBeep, 1500);
+}
+function stopRingtone() {
+  if (ringInterval) clearInterval(ringInterval);
+  if (ringtoneCtx && ringtoneCtx.state !== 'closed') ringtoneCtx.close();
+  ringtoneCtx = null;
+}
+
 function resetSmallViewPosition() {
   if (!callSmallView) return;
+  callSmallView.className = 'call-small-view';
   callSmallView.style.right = '20px';
   callSmallView.style.bottom = '80px';
   callSmallView.style.left = 'auto';
@@ -13,132 +64,214 @@ function resetSmallViewPosition() {
   callSmallView.style.transform = 'translate(0, 0)';
 }
 
-const toolCall = document.getElementById('toolCall');
-if(toolCall) toolCall.onclick = () => {
-  closePanels(); 
-  callWidget.style.display = 'block';
-  callLargeView.style.display = 'flex'; 
-  callSmallView.style.display = 'none';
-  resetSmallViewPosition();
-  
-  callSeconds = 0; 
-  document.getElementById('callTimeLarge').textContent = '00:00';
-  document.getElementById('callTimeSmall').textContent = '00:00';
-  document.getElementById('callNameLarge').textContent = chatSettings.otherName;
-  document.getElementById('callNameSmall').textContent = chatSettings.otherName;
-  if (chatSettings.otherAvatar) { 
-    document.getElementById('callAvatar').src = chatSettings.otherAvatar; 
-    document.getElementById('callAvatarSmall').src = chatSettings.otherAvatar; 
-  }
+function formatDuration(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+}
+
+function startCallTimer() {
+  callSeconds = 0;
+  callTimeLarge.style.display = 'block';
+  callTimeLarge.textContent = '00:00';
+  callTimeSmall.textContent = '00:00';
   if (callTimer) clearInterval(callTimer);
   callTimer = setInterval(() => {
     callSeconds++; 
-    const m = String(Math.floor(callSeconds / 60)).padStart(2, '0'); 
-    const s = String(callSeconds % 60).padStart(2, '0');
-    document.getElementById('callTimeLarge').textContent = `${m}:${s}`; 
-    document.getElementById('callTimeSmall').textContent = `${m}:${s}`;
+    const timeStr = formatDuration(callSeconds);
+    callTimeLarge.textContent = timeStr; 
+    callTimeSmall.textContent = timeStr;
   }, 1000);
-};
-
-const callMuteBtn = document.getElementById('callMuteBtn');
-if (callMuteBtn) callMuteBtn.onclick = () => {
-  const on = callMuteBtn.classList.toggle('on');
-  const icon = callMuteBtn.querySelector('.ctrl-icon');
-  const label = callMuteBtn.querySelector('span');
-  if (icon) icon.textContent = on ? '🔇' : '🎤';
-  if (label) label.textContent = on ? '取消静音' : '静音';
-  showToast(on ? '已静音' : '已取消静音');
-};
-
-const callVideoBtn = document.getElementById('callVideoBtn');
-if (callVideoBtn) callVideoBtn.onclick = () => {
-  const on = callVideoBtn.classList.toggle('on');
-  const icon = callVideoBtn.querySelector('.ctrl-icon');
-  const label = callVideoBtn.querySelector('span');
-  if (icon) icon.textContent = on ? '🎥' : '📷';
-  if (label) label.textContent = on ? '关闭摄像头' : '摄像头';
-  showToast(on ? '摄像头已开启' : '摄像头已关闭');
-};
-
-function resetCallControls() {
-  callSeconds = 0;
-  const tl = document.getElementById('callTimeLarge'); if (tl) tl.textContent = '00:00';
-  const ts = document.getElementById('callTimeSmall'); if (ts) ts.textContent = '00:00';
-  [callMuteBtn, callVideoBtn].forEach(btn => {
-    if (!btn) return;
-    btn.classList.remove('on');
-    const icon = btn.querySelector('.ctrl-icon');
-    const label = btn.querySelector('span');
-    if (btn === callMuteBtn) { if (icon) icon.textContent = '🎤'; if (label) label.textContent = '静音'; }
-    else { if (icon) icon.textContent = '📷'; if (label) label.textContent = '摄像头'; }
-  });
 }
 
-function endCall() {
-  if (callTimer) clearInterval(callTimer);
-  callTimer = null;
-  callWidget.style.display = 'none';
-  if (callLargeView) callLargeView.style.display = 'flex';
-  if (callSmallView) { callSmallView.style.display = 'none'; }
+function initCallUI(isIncoming) {
+  callAvatar.src = chatSettings.otherAvatar || '';
+  callAvatarSmall.src = chatSettings.otherAvatar || '';
+  callNameLarge.textContent = chatSettings.otherName;
+  callNameSmall.textContent = chatSettings.otherName;
+  
+  callLargeView.style.display = 'flex';
+  callSmallView.style.display = 'none';
   resetSmallViewPosition();
-  resetCallControls();
-  showToast('通话已结束');
+  
+  callMuteBtn.style.visibility = 'hidden';
+  callVideoBtn.style.visibility = 'hidden';
+  callTimeLarge.style.display = 'none';
+  
+  if (isIncoming) {
+    callStatusLarge.textContent = '邀请你语音通话...';
+    callHangupBtn.style.display = 'none';
+    incomingActions.style.display = 'flex';
+  } else {
+    callStatusLarge.textContent = '正在呼叫...';
+    callHangupBtn.style.display = 'flex';
+    incomingActions.style.display = 'none';
+  }
 }
-const hangupBtn = document.getElementById('callHangupBtn');
-if (hangupBtn) hangupBtn.onclick = endCall;
-const hangupSmallBtn = document.getElementById('callHangupSmallBtn');
-if (hangupSmallBtn) hangupSmallBtn.onclick = endCall;
 
+function endCall(state, who) {
+  if (callTimer) clearInterval(callTimer);
+  if (callTimeout) clearTimeout(callTimeout);
+  stopRingtone();
+  
+  callWidget.style.display = 'none';
+  resetSmallViewPosition();
+  
+  // 通话记录以对话气泡呈现：
+  // 接通后挂断 -> 被叫方发“通话结束 时长”；拒接 -> 拒接方发；呼叫中取消 -> 主叫方发；未接通 -> 被叫方发未接提示
+  let bubbleText = '', bubbleIsMe = null;
+  if (state === 'completed') {
+    bubbleText = `通话结束 ${formatDuration(callSeconds)}`;
+    bubbleIsMe = (callDirection === 'in'); // 他打给我 -> 我是被叫 -> 我这边发
+  } else if (state === 'rejected') {
+    bubbleText = '拒绝了语音通话';
+    bubbleIsMe = (who === 'me');
+  } else if (state === 'cancelled') {
+    bubbleText = '已取消';
+    bubbleIsMe = (who === 'me');
+  } else if (state === 'unanswered') {
+    if (callDirection === 'in') { bubbleText = '未接来电'; bubbleIsMe = true; }
+    else { bubbleText = '抱歉刚才在忙，没接到你的电话'; bubbleIsMe = false; }
+  }
+  
+  if (bubbleText) {
+    const time = Date.now();
+    const content = { val: bubbleText };
+    chatHistory.push({ role: bubbleIsMe ? 'me' : 'other', type: 'text', content, time });
+    saveAllData();
+    addMessageDOM(content, bubbleIsMe, 'text', time);
+  }
+}
+
+// 发起通话（我打给他）
+const toolCall = document.getElementById('toolCall');
+if(toolCall) toolCall.onclick = () => {
+  closePanels(); 
+  callDirection = 'out';
+  callWidget.style.display = 'flex';
+  initCallUI(false);
+  
+  // 等待对方接通：15% 在忙接不到，10% 拒接，其余接通
+  const roll = Math.random();
+  const isBusy = roll < 0.15;
+  const willReject = !isBusy && roll < 0.25;
+  const waitMs = 2500 + Math.random() * 3000;
+  callTimeout = setTimeout(() => {
+    if (callWidget.style.display !== 'flex') return;
+    if (isBusy) { endCall('unanswered', 'other'); return; }
+    if (willReject) { endCall('rejected', 'other'); return; }
+    callStatusLarge.textContent = '通话中...';
+    callTimeLarge.style.display = 'block';
+    callMuteBtn.style.visibility = 'visible';
+    callVideoBtn.style.visibility = 'visible';
+    startCallTimer();
+  }, waitMs);
+};
+
+// 触发来电（对方打给我）
+function triggerIncomingCall() {
+  if (callWidget.style.display === 'flex') return; // 正在通话中不触发
+  callDirection = 'in';
+  callWidget.style.display = 'flex';
+  initCallUI(true);
+  playRingtone();
+  
+  // 30秒没人接就自动挂断
+  callTimeout = setTimeout(() => {
+    if (callWidget.style.display === 'flex' && incomingActions.style.display !== 'none') {
+      endCall('unanswered', 'other');
+    }
+  }, 30000);
+}
+
+// 随机来电：每 5 分钟有 5% 概率触发，可在设置里关闭
+setInterval(() => {
+  if (Math.random() < 0.05) triggerIncomingCall();
+}, 5 * 60 * 1000);
+
+// 接听按钮
+if(acceptCallBtn) acceptCallBtn.onclick = () => {
+  stopRingtone();
+  if (callTimeout) clearTimeout(callTimeout);
+  incomingActions.style.display = 'none';
+  callHangupBtn.style.display = 'flex';
+  callStatusLarge.textContent = '通话中...';
+  callTimeLarge.style.display = 'block';
+  callMuteBtn.style.visibility = 'visible';
+  callVideoBtn.style.visibility = 'visible';
+  startCallTimer();
+};
+
+// 拒接按钮
+if(rejectCallBtn) rejectCallBtn.onclick = () => {
+  endCall('rejected', 'me');
+};
+
+// 挂断按钮（通用）
+if(callHangupBtn) callHangupBtn.onclick = () => {
+  if (callTimeLarge.style.display === 'none') {
+    endCall('cancelled', 'me'); // 还没接通就挂了
+  } else {
+    endCall('completed', 'me'); // 通话中挂了
+  }
+};
+
+// 大小窗切换
 const minimizeBtn = document.getElementById('callMinimizeBtn');
 if (minimizeBtn) {
-  minimizeBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (callLargeView) callLargeView.style.display = 'none';
-    if (callSmallView) {
-      callSmallView.style.cssText = 'display: flex !important; position: absolute !important; right: 20px !important; bottom: 80px !important; left: auto !important; top: auto !important; transform: translate(0, 0) !important; z-index: 99999 !important;';
-    }
+  minimizeBtn.addEventListener('pointerdown', (e) => {
+    e.stopPropagation(); e.preventDefault();
+    callLargeView.style.display = 'none';
+    callSmallView.style.display = 'flex';
+    callSmallView.style.cssText = 'display: flex !important; position: absolute !important; right: 20px !important; bottom: 80px !important; left: auto !important; top: auto !important; transform: translate(0, 0) !important; z-index: 99999 !important;';
   });
 }
 
 const maximizeBtn = document.getElementById('callMaximizeBtn');
 if (maximizeBtn) {
-  maximizeBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (callLargeView) callLargeView.style.display = 'flex';
-    if (callSmallView) callSmallView.style.display = 'none';
+  maximizeBtn.addEventListener('pointerdown', (e) => {
+    e.stopPropagation(); e.preventDefault();
+    callLargeView.style.display = 'flex';
+    callSmallView.style.display = 'none';
     resetSmallViewPosition();
   });
 }
 
-// ===== 修复：使用 Pointer 事件来保证丝滑拖拽且不卡死 =====
-let isDraggingCall = false, startX = 0, startY = 0;
+const hangupSmallBtn = document.getElementById('callHangupSmallBtn');
+if (hangupSmallBtn) hangupSmallBtn.onclick = () => {
+  if (callTimeLarge.style.display === 'none') endCall('cancelled', 'me');
+  else endCall('completed', 'me');
+};
+
+// 拖拽逻辑
+let isDraggingCall = false, startX = 0, startY = 0, callMovedDist = 0;
 const pipDragArea = document.querySelector('.pip-drag-area');
 
 if(pipDragArea) {
   pipDragArea.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.small-btn')) return;
     isDraggingCall = true;
+    callMovedDist = 0;
     startX = e.clientX; startY = e.clientY;
     const rect = callSmallView.getBoundingClientRect();
     const appRect = appContainer.getBoundingClientRect();
     
-    callSmallView.style.right = 'auto'; 
-    callSmallView.style.bottom = 'auto';
+    callSmallView.style.right = 'auto'; callSmallView.style.bottom = 'auto';
     callSmallView.style.left = (rect.left - appRect.left) + 'px'; 
     callSmallView.style.top = (rect.top - appRect.top) + 'px';
     callSmallView.style.transition = 'none';
     
-    // 捕获指针，防止拖到窗口外丢失事件
     pipDragArea.setPointerCapture(e.pointerId);
     document.body.style.userSelect = 'none'; 
-    document.body.style.touchAction = 'none'; // 阻止手机端下拉刷新/滚动
+    document.body.style.touchAction = 'none'; 
   });
 
   pipDragArea.addEventListener('pointermove', (e) => {
     if (!isDraggingCall) return;
-    
     const dx = e.clientX - startX, dy = e.clientY - startY;
+    callMovedDist += Math.abs(dx) + Math.abs(dy);
     startX = e.clientX; startY = e.clientY;
     
     let newLeft = callSmallView.offsetLeft + dx;
@@ -163,19 +296,43 @@ if(pipDragArea) {
     document.body.style.touchAction = '';
     pipDragArea.releasePointerCapture(e.pointerId);
     
-    callSmallView.style.transition = 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
     const appW = appContainer.clientWidth;
+
+    // 单击（几乎没拖动）：椭圆<->头像球 形态切换，与贴边吸附同速同曲线
+    if (callMovedDist < 6) {
+      callSmallView.style.transition = 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+      const isSnapped = callSmallView.classList.contains('snap-left') || callSmallView.classList.contains('snap-right');
+      if (isSnapped) {
+        const wasRight = callSmallView.classList.contains('snap-right');
+        callSmallView.classList.remove('snap-left', 'snap-right');
+        const pillW = 178;
+        let newLeft = wasRight ? appW - pillW - 20 : 20;
+        newLeft = Math.max(10, Math.min(newLeft, appW - pillW - 10));
+        callSmallView.style.left = newLeft + 'px';
+        const appH = appContainer.clientHeight;
+        callSmallView.style.top = Math.max(10, Math.min(callSmallView.offsetTop, appH - callSmallView.offsetHeight - 10)) + 'px';
+      } else {
+        const curLeft = callSmallView.offsetLeft;
+        if (curLeft + 89 < appW / 2) { callSmallView.style.left = '0px'; callSmallView.classList.add('snap-left'); }
+        else { callSmallView.style.left = (appW - 56) + 'px'; callSmallView.classList.add('snap-right'); }
+      }
+      return;
+    }
+
+    callSmallView.style.transition = 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+    const currentLeft = callSmallView.offsetLeft;
     
-    if (callSmallView.offsetLeft < 20) { 
+    // 吸附逻辑
+    if (currentLeft < 30) { 
       callSmallView.style.left = '0px'; 
-      callSmallView.style.transform = 'translateX(-40%)'; 
+      callSmallView.classList.add('snap-left');
     } 
-    else if (callSmallView.offsetLeft + callSmallView.offsetWidth > appW - 20) { 
-      callSmallView.style.left = (appW - callSmallView.offsetWidth) + 'px'; 
-      callSmallView.style.transform = 'translateX(40%)'; 
+    else if (currentLeft + callSmallView.offsetWidth > appW - 30) { 
+      callSmallView.style.left = (appW - 56) + 'px'; // 56是宽度
+      callSmallView.classList.add('snap-right');
     } 
     else { 
-      callSmallView.style.transform = 'translateX(0)'; 
+      callSmallView.classList.remove('snap-left', 'snap-right');
     }
   });
   
@@ -186,7 +343,18 @@ if(pipDragArea) {
   });
 }
 
-if(callSmallView) {
-  callSmallView.ondblclick = () => { callLargeView.style.display = 'flex'; callSmallView.style.display = 'none'; resetSmallViewPosition(); };
-  callSmallView.onclick = () => { if (callSmallView.style.transform !== 'translateX(0)' && !isDraggingCall) callSmallView.style.transform = 'translateX(0)'; };
-}
+// 静音/摄像头
+if (callMuteBtn) callMuteBtn.onclick = () => {
+  const on = callMuteBtn.classList.toggle('on');
+  const icon = callMuteBtn.querySelector('.ctrl-icon');
+  const label = callMuteBtn.querySelector('span');
+  if (icon) icon.textContent = on ? '🔇' : '🎤';
+  if (label) label.textContent = on ? '取消静音' : '静音';
+};
+if (callVideoBtn) callVideoBtn.onclick = () => {
+  const on = callVideoBtn.classList.toggle('on');
+  const icon = callVideoBtn.querySelector('.ctrl-icon');
+  const label = callVideoBtn.querySelector('span');
+  if (icon) icon.textContent = on ? '🎥' : '📷';
+  if (label) label.textContent = on ? '关闭摄像头' : '摄像头';
+};

@@ -113,6 +113,7 @@ function renderHistory(filterDate = '') {
       else if (msg.type === 'transfer') content = `[转账 ¥${c.amount || '0.00'}]`;
       else if (msg.type === 'redpacket') content = `[红包 ${c.note || ''}]`;
       else if (msg.type === 'location') content = c.val || '[位置]';
+      else if (msg.type === 'interact') content = `[互动 ${c.name || ''}]`;
       else content = '[卡片]';
       
       const av = isMe ? chatSettings.myAvatar : chatSettings.otherAvatar;

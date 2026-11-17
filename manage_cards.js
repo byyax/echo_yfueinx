@@ -6,8 +6,30 @@ let isBatchMode = false;
 const tagBarEl = document.getElementById('tagBar');
 const batchToggleBtn = document.getElementById('batchToggleBtn');
 const batchActions = document.getElementById('batchActions');
+const listEl = document.getElementById('cardList');
+const pageCardsEl = document.getElementById('pageCards');
 
-if(tagBarEl) tagBarEl.addEventListener('wheel', (evt) => { evt.preventDefault(); tagBarEl.scrollLeft += evt.deltaY; });
+// 实现手指在字卡栏上下滑动也能滑动下方列表的功能
+if (pageCardsEl) {
+  let startY = 0;
+  let startScrollTop = 0;
+  pageCardsEl.addEventListener('touchstart', (e) => {
+    if (e.target.closest('.main-lib-nav') || e.target.closest('.lib-nav-wrapper') || e.target.closest('.tag-bar') || e.target.closest('.card-toolbar')) {
+      startY = e.touches[0].clientY;
+      startScrollTop = listEl.scrollTop;
+    } else {
+      startY = 0;
+    }
+  }, { passive: true });
+  
+  pageCardsEl.addEventListener('touchmove', (e) => {
+    if (startY > 0 && listEl) {
+      const currentY = e.touches[0].clientY;
+      const diff = startY - currentY;
+      listEl.scrollTop = startScrollTop + diff;
+    }
+  }, { passive: true });
+}
 
 if(batchToggleBtn) {
   batchToggleBtn.onclick = () => {
@@ -28,11 +50,7 @@ if(batchToggleBtn) {
 
 const tagBtn = document.getElementById('openTagManagerBtn');
 if(tagBtn) {
-  tagBtn.onclick = () => { 
-    renderTagManager(); 
-    const modal = document.getElementById('tagManagerModal');
-    if (modal) modal.classList.add('show');
-  };
+  tagBtn.onclick = () => { renderTagManager(); const modal = document.getElementById('tagManagerModal'); if (modal) modal.classList.add('show'); };
 }
 const closeTagManagerBtn = document.getElementById('closeTagManagerBtn');
 if(closeTagManagerBtn) closeTagManagerBtn.onclick = () => document.getElementById('tagManagerModal').classList.remove('show');
@@ -113,6 +131,36 @@ bindSubLibEvents();
 const searchInput = document.getElementById('searchInput');
 if(searchInput) searchInput.oninput = () => { query = searchInput.value.trim(); refreshCardsUI(); };
 
+// 修复：字卡严格查重功能（提示具体重复的内容）
+document.getElementById('checkDuplicateBtn').onclick = () => {
+  const textCards = contents.filter(c => c.type === 'text');
+  const seen = new Set();
+  const dupIds = [];
+  const dupTexts = [];
+  
+  textCards.forEach(c => {
+    if (seen.has(c.val)) {
+      dupIds.push(c.id);
+      if (!dupTexts.includes(c.val)) dupTexts.push(c.val);
+    } else {
+      seen.add(c.val);
+    }
+  });
+
+  if (dupIds.length === 0) {
+    showToast('当前无重复内容 ✨');
+  } else {
+    const preview = dupTexts.slice(0, 3).map(t => `「${t}」`).join('、');
+    const more = dupTexts.length > 3 ? ` 等 ${dupTexts.length} 组` : '';
+    showConfirm('发现重复', `检测到 ${dupIds.length} 条重复字卡：${preview}${more}\n是否删除？（保留最早的一条）`, () => {
+      contents = contents.filter(c => !dupIds.includes(c.id));
+      saveAllData();
+      refreshCardsUI();
+      showToast('已清除重复字卡');
+    });
+  }
+};
+
 function refreshCardsUI() {
   try {
     if (currentLib === 'text' && tagBarEl) {
@@ -129,9 +177,8 @@ function refreshCardsUI() {
     const list = document.getElementById('cardList'); if(!list) return; list.innerHTML = '';
     const countLabel = document.getElementById('countLabel');
     
-    // 修复：表情包库的网格样式
     if (currentLib === 'image') {
-      list.className = 'image-grid';
+      list.className = 'card-list image-grid'; // 网格布局
     } else {
       list.className = 'card-list';
     }
@@ -159,9 +206,10 @@ function refreshCardsUI() {
     filtered.forEach(item => {
       const row = document.createElement('div'); row.className = 'card-item';
       
-      // 渲染图片形式的卡片
       if (item.type === 'image') {
         row.innerHTML = `<img src="${item.val}">`;
+        
+        // 表情包删除逻辑：长按显示叉号，或者批量管理显示复选框
         if (isBatchMode) {
           const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = selected.has(item.id);
           cb.onchange = () => { cb.checked ? selected.add(item.id) : selected.delete(item.id); };
@@ -175,6 +223,19 @@ function refreshCardsUI() {
             });
           };
           row.appendChild(delBtn);
+          
+          // 长按逻辑
+          let pressTimer;
+          const startPress = (e) => {
+            pressTimer = setTimeout(() => {
+              document.querySelectorAll('.image-grid .card-item').forEach(el => el.classList.remove('show-delete'));
+              row.classList.add('show-delete');
+            }, 600);
+          };
+          const cancelPress = () => clearTimeout(pressTimer);
+          
+          row.onmousedown = startPress; row.onmouseup = cancelPress; row.onmouseleave = cancelPress;
+          row.ontouchstart = startPress; row.ontouchend = cancelPress; row.ontouchmove = cancelPress;
         }
       } else {
         if (isBatchMode) {
@@ -190,7 +251,6 @@ function refreshCardsUI() {
   } catch(e) { console.error("刷新界面出错:", e); }
 }
 
-// 修复：如果是非文字字卡，不显示分类下拉框
 document.getElementById('openAddModal').onclick = () => {
   editingItemId = null; document.getElementById('editItemId').value = '';
   const amt = document.getElementById('addModalTitle'); amt.textContent = `添加 ${currentLib === 'text' ? '字卡' : currentLib}`;
@@ -198,13 +258,12 @@ document.getElementById('openAddModal').onclick = () => {
   const saa = document.getElementById('stickerAddArea'); saa.style.display = currentLib === 'image' ? 'block' : 'none';
   const textarea = document.getElementById('newCardsText'); textarea.value = '';
   
-  // 隐藏分类
   const addTagRow = document.getElementById('addTagRow');
   if (addTagRow) addTagRow.style.display = (currentLib === 'text') ? 'flex' : 'none';
 
   if(currentLib === 'pat') textarea.placeholder = '格式：动作，用 [我] 和 [他] 代替。\n例如：捏了捏[我]的脸';
   else if(currentLib === 'signature') textarea.placeholder = '一行一条签名，后台会自动轮换';
-  else textarea.placeholder = '一行一条，自动过滤重复项';
+  else textarea.placeholder = '一行一条，自动过滤完全相同的重复项';
   document.getElementById('addModal').classList.add('show');
 };
 
@@ -214,7 +273,6 @@ function openEditModal(item) {
   document.getElementById('textAddArea').style.display = 'block'; document.getElementById('stickerAddArea').style.display = 'none';
   document.getElementById('newCardsText').value = item.val; 
   
-  // 隐藏分类
   const addTagRow = document.getElementById('addTagRow');
   if (addTagRow) addTagRow.style.display = (currentLib === 'text') ? 'flex' : 'none';
   
@@ -245,6 +303,7 @@ document.getElementById('saveAdd').onclick = async () => {
       if(!cleanLine) return;
       
       let isDuplicate = false;
+      // 严格全字匹配
       if (type === 'text' || type === 'emoji') {
         isDuplicate = contents.some(c => c.type === type && c.val === cleanLine);
       } else if (type === 'location') {
@@ -274,7 +333,7 @@ document.getElementById('saveAdd').onclick = async () => {
   else if (currentLib === 'emoji') processLines(val.split('\n'), 'emoji', null);
   else if (currentLib === 'image') { 
     const files = document.getElementById('newStickersInput').files; 
-    for (let i = 0; i < files.length; i++) { const base64 = await compressImage(files[i]); contents.push({ id: 'c_'+timestamp+i, type: 'image', val: base64, tagId: 'unclassified' }); addedCount++; } 
+    for (let i = 0; i < files.length; i++) { const base64 = await compressImage(files[i]); if (!base64) { showToast('有动图太大，已跳过'); continue; } contents.push({ id: 'c_'+timestamp+i, type: 'image', val: base64, tagId: 'unclassified' }); addedCount++; } 
   }
   
   saveAllData(); document.getElementById('newCardsText').value = ''; document.getElementById('addModal').classList.remove('show'); refreshCardsUI();
@@ -320,5 +379,11 @@ document.getElementById('cancelMoveBtn').onclick = () => document.getElementById
 document.getElementById('saveMoveBtn').onclick = () => {
   const target = document.getElementById('moveTagSelect').value; contents.forEach(c => { if(selected.has(c.id)) c.tagId = target; }); saveAllData(); selected.clear(); document.getElementById('moveModal').classList.remove('show'); refreshCardsUI();
 };
-const TAG_COLORS = ['#ff4d4f','#faad14','#52c41a','#1890ff','#722ed1','#eb2f96','#13c2c2','#f5222d','#fa8c16','#a0d911','#2f54eb','#fadb14','#d4b106','#8c8c8c','#595959','#000000'];
+// 修复：标签调色盘扩充为 24 色，色差更大，只保留一个深灰
+const TAG_COLORS = [
+  '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c', '#3498db',
+  '#9b59b6', '#fd79a8', '#00cec9', '#6c5ce7', '#ff7675', '#fab1a0',
+  '#ffeaa7', '#55efc4', '#81ecec', '#74b9ff', '#a29bfe', '#fd79c8',
+  '#e17055', '#00b894', '#0984e3', '#d63031', '#b2bec3', '#2d3436'
+];
 let editingTagId = null, pickingColor = '';

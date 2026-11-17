@@ -1,6 +1,7 @@
 const chatEl = document.getElementById('chat');
 const msgInput = document.getElementById('msgInput');
 let currentQuote = null;
+let isTyping = false; // 正在输入状态
 
 function applyChatSettings() {
   const titleEl = document.getElementById('chatTitle'); if(titleEl) titleEl.textContent = chatSettings.otherName;
@@ -8,7 +9,21 @@ function applyChatSettings() {
   const sigEl = document.getElementById('signatureBar'); if(sigEl) sigEl.textContent = chatSettings.signature;
 }
 
-function getTimeStr(time) { const d = new Date(time); return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`; }
+function getTimeStr(time) {
+  const d = new Date(time);
+  let h = d.getHours();
+  const m = d.getMinutes().toString().padStart(2, '0');
+  const s = d.getSeconds().toString().padStart(2, '0');
+  const useSec = chatSettings.timeFormat === 'hms';
+  if (chatSettings.hourFormat === '12') {
+    const ap = h < 12 ? 'am' : 'pm';
+    let h12 = h % 12; if (h12 === 0) h12 = 12;
+    const hh = h12.toString().padStart(2, '0');
+    return useSec ? `${hh}:${m}:${s}${ap}` : `${hh}:${m}${ap}`;
+  }
+  const hh = h.toString().padStart(2, '0');
+  return useSec ? `${hh}:${m}:${s}` : `${hh}:${m}`;
+}
 
 // ===== 气泡菜单相关 =====
 let bubbleMenuCtx = null;
@@ -18,8 +33,27 @@ function getQuoteDisplayText(content, type) {
   if (type === 'redpacket') return '[红包] ' + (content.note || '');
   if (type === 'transfer') return '[转账] ¥' + (content.amount || '0.00');
   if (type === 'gift') return '[礼物] ' + (content.name || content.val || '');
+  if (type === 'interact') return '[互动] ' + (content.name || '');
   if (type === 'location') return '[位置] ' + (content.val || '');
   return (content && content.val !== undefined && content.val !== null) ? String(content.val) : '';
+}
+
+// 礼物图标映射：优先用礼物自带的图标，否则按名字关键词猜，自定义礼物固定蝴蝶结
+function getGiftIcon(content) {
+  if (content && content.icon) return content.icon;
+  const name = (content && (content.name || content.val)) || '';
+  const map = [
+    ['奶茶', '🧋'], ['蛋糕', '🍰'], ['玫瑰', '🌹'], ['花束', '💐'], ['巧克力', '🍫'],
+    ['毛绒', '🧸'], ['玩具', '🧸'], ['蜡烛', '🕯️'], ['香薰', '🕯️'], ['糖', '🍬'],
+    ['发圈', '🎀'], ['果茶', '🍵'], ['贴纸', '🏷️'], ['润唇', '💄'], ['香水', '🧴'],
+    ['手链', '📿'], ['咖啡', '☕'], ['围巾', '🧣'], ['画册', '📚'], ['门票', '🎫'],
+    ['耳机', '🎧'], ['腰痛', '🔥'], ['钢笔', '🖋️'], ['披肩', '🧥'], ['相机', '📷'],
+    ['吊坠', '💎'], ['腕表', '⌚'], ['包包', '👜'], ['首饰', '💍'], ['民宿', '🏖️'],
+    ['西餐', '🍝'], ['火锅', '🍲'], ['刺身', '🍣'], ['沐浴', '🧴'], ['眼罩', '😴'],
+    ['保温杯', '🥤'], ['亲亲', '😘'], ['夜宵', '🍜']
+  ];
+  for (const [k, v] of map) { if (name.includes(k)) return v; }
+  return (content && content.custom) ? '🎀' : '🎁';
 }
 
 function showBubbleMenu(x, y, content, isMe, type, time, rowEl) {
@@ -43,6 +77,18 @@ function hideBubbleMenu() {
   const menu = document.getElementById('bubbleMenu');
   if (menu) menu.classList.remove('show');
   bubbleMenuCtx = null;
+}
+
+// 滚动定位到引用的消息：整行短促闪一下
+function scrollToMessage(time) {
+  const target = document.querySelector(`.bubble[data-msg-time="${time}"]`);
+  if (!target) return;
+  const row = target.closest('.row') || target;
+  row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  row.classList.remove('flash-row');
+  void row.offsetWidth;
+  row.classList.add('flash-row');
+  setTimeout(() => row.classList.remove('flash-row'), 700);
 }
 
 // ===== 自动接收我发出的红包/转账/礼物 =====
@@ -71,9 +117,13 @@ function autoReceiveMyCard(time) {
     if (title) title.textContent = `¥${msg.content.amount || '0.00'}`;
     if (bottom) bottom.textContent = '已领取';
   } else if (msg.type === 'gift') {
-    if (icon) { icon.textContent = '🎀'; icon.className = 'card-icon grey'; }
+    if (icon) { icon.textContent = getGiftIcon(msg.content); icon.className = 'card-icon grey'; }
     if (title) title.textContent = msg.content.name || '礼物';
     if (bottom) bottom.textContent = '已拆开';
+  } else if (msg.type === 'interact') {
+    if (icon) { icon.textContent = msg.content.icon || '💞'; icon.className = 'card-icon grey'; }
+    if (subtitle) subtitle.textContent = '已接受';
+    if (bottom) bottom.textContent = '已接受';
   }
 }
 
@@ -88,9 +138,13 @@ function openOtherCard(time, type) {
   const mName = document.getElementById('giftOpenName');
   const mAmount = document.getElementById('giftOpenAmount');
   const btn = document.getElementById('confirmOpenGiftBtn');
+  const closeBtn = document.getElementById('closeGiftOpenBtn');
   
   mAmount.style.display = 'none';
   btn.textContent = '拆开';
+  closeBtn.style.display = 'block';
+
+  closeBtn.onclick = () => modal.classList.remove('show');
   
   if (type === 'redpacket') {
     mTitle.textContent = '🧧 恭喜发财';
@@ -101,6 +155,7 @@ function openOtherCard(time, type) {
       mAmount.textContent = `¥${msg.content.amount || '0.00'}`;
       mAmount.style.display = 'block';
       btn.textContent = '开心收下';
+      closeBtn.style.display = 'none';
       btn.onclick = () => finishOpenCard(time, type);
     };
   } else if (type === 'gift') {
@@ -108,14 +163,23 @@ function openOtherCard(time, type) {
     mIcon.textContent = '🎁';
     mName.textContent = '对方送了你一个神秘礼物';
     btn.onclick = () => {
-      mIcon.textContent = '🎀';
-      mName.textContent = msg.content.name || msg.content.val || '神秘礼物';
+      const giftName = msg.content.name || msg.content.val || '神秘礼物';
+      const giftEmoji = getGiftIcon(msg.content);
+      mIcon.textContent = giftEmoji;
+      mName.textContent = giftName;
       btn.textContent = '开心收下';
+      closeBtn.style.display = 'none';
       btn.onclick = () => finishOpenCard(time, type);
     };
   } else if (type === 'transfer') {
     finishOpenCard(time, type);
     return;
+  } else if (type === 'interact') {
+    mTitle.textContent = `${msg.content.icon || '💞'} ${msg.content.name || '互动请求'}`;
+    mIcon.textContent = msg.content.icon || '💞';
+    mName.textContent = `对方想要${msg.content.name || '互动'}`;
+    btn.textContent = '接受';
+    btn.onclick = () => finishOpenCard(time, type);
   }
   
   modal.classList.add('show');
@@ -142,9 +206,15 @@ function finishOpenCard(time, type) {
       if (icon) { icon.textContent = '🧧'; icon.className = 'card-icon grey'; }
       if (title) title.textContent = `¥${msg.content.amount || '0.00'}`;
       if (bottom) bottom.textContent = '已领取';
+    } else if (type === 'interact') {
+      if (icon) { icon.textContent = msg.content.icon || '💞'; icon.className = 'card-icon grey'; }
+      if (subtitle) subtitle.textContent = '已接受';
+      if (bottom) bottom.textContent = '已接受';
     } else if (type === 'gift') {
-      if (icon) { icon.textContent = '🎀'; icon.className = 'card-icon grey'; }
-      if (title) title.textContent = msg.content.name || '礼物';
+      const giftName = msg.content.name || '礼物';
+      const giftEmoji = getGiftIcon(msg.content);
+      if (icon) { icon.textContent = giftEmoji; icon.className = 'card-icon grey'; }
+      if (title) title.textContent = giftName;
       if (bottom) bottom.textContent = '已拆开';
     }
   }
@@ -169,6 +239,21 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
       const quoteDiv = document.createElement('div');
       quoteDiv.className = 'quote-box';
       quoteDiv.innerHTML = `<b>${content.quote.sender}:</b> ${content.quote.text}`;
+      // 单击/双击引用框都回溯到原消息（双向通用；老数据没时间戳就按发送者+文本反查）
+      const jumpToQuote = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        let t = content.quote.time;
+        if (!t) {
+          const wantOther = content.quote.sender === chatSettings.otherName;
+          const found = chatHistory.find(m => (m.role === 'other') === wantOther && m.content && String(m.content.val || '') === String(content.quote.text || ''));
+          if (found) t = found.time;
+        }
+        if (t) scrollToMessage(t);
+        else showToast('找不到原消息了');
+      };
+      quoteDiv.onclick = jumpToQuote;
+      quoteDiv.ondblclick = jumpToQuote;
       bubble.appendChild(quoteDiv);
     }
 
@@ -181,7 +266,7 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
     } else if (type === 'pat') {
       bubble.style.background = 'transparent'; bubble.style.boxShadow = 'none'; bubble.style.fontSize = '12px'; bubble.style.color = '#888';
       bodyDiv.textContent = content.val;
-    } else if (type === 'location' || type === 'redpacket' || type === 'transfer' || type === 'gift') {
+    } else if (type === 'location' || type === 'redpacket' || type === 'transfer' || type === 'gift' || type === 'interact') {
       bubble.classList.add('special-card');
       if (content.isOpened) bubble.classList.add('opened');
       
@@ -191,7 +276,7 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
         icon = content.isOpened ? '🧧' : '🧧'; 
         title = content.isOpened ? `¥${content.amount || '0.00'}` : (content.note || '恭喜发财'); 
         colorClass = content.isOpened ? 'grey' : 'red'; 
-        subTitle = '微信红包'; 
+        subTitle = '红包'; 
       }
       if(type === 'transfer') { 
         icon = content.isOpened ? '✅' : '💰'; 
@@ -199,23 +284,35 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
         colorClass = content.isOpened ? 'grey' : 'trans'; 
         subTitle = content.isOpened ? '已收款' : '转账'; 
       }
+      if(type === 'interact') {
+        icon = content.isOpened ? (content.icon || '💞') : (content.icon || '💞');
+        title = content.name || '互动';
+        colorClass = content.isOpened ? 'grey' : 'interact';
+        subTitle = content.isOpened ? '已接受' : '互动请求';
+      }
       if(type === 'gift') { 
-        icon = content.isOpened ? '🎀' : '🎁'; 
-        title = content.isOpened ? (content.name || '礼物') : (content.name || content.val || '礼物'); 
+        let gName = content.name || content.val || '神秘礼物';
+        if (!isMe && !content.isOpened) gName = '神秘礼物'; // 对方送的一开始不暴露
+        
+        const gEmoji = content.isOpened ? getGiftIcon(content) : '🎁';
+        
+        icon = gEmoji; 
+        title = content.isOpened ? gName : '礼物'; 
         colorClass = content.isOpened ? 'grey' : 'red'; 
         subTitle = '礼物'; 
       }
       
       let bottomText = '';
       if (type === 'location') bottomText = '位置信息';
+      else if (type === 'transfer') bottomText = content.isOpened ? '已收款' : '未收款';
       else if (content.isOpened) {
-        if (type === 'transfer') bottomText = '已收款';
-        else if (type === 'redpacket') bottomText = '已领取';
+        if (type === 'redpacket') bottomText = '已领取';
         else if (type === 'gift') bottomText = '已拆开';
+        else if (type === 'interact') bottomText = '已接受';
       } else if (!isMe) {
-        bottomText = '点击拆开';
+        bottomText = type === 'interact' ? '点击接受' : '点击拆开';
       } else {
-        bottomText = '等待对方查看';
+        bottomText = type === 'interact' ? '等待对方回应' : '等待对方查看';
       }
       
       bodyDiv.innerHTML = `<div class="card-top"><div class="card-icon ${colorClass}">${icon}</div><div class="card-info"><h4>${title}</h4><p>${subTitle}</p></div></div><div class="card-bottom">${bottomText}</div>`;
@@ -226,7 +323,12 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
     } else {
       const textVal = (content.val === undefined || content.val === null) ? '' : String(content.val);
       bodyDiv.textContent = textVal;
-      if (textVal.length <= 4 && /\p{Emoji}/u.test(textVal)) { bubble.style.fontSize = '30px'; bubble.style.background = 'transparent'; bubble.style.padding = '0'; }
+      
+      // 修复：严格判定纯 Emoji，避免像“🍎蹭蹭”这种被误判导致气泡消失
+      const isPureEmoji = /^(\p{Emoji}|\p{Emoji_Modifier}|\p{Emoji_Component}|\s)+$/u.test(textVal);
+      if (textVal.length <= 6 && isPureEmoji) { 
+        bubble.style.fontSize = '30px'; bubble.style.background = 'transparent'; bubble.style.padding = '0'; bubble.style.boxShadow = 'none'; 
+      }
     }
     
     bubble.appendChild(bodyDiv);
@@ -246,7 +348,10 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
     bubble.addEventListener('touchend', () => clearTimeout(bubblePressTimer));
     bubble.addEventListener('touchmove', () => clearTimeout(bubblePressTimer));
     bubble.addEventListener('touchcancel', () => clearTimeout(bubblePressTimer));
-    bubble.ondblclick = () => startQuote(content, isMe ? chatSettings.myName : chatSettings.otherName, getQuoteDisplayText(content, type));
+    bubble.ondblclick = (e) => {
+      if (e.target.closest && e.target.closest('.quote-box')) return; // 双击引用框是回溯，不是发起新引用
+      startQuote(content, isMe ? chatSettings.myName : chatSettings.otherName, getQuoteDisplayText(content, type), time);
+    };
 
     const timeStr = document.createElement('div'); timeStr.className = 'bubble-time'; timeStr.textContent = getTimeStr(time);
     wrap.appendChild(bubble); wrap.appendChild(timeStr);
@@ -255,8 +360,8 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
   } catch (err) { console.error("渲染错误", err); }
 }
 
-function startQuote(contentObj, sender, text) {
-  currentQuote = { sender, text };
+function startQuote(contentObj, sender, text, timeVal) {
+  currentQuote = { sender, text, time: timeVal || (contentObj && contentObj.time) };
   document.getElementById('quotePreview').style.display = 'flex';
   document.getElementById('quoteSender').textContent = `回复 ${sender}:`;
   document.getElementById('quoteText').textContent = text;
@@ -279,7 +384,7 @@ function sendMessage(val, type = 'text', isMe = true, customQuote = null) {
   saveAllData();
   lastInteractionTime = Date.now(); 
 
-  if (isMe && (type === 'redpacket' || type === 'transfer' || type === 'gift')) {
+  if (isMe && (type === 'redpacket' || type === 'transfer' || type === 'gift' || type === 'interact')) {
     const delay = 2000 + Math.random() * 3000;
     setTimeout(() => autoReceiveMyCard(time), delay);
   }
@@ -325,83 +430,65 @@ function triggerPat(isMePatting) {
   }
   if (isMePatting) {
     setTimeout(() => { 
-      const reactions = ['干嘛呀~', '嘿嘿', '怎么啦？', '戳我干嘛']; 
-      sendMessage(reactions[Math.floor(Math.random() * reactions.length)], 'text', false); 
+      const reactions = ['干嘛呀~', '嘿嘿', '怎么啦？', '戳我干嘛', '我在呢']; 
+      sendMessage(reactions[Math.floor(Math.random()*reactions.length)], 'text', false); 
     }, 1000);
   }
 }
 
 function getRandomDelay() { return Math.floor(Math.random() * ((chatSettings.replyDelay || 1) * 60 * 1000)); }
 
-// ===== 核心：对方随机回复逻辑（贴近真实） =====
+function showTypingIndicator() {
+  if(!chatEl) return;
+  if (document.getElementById('typingIndicator')) return;
+  const row = document.createElement('div');
+  row.id = 'typingIndicator';
+  row.className = 'row';
+  const avatar = document.createElement('div'); avatar.className = 'avatar other';
+  if (chatSettings.otherAvatar) avatar.innerHTML = `<img src="${chatSettings.otherAvatar}">`;
+  else avatar.textContent = chatSettings.otherName.charAt(0);
+  const wrap = document.createElement('div'); wrap.className = 'bubble-wrap';
+  const bubble = document.createElement('div'); bubble.className = 'bubble typing-bubble';
+  const label = document.createElement('span'); label.className = 'typing-label'; label.textContent = `${chatSettings.otherName} 正在输入`;
+  bubble.appendChild(label);
+  for (let i = 0; i < 3; i++) { const d = document.createElement('span'); d.className = 'typing-dot'; bubble.appendChild(d); }
+  wrap.appendChild(bubble); row.appendChild(avatar); row.appendChild(wrap);
+  chatEl.appendChild(row);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function hideTypingIndicator() {
+  const typing = document.getElementById('typingIndicator');
+  if (typing) typing.remove();
+}
+
 function randomReply() {
-  // 5% 的概率发送特殊卡片（红包/转账/礼物），95% 是文字
-  const r = Math.random();
-  if (r < 0.05) {
-    const tRand = Math.random();
-    let t = 'redpacket';
-    if (tRand > 0.33 && tRand <= 0.66) t = 'gift';
-    else if (tRand > 0.66) t = 'transfer';
-
-    // 辅助函数：生成随机金额 (精确到 0.1)
-    const getRandomAmount = (min, max) => (Math.random() * (max - min) + min).toFixed(1);
-    
-    // 辅助函数：生成随机备注（60% 概率为空，40% 概率有备注）
-    const getRandomNote = (pool) => {
-      if (Math.random() < 0.6) return ''; 
-      return pool[Math.floor(Math.random() * pool.length)];
-    };
-
-    if (t === 'gift') {
-      const gifts = ['一杯奶茶', '一束玫瑰', '一盒巧克力', '一个毛绒玩具', '一份夜宵'];
-      const picked = gifts[Math.floor(Math.random() * gifts.length)];
-      sendMessage({ name: picked, val: `送了你${picked}` }, 'gift', false);
-      
-    } else if (t === 'redpacket') {
-      let amount = '';
-      let note = '';
-      
-      // 彩蛋概率 3%
-      if (Math.random() < 0.03) {
-        const rpEggs = ['13.14', '52.00', '88.00', '99.99', '131.40', '520.00'];
-        amount = rpEggs[Math.floor(Math.random() * rpEggs.length)];
-        note = getRandomNote(['给你个大惊喜！', '我爱你', '遇到你真好', '拿去买点喜欢的']);
-      } else {
-        // 日常随机：10.0 ~ 200.0 之间
-        amount = getRandomAmount(10.0, 200.0);
-        note = getRandomNote(['拿去喝奶茶', '买点好吃的', '给你个小惊喜', '天天开心', '一点小心意', '买点喜欢的', '吃点好吃的']);
-      }
-      sendMessage({ amount, note }, 'redpacket', false);
-      
-    } else if (t === 'transfer') {
-      let amount = '';
-      let note = '';
-      
-      // 彩蛋概率 1%（霸总附体，极小概率触发大额）
-      if (Math.random() < 0.01) {
-        const transfers = [
-          { amount: '520.00' },
-          { amount: '888.00' },
-          { amount: '1314.00' },
-          { amount: '5200.00' },
-          { amount: '5210.00' },
-          { amount: '8888.00' },
-          { amount: '52000.00' }
-        ];
-        const picked = transfers[Math.floor(Math.random() * transfers.length)];
-        amount = picked.amount;
-        note = getRandomNote(['拿去随便花', '别省着', '去买那个你一直想要的', '我爱你', '拿去买你喜欢的']);
-      } else {
-        // 日常随机：10.0 ~ 200.0 之间
-        amount = getRandomAmount(10.0, 200.0);
-        note = getRandomNote(['拿去买杯喝的', '买点喜欢的小玩意', '一点心意', '今天开心，分你一半', '吃点好吃的', '买点喜欢的', '我爱你']);
-      }
-      sendMessage({ amount, note }, 'transfer', false);
-    }
+  // 新增 10% 概率触发拍一拍
+  if (Math.random() < 0.1) {
+    triggerPat(false);
     return;
   }
 
-  // ===== 文字与表情包逻辑（95%） =====
+  const r = Math.random();
+  if (r < 0.05) {
+    const types = ['gift', 'redpacket', 'transfer'];
+    const t = types[Math.floor(Math.random() * types.length)];
+    
+    // 对方随机送礼：直接读商城礼物库
+    if (t === 'gift') {
+      const all = (typeof GIFT_ITEMS !== 'undefined') ? GIFT_ITEMS : [];
+      if (all.length > 0) {
+        const g = all[Math.floor(Math.random() * all.length)];
+        sendMessage({ name: g.name, icon: g.icon, price: g.price, val: `送了你${g.name}` }, 'gift', false);
+      } else {
+        sendMessage({ name: '神秘礼物', val: '送了你神秘礼物' }, 'gift', false);
+      }
+    }
+    else if (t === 'redpacket') sendMessage({ amount: '52.00', note: '给你个小红包' }, 'redpacket', false);
+    else if (t === 'transfer') sendMessage({ amount: '520.00', note: '拿去花' }, 'transfer', false);
+    return;
+  }
+
   const textCards = contents.filter(item => item.type === 'text');
   const imageCards = contents.filter(item => item.type === 'image');
   
@@ -410,7 +497,7 @@ function randomReply() {
     const recentMyMsgs = chatHistory.slice(-20).filter(m => m.role === 'me' && m.type === 'text');
     if (recentMyMsgs.length > 0) {
       const target = recentMyMsgs[Math.floor(Math.random() * recentMyMsgs.length)];
-      quote = { sender: chatSettings.myName, text: target.content.val };
+      quote = { sender: chatSettings.myName, text: target.content.val, time: target.time };
     }
   }
 
@@ -419,14 +506,36 @@ function randomReply() {
   
   let replyText = textCards[Math.floor(Math.random() * textCards.length)].val;
   
-  // Emoji 插入逻辑优化：只在末尾加，且概率降为 30%
   const emojis = contents.filter(item => item.type === 'emoji');
   if (emojis.length > 0 && Math.random() < 0.3) {
     const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)].val;
-    replyText = replyText + ' ' + randomEmoji; // 只加在后面
+    replyText = replyText + ' ' + randomEmoji; 
   }
   
   sendMessage(replyText, 'text', false, quote);
+}
+
+// 处理正在输入的延迟
+function simulateReplyWithDelay() {
+  // 对方离线时：隔一阵才回来，并先回一句离线自动回复
+  if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') {
+    const extra = 90000 + Math.random() * 150000;
+    setTimeout(() => {
+      if (typeof setOtherOnline === 'function') setOtherOnline();
+      const lines = (typeof offlineReplyLines !== 'undefined' && offlineReplyLines.length) ? offlineReplyLines : ['刚看到消息！怎么啦'];
+      sendMessage(lines[Math.floor(Math.random() * lines.length)], 'text', false);
+      setTimeout(randomReply, 1200 + Math.random() * 1500);
+    }, extra);
+    return;
+  }
+  const delay = getRandomDelay();
+  const typingOn = chatSettings.showTyping !== false;
+  if (delay > 2000 && typingOn) {
+    setTimeout(showTypingIndicator, Math.min(1000, delay / 2));
+    setTimeout(() => { hideTypingIndicator(); randomReply(); }, delay);
+  } else {
+    setTimeout(randomReply, delay);
+  }
 }
 
 setInterval(() => {
@@ -435,20 +544,20 @@ setInterval(() => {
     if (now - lastInteractionTime > chatSettings.autoReplyTime * 60 * 1000) {
       lastInteractionTime = now;
       let count = chatSettings.autoReplyCount || 1;
-      for(let i=0; i<count; i++) { setTimeout(() => { randomReply(); }, i * 1500); }
+      for(let i=0; i<count; i++) { setTimeout(simulateReplyWithDelay, i * 1500); }
     }
   }
 }, 5000); 
 
 setInterval(() => {
   if (signatureLibrary.length > 0) {
-    const now = Date.now();
-    if (now - lastSigUpdate > chatSettings.sigTimer * 60 * 1000) {
+    // 50% 概率触发签名更新
+    if (Math.random() < 0.5) {
       chatSettings.signature = signatureLibrary[Math.floor(Math.random() * signatureLibrary.length)].val;
-      lastSigUpdate = now; saveAllData(); applyChatSettings();
+      saveAllData(); applyChatSettings();
     }
   }
-}, 10000);
+}, (chatSettings.sigTimer || 5) * 60000); // 按照设置里的分钟数执行，每次有 50% 概率变
 
 const sendBtn = document.getElementById('sendBtn');
 if(sendBtn) sendBtn.onclick = () => { 
@@ -457,13 +566,13 @@ if(sendBtn) sendBtn.onclick = () => {
   msgInput.value = ''; 
   currentQuote = null;
   document.getElementById('quotePreview').style.display = 'none';
-  closePanels(); setTimeout(randomReply, getRandomDelay()); 
+  closePanels(); simulateReplyWithDelay(); 
 };
 const proactiveBtn = document.getElementById('proactiveBtn');
 if(proactiveBtn) proactiveBtn.onclick = () => { 
   lastInteractionTime = Date.now();
   let count = chatSettings.replyCount || 1, delay = 0; 
-  for (let i = 0; i < count; i++) { delay += getRandomDelay() + 1000; setTimeout(randomReply, delay); } 
+  for (let i = 0; i < count; i++) { delay += getRandomDelay() + 1000; setTimeout(simulateReplyWithDelay, delay); } 
 };
 if(msgInput) msgInput.onkeydown = e => { if (e.key === 'Enter') sendBtn.click(); };
 
@@ -487,7 +596,7 @@ document.addEventListener('click', (e) => {
     e.stopPropagation();
     const ctx = bubbleMenuCtx;
     if (!ctx) return;
-    startQuote(ctx.content, ctx.isMe ? chatSettings.myName : chatSettings.otherName, getQuoteDisplayText(ctx.content, ctx.type));
+    startQuote(ctx.content, ctx.isMe ? chatSettings.myName : chatSettings.otherName, getQuoteDisplayText(ctx.content, ctx.type), ctx.time);
     hideBubbleMenu();
   };
 

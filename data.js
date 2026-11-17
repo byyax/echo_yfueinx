@@ -8,6 +8,23 @@ let payPassword = localStorage.getItem('pay_password') || null;
 let locLibrary = JSON.parse(localStorage.getItem('loc_library')) || [{ id: 'l1', val: '我在DR世界' }, { id: 'l2', val: '我在CR世界' }];
 let pokeLibrary = JSON.parse(localStorage.getItem('poke_library')) || [{id: 'p1', val: '捏了捏你的脸，并亲了你一口'}];
 let signatureLibrary = JSON.parse(localStorage.getItem('signature_library')) || [{id: 's1', val: '今天心情不错'}, {id: 's2', val: '想吃小蛋糕'}];
+let interactLibrary = JSON.parse(localStorage.getItem('interact_library')) || [
+  { id: 'i1', name: '摸摸头', icon: '🖐️' },
+  { id: 'i2', name: '戳戳脸', icon: '👉' },
+  { id: 'i3', name: '抱抱', icon: '🤗' },
+  { id: 'i4', name: '贴贴', icon: '💞' },
+  { id: 'i5', name: '捏捏脸', icon: '🤏' },
+  { id: 'i6', name: '举高高', icon: '🙌' }
+];
+
+// 对方离线时的自动回复（回来后会先发一句）
+let offlineReplyLines = [
+  '刚刚没看手机！怎么啦怎么啦',
+  '呜我才回来， missed you～想我了吗',
+  '刚忙完回来！你的消息我现在才看到',
+  '回来啦回来啦！刚才手机不在身边',
+  '嗨！我刚上线，看到你的消息立刻飞奔过来'
+];
 
 if (locLibrary.length > 0 && typeof locLibrary[0] === 'string') locLibrary = locLibrary.map((v, i) => ({ id: 'l_'+i, val: v }));
 if (pokeLibrary.length > 0 && typeof pokeLibrary[0] === 'string') pokeLibrary = pokeLibrary.map((v, i) => ({ id: 'p_'+i, val: v }));
@@ -24,6 +41,8 @@ if (chatSettings.replyCount === undefined) chatSettings.replyCount = 1;
 if (chatSettings.sigTimer === undefined) chatSettings.sigTimer = 5;
 if (chatSettings.autoReplyTime === undefined) chatSettings.autoReplyTime = 0; 
 if (chatSettings.autoReplyCount === undefined) chatSettings.autoReplyCount = 1;
+if (chatSettings.showTyping === undefined) chatSettings.showTyping = true;
+if (!chatSettings.hourFormat) chatSettings.hourFormat = '24';
 
 let lastSigUpdate = Date.now();
 let lastInteractionTime = Date.now();
@@ -53,6 +72,7 @@ function saveAllData() {
   localStorage.setItem('loc_library', JSON.stringify(locLibrary));
   localStorage.setItem('poke_library', JSON.stringify(pokeLibrary));
   localStorage.setItem('signature_library', JSON.stringify(signatureLibrary));
+  localStorage.setItem('interact_library', JSON.stringify(interactLibrary));
 }
 
 function showToast(msg) { const t = document.getElementById('toast'); if (!t) return; t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
@@ -79,6 +99,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function compressImage(file, maxSize = 400) {
   return new Promise(resolve => {
+    const t = (file.type || '').toLowerCase();
+    // 动图（GIF/WebP）不能用 canvas 压缩，否则丢动画、透明底变黑；直接原样读入
+    if (t === 'image/gif' || t === 'image/webp') {
+      if (file.size > 2.5 * 1024 * 1024) { resolve(null); return; } // 太大存不进本地存储
+      const r = new FileReader();
+      r.onload = e => resolve(e.target.result);
+      r.readAsDataURL(file);
+      return;
+    }
     const reader = new FileReader();
     reader.onload = e => {
       const img = new Image();
@@ -89,7 +118,9 @@ function compressImage(file, maxSize = 400) {
         else if (height > maxSize) { width *= maxSize / height; height = maxSize; }
         canvas.width = width; canvas.height = height;
         canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.8));
+        // PNG 输出仍用 PNG，保住透明底；其余转 JPEG 省空间
+        if (t === 'image/png') resolve(canvas.toDataURL('image/png'));
+        else resolve(canvas.toDataURL('image/jpeg', 0.8));
       };
       img.src = e.target.result;
     };

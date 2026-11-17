@@ -21,10 +21,32 @@ document.querySelectorAll('.sticker-nav-btn').forEach(btn => {
 });
 
 const manageMyStickersBtn = document.getElementById('manageMyStickersBtn');
+const deleteMyStickersBtn = document.getElementById('deleteMyStickersBtn');
+let selectedMyStickers = new Set();
+
+function updateDeleteMyStickersBtn() {
+  if (!deleteMyStickersBtn) return;
+  deleteMyStickersBtn.textContent = selectedMyStickers.size > 0 ? `删除选中(${selectedMyStickers.size})` : '删除选中';
+}
+
 if(manageMyStickersBtn) manageMyStickersBtn.onclick = function() {
   isEditingMyStickers = !isEditingMyStickers;
   this.textContent = isEditingMyStickers ? '完成' : '批量管理';
-  this.classList.toggle('primary'); renderStickers();
+  this.classList.toggle('primary');
+  selectedMyStickers.clear();
+  if (deleteMyStickersBtn) deleteMyStickersBtn.style.display = isEditingMyStickers ? 'inline-block' : 'none';
+  updateDeleteMyStickersBtn();
+  renderStickers();
+};
+
+if (deleteMyStickersBtn) deleteMyStickersBtn.onclick = () => {
+  if (selectedMyStickers.size === 0) return showToast('请先勾选要删除的表情');
+  showConfirm('确认删除', `确定删除选中的 ${selectedMyStickers.size} 个表情吗？此操作不可逆。`, () => {
+    Array.from(selectedMyStickers).sort((a, b) => b - a).forEach(i => myEmojis.splice(i, 1));
+    selectedMyStickers.clear();
+    saveAllData(); updateDeleteMyStickersBtn(); renderStickers();
+    showToast('删除成功');
+  });
 };
 
 let pressTimer;
@@ -59,29 +81,37 @@ function renderStickers() {
         fileInput.onchange = async (e) => { 
           const files = e.target.files; 
           if (!files || files.length === 0) return; 
+          let tooBig = 0;
           for(let i=0; i<files.length; i++) {
             const base64 = await compressImage(files[i], 300); 
-            myEmojis.push(base64); 
+            if (base64) myEmojis.push(base64); else tooBig++;
           }
+          if (tooBig > 0) showToast(`${tooBig} 张动图太大，已跳过`);
           saveAllData(); 
           renderStickers(); 
         };
         myStickerList.appendChild(addBtn); myStickerList.appendChild(fileInput);
       }
       myEmojis.forEach((src, index) => {
+        const cell = document.createElement('div');
+        cell.style.position = 'relative';
         const img = document.createElement('img'); img.className = 'sticker-item'; img.src = src;
         if (isEditingMyStickers) { 
-          img.style.opacity = '0.7'; 
-          img.onclick = () => { 
-            showConfirm('删除表情包', '确定删除该表情包？', () => { myEmojis.splice(index, 1); saveAllData(); renderStickers(); });
-          }; 
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = selectedMyStickers.has(index);
+          cb.style.cssText = 'position:absolute; top:5px; left:5px; width:20px; height:20px; accent-color:var(--primary); z-index:2; cursor:pointer;';
+          cb.onchange = () => { cb.checked ? selectedMyStickers.add(index) : selectedMyStickers.delete(index); updateDeleteMyStickersBtn(); };
+          img.onclick = () => { cb.checked = !cb.checked; cb.onchange(); };
+          cell.appendChild(img); cell.appendChild(cb);
         } 
         else {
           img.onmousedown = (e) => startPress(e, index); img.onmouseup = cancelPress; img.onmouseleave = cancelPress;
           img.ontouchstart = (e) => startPress(e, index); img.ontouchend = cancelPress;
           img.onclick = () => { if(pressTimer) clearTimeout(pressTimer); sendMessage(src, 'image', true); if(stickerPanel) stickerPanel.classList.remove('show'); setTimeout(randomReply, getRandomDelay()); };
+          cell.appendChild(img);
         }
-        myStickerList.appendChild(img);
+        myStickerList.appendChild(cell);
       });
     }
     if (hisStickerList) {
