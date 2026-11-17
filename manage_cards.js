@@ -42,7 +42,7 @@ function renderTagManager() {
   if (!tags || tags.length === 0) { list.innerHTML = '<div style="text-align: center; color: #999; margin-top: 20px;">暂无标签，请点击下方新建。</div>'; return; }
   tags.forEach(tag => {
     const row = document.createElement('div'); 
-    row.style = "display:flex; justify-content:space-between; align-items:center; background:#f9fafb; padding:12px 16px; border-radius:12px; margin-bottom:10px;";
+    row.style = "display:flex; justify-content:space-between; align-items:center; background:var(--bg-color); padding:12px 16px; border-radius:12px; margin-bottom:10px;";
     row.innerHTML = `<div style="display:flex; align-items:center; gap:10px;"><span style="width:14px;height:14px;border-radius:50%;background:${tag.color}"></span><span>${tag.name}</span></div>`;
     const actions = document.createElement('div');
     if (tag.id !== 'unclassified') {
@@ -129,6 +129,13 @@ function refreshCardsUI() {
     const list = document.getElementById('cardList'); if(!list) return; list.innerHTML = '';
     const countLabel = document.getElementById('countLabel');
     
+    // 修复：表情包库的网格样式
+    if (currentLib === 'image') {
+      list.className = 'image-grid';
+    } else {
+      list.className = 'card-list';
+    }
+
     let filtered = [];
     if (currentLib === 'location') filtered = [...locLibrary];
     else if (currentLib === 'pat') filtered = [...pokeLibrary];
@@ -147,17 +154,35 @@ function refreshCardsUI() {
       countLabel.textContent = query ? `找到 ${filtered.length} 项` : `${currentName} 共 ${filtered.length} 项`;
     }
     
-    if (filtered.length === 0) { list.innerHTML = `<div style="text-align:center; color:#999; padding: 40px 0;">这里空空如也</div>`; return; }
+    if (filtered.length === 0) { list.innerHTML = `<div style="text-align:center; color:#999; padding: 40px 0; grid-column:1/-1;">这里空空如也</div>`; return; }
 
     filtered.forEach(item => {
       const row = document.createElement('div'); row.className = 'card-item';
-      if (isBatchMode) {
-        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = selected.has(item.id);
-        cb.style = "width:20px; height:20px; accent-color: var(--primary); cursor:pointer; margin-top:2px; flex-shrink:0;";
-        cb.onchange = () => { cb.checked ? selected.add(item.id) : selected.delete(item.id); }; row.appendChild(cb);
-      }
-      const text = document.createElement('div'); text.className = 'text'; text.textContent = item.type === 'image' ? '(图片文件)' : item.val; row.appendChild(text);
-      if (item.type !== 'image') { 
+      
+      // 渲染图片形式的卡片
+      if (item.type === 'image') {
+        row.innerHTML = `<img src="${item.val}">`;
+        if (isBatchMode) {
+          const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = selected.has(item.id);
+          cb.onchange = () => { cb.checked ? selected.add(item.id) : selected.delete(item.id); };
+          row.appendChild(cb);
+        } else {
+          const delBtn = document.createElement('button'); delBtn.className = 'delete-btn'; delBtn.textContent = '✕';
+          delBtn.onclick = (e) => {
+            e.stopPropagation();
+            showConfirm('删除表情包', '确定删除这个表情包吗？', () => {
+              contents = contents.filter(c => c.id !== item.id); saveAllData(); refreshCardsUI();
+            });
+          };
+          row.appendChild(delBtn);
+        }
+      } else {
+        if (isBatchMode) {
+          const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = selected.has(item.id);
+          cb.style = "width:20px; height:20px; accent-color: var(--primary); cursor:pointer; margin-top:2px; flex-shrink:0;";
+          cb.onchange = () => { cb.checked ? selected.add(item.id) : selected.delete(item.id); }; row.appendChild(cb);
+        }
+        const text = document.createElement('div'); text.className = 'text'; text.textContent = item.val; row.appendChild(text);
         const editBtn = document.createElement('button'); editBtn.innerHTML = '✏️'; editBtn.style = "background:none; border:none; cursor:pointer; font-size:16px; padding:5px; flex-shrink:0;"; editBtn.onclick = () => openEditModal(item); row.appendChild(editBtn);
       }
       list.appendChild(row);
@@ -165,12 +190,18 @@ function refreshCardsUI() {
   } catch(e) { console.error("刷新界面出错:", e); }
 }
 
+// 修复：如果是非文字字卡，不显示分类下拉框
 document.getElementById('openAddModal').onclick = () => {
   editingItemId = null; document.getElementById('editItemId').value = '';
   const amt = document.getElementById('addModalTitle'); amt.textContent = `添加 ${currentLib === 'text' ? '字卡' : currentLib}`;
   const taa = document.getElementById('textAddArea'); taa.style.display = currentLib === 'image' ? 'none' : 'block';
   const saa = document.getElementById('stickerAddArea'); saa.style.display = currentLib === 'image' ? 'block' : 'none';
   const textarea = document.getElementById('newCardsText'); textarea.value = '';
+  
+  // 隐藏分类
+  const addTagRow = document.getElementById('addTagRow');
+  if (addTagRow) addTagRow.style.display = (currentLib === 'text') ? 'flex' : 'none';
+
   if(currentLib === 'pat') textarea.placeholder = '格式：动作，用 [我] 和 [他] 代替。\n例如：捏了捏[我]的脸';
   else if(currentLib === 'signature') textarea.placeholder = '一行一条签名，后台会自动轮换';
   else textarea.placeholder = '一行一条，自动过滤重复项';
@@ -181,7 +212,13 @@ function openEditModal(item) {
   editingItemId = item.id; document.getElementById('editItemId').value = item.id;
   document.getElementById('addModalTitle').textContent = `编辑内容`;
   document.getElementById('textAddArea').style.display = 'block'; document.getElementById('stickerAddArea').style.display = 'none';
-  document.getElementById('newCardsText').value = item.val; document.getElementById('addModal').classList.add('show');
+  document.getElementById('newCardsText').value = item.val; 
+  
+  // 隐藏分类
+  const addTagRow = document.getElementById('addTagRow');
+  if (addTagRow) addTagRow.style.display = (currentLib === 'text') ? 'flex' : 'none';
+  
+  document.getElementById('addModal').classList.add('show');
 }
 
 document.getElementById('cancelAdd').onclick = () => document.getElementById('addModal').classList.remove('show');

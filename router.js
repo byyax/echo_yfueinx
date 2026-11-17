@@ -4,7 +4,6 @@ function switchPage(pageId) {
 }
 
 // --- 主题与颜色初始化 ---
-// 1. 读取黑夜模式
 const themeToggleBtn = document.getElementById('themeToggleBtn');
 const currentTheme = localStorage.getItem('theme') || 'light';
 if (currentTheme === 'dark') {
@@ -12,11 +11,9 @@ if (currentTheme === 'dark') {
   if (themeToggleBtn) themeToggleBtn.textContent = '☀️';
 }
 
-// 2. 读取气泡主题
 if (!chatSettings.bubbleTheme) chatSettings.bubbleTheme = 'default';
 document.documentElement.setAttribute('data-bubble-theme', chatSettings.bubbleTheme);
 
-// 3. 黑白模式切换按钮
 if (themeToggleBtn) {
   themeToggleBtn.onclick = () => {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -51,7 +48,6 @@ const menuSettings = document.getElementById('menuSettings'); if(menuSettings) m
   if (otherShow) otherShow.textContent = chatSettings.otherName || '对方';
   if (typeof updatePatPreview === 'function') updatePatPreview();
 
-  // 同步气泡主题选中状态
   document.querySelectorAll('.theme-option').forEach(o => {
     if (o.dataset.bubbleTheme === (chatSettings.bubbleTheme || 'default')) o.classList.add('active');
     else o.classList.remove('active');
