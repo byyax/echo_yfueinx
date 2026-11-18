@@ -1,13 +1,34 @@
 let tags = JSON.parse(localStorage.getItem('chat_tags')) || [{ id: 'unclassified', name: '未分类', color: '#8c8c8c' }];
-let contents = JSON.parse(localStorage.getItem('chat_contents')) || [];
+let contents = JSON.parse(localStorage.getItem('chat_contents')) || [
+  { id: 'c_init_1', type: 'text', val: '我爱你', tagId: 'unclassified' },
+  { id: 'c_init_2', type: 'text', val: '我好想你', tagId: 'unclassified' },
+  { id: 'c_init_3', type: 'text', val: '今天天气不错', tagId: 'unclassified' },
+  { id: 'c_init_4', type: 'text', val: '你吃饭了吗', tagId: 'unclassified' },
+  { id: 'c_init_5', type: 'text', val: '我一直在等着你', tagId: 'unclassified' },
+  { id: 'c_init_6', type: 'text', val: '你来了', tagId: 'unclassified' },
+  { id: 'c_init_e1', type: 'emoji', val: '🥺', tagId: 'unclassified' },
+  { id: 'c_init_e2', type: 'emoji', val: '🥰', tagId: 'unclassified' }
+];
 let myEmojis = JSON.parse(localStorage.getItem('my_emojis')) || [];
 let chatSettings = JSON.parse(localStorage.getItem('chat_settings')) || {};
 let chatHistory = JSON.parse(localStorage.getItem('chat_history')) || [];
 let payPassword = localStorage.getItem('pay_password') || null;
 
-let locLibrary = JSON.parse(localStorage.getItem('loc_library')) || [{ id: 'l1', val: '我在DR世界' }, { id: 'l2', val: '我在CR世界' }];
-let pokeLibrary = JSON.parse(localStorage.getItem('poke_library')) || [{id: 'p1', val: '捏了捏你的脸，并亲了你一口'}];
-let signatureLibrary = JSON.parse(localStorage.getItem('signature_library')) || [{id: 's1', val: '今天心情不错'}, {id: 's2', val: '想吃小蛋糕'}];
+let locLibrary = JSON.parse(localStorage.getItem('loc_library')) || [
+  { id: 'l1', val: '我在DR世界' },
+  { id: 'l2', val: '我在CR世界' },
+  { id: 'l3', val: '在你身边(CR)' },
+  { id: 'l4', val: '在忙(DR)' },
+  { id: 'l5', val: '我在外出(DR)' },
+  { id: 'l6', val: '正在来找你(DR-CR)' },
+  { id: 'l7', val: '在工作(DR)' }
+];
+let pokeLibrary = JSON.parse(localStorage.getItem('poke_library')) || [{id: 'p1', val: '戳了戳你的脸'}, {id: 'p2', val: '拍了拍你的肩'}];
+let signatureLibrary = JSON.parse(localStorage.getItem('signature_library')) || [
+  {id: 's1', val: '我喜欢夏天和你淋雨。'},
+  {id: 's2', val: '想见你的心情，无数次令我心碎。'},
+  {id: 's3', val: 'You are the one。'}
+];
 // 每个互动动作可以配几句不同的回应，发送时随机挑一句
 const INTERACT_REPLIES = {
   '摸摸头': ['嗯……再摸一会儿也行', '被你摸得都困了', '头只能你摸，别人不行', '乖，换我摸摸你'],
@@ -34,18 +55,18 @@ interactLibrary.forEach(it => {
 
 // 对方离线时的自动回复（回来后会先发一句）
 let offlineReplyLines = [
-  '刚刚没看手机！怎么啦怎么啦',
-  '呜我才回来， missed you～想我了吗',
-  '刚忙完回来！你的消息我现在才看到',
-  '回来啦回来啦！刚才手机不在身边',
-  '嗨！我刚上线，看到你的消息立刻飞奔过来'
+  '刚刚没看手机，怎么啦？',
+  '不好意思，我睡着了..',
+  '我才忙完回来，我好想你',
+  '刚上线，我把你的消息看完了',
+  '立刻朝你飞奔过来'
 ];
 
 if (locLibrary.length > 0 && typeof locLibrary[0] === 'string') locLibrary = locLibrary.map((v, i) => ({ id: 'l_'+i, val: v }));
 if (pokeLibrary.length > 0 && typeof pokeLibrary[0] === 'string') pokeLibrary = pokeLibrary.map((v, i) => ({ id: 'p_'+i, val: v }));
 if (signatureLibrary.length > 0 && typeof signatureLibrary[0] === 'string') signatureLibrary = signatureLibrary.map((v, i) => ({ id: 's_'+i, val: v }));
 
-// ===== 界面配色：只改变白天模式 =====
+// ===== 界面配色：白天完整应用；黑夜模式的气泡按主色轻微着色 =====
 const PALETTES = [
   // 单色：一个主色走到底
   { id: 'olive',     name: '橄榄绿',   group: 'plain', main: '#A4C639', deep: '#6B8E23', bg: '#ffffff', bubble: '#B8DE86' },
@@ -54,7 +75,13 @@ const PALETTES = [
   { id: 'taro',      name: '香芋紫',   group: 'plain', main: '#9B8AC4', deep: '#6F5E9E', bg: '#ffffff', bubble: '#DCD3F2' },
   { id: 'caramel',   name: '焦糖奶咖', group: 'plain', main: '#B08B6E', deep: '#967A64', bg: '#ffffff', bubble: '#E3D8C4' },
   { id: 'lemon',     name: '柠檬黄',   group: 'plain', main: '#D9B23A', deep: '#A8862A', bg: '#ffffff', bubble: '#F3E3A8' },
-  { id: 'wechat',    name: '微信绿',   group: 'plain', main: '#07C160', deep: '#059A4C', bg: '#ffffff', bubble: '#95EC69' },
+  // 其他：模拟常用社交软件的配色
+  { id: 'wechat',    name: '微信',     group: 'social', main: '#07C160', deep: '#059A4C', bg: '#EDEDED', bubble: '#95EC69' },
+  { id: 'telegram',  name: 'Telegram', group: 'social', main: '#3390EC', deep: '#2481CC', bg: '#E6EBEE', bubble: '#EFFDDE' },
+  { id: 'qq',        name: 'QQ',       group: 'social', main: '#12B7F5', deep: '#0E9FD8', bg: '#F2F3F5', bubble: '#0099FF' },
+  { id: 'line',      name: 'LINE',     group: 'social', main: '#06C755', deep: '#05A948', bg: '#8CA0B3', bubble: '#8DE055' },
+  { id: 'whatsapp',  name: 'WhatsApp', group: 'social', main: '#25D366', deep: '#128C7E', bg: '#ECE5DD', bubble: '#DCF8C6' },
+  { id: 'imessage',  name: 'iMessage', group: 'social', main: '#007AFF', deep: '#0062CC', bg: '#FFFFFF', bubble: '#E9E9EB' },
   // 撞色：按钮一个色，气泡另一个色
   { id: 'matcha',    name: '樱花抹茶', group: 'clash', main: '#E0798F', deep: '#B25A6E', bg: '#F7E3EB', bubble: '#CDE3B4', dot: 'linear-gradient(135deg, #FFE0E8 50%, #CDE3B4 50%)' },
   { id: 'mintpeach', name: '蜜桃薄荷', group: 'clash', main: '#E9906C', deep: '#C4703F', bg: '#FBE7DC', bubble: '#B9EBD8', dot: 'linear-gradient(135deg, #FFE0D2 50%, #B9EBD8 50%)' },
@@ -88,21 +115,29 @@ const PALETTE_GROUPS = [
   { id: 'plain', label: '单色' },
   { id: 'clash', label: '撞色' },
   { id: 'grad',  label: '渐变' },
-  { id: 'tech',  label: '科技' }
+  { id: 'tech',  label: '科技' },
+  { id: 'social', label: '其他' }
 ];
 
-if (!chatSettings.otherName) chatSettings.otherName = '陆昀霏';
+if (!chatSettings.otherName) chatSettings.otherName = '小云';
 if (!chatSettings.myName) chatSettings.myName = '你';
-if (!chatSettings.signature) chatSettings.signature = '这个人很懒';
+if (!chatSettings.signature) chatSettings.signature = '我喜欢夏天和你淋雨。';
 // 拍一拍：迁移新字段（原来是 myPat/hisPat，现在是 myPatAction + myPatSuffix）
 if (!chatSettings.myPatAction) chatSettings.myPatAction = '拍了拍';
 if (chatSettings.myPatSuffix === undefined) chatSettings.myPatSuffix = '的后背';
 if (chatSettings.replyDelay === undefined) chatSettings.replyDelay = 0.5;
 if (chatSettings.replyCount === undefined) chatSettings.replyCount = 1;
 if (chatSettings.sigTimer === undefined || chatSettings.sigTimer < 15) chatSettings.sigTimer = 15;
-if (chatSettings.autoReplyTime === undefined) chatSettings.autoReplyTime = 0; 
+if (chatSettings.autoReplyTime === undefined) chatSettings.autoReplyTime = 0;
 if (chatSettings.autoReplyCount === undefined) chatSettings.autoReplyCount = 1;
+if (chatSettings.moodEnabled === undefined) chatSettings.moodEnabled = true;
 if (chatSettings.showTyping === undefined) chatSettings.showTyping = true;
+
+// 半夜判定：00:00–05:00。只用于熬夜情绪和夜间离线概率，不改变白天作息。
+function isLateNightHour() {
+  const h = new Date().getHours();
+  return h >= 0 && h < 5;
+}
 if (chatSettings.sound === undefined) chatSettings.sound = true;
 if (!chatSettings.palette) chatSettings.palette = 'olive';
 // 图标色调：off 原色 / soft 柔和降饱和 / tint 跟随配色

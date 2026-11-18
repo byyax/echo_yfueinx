@@ -64,7 +64,7 @@
 </ul>
 <p>不要用 Word / WPS，它们会把英文引号变成中文引号，代码会直接坏掉。</p>
 <h3>2. 编码</h3>
-<p>所有文件保存为 <strong>UTF-8</strong>。VS Code 右下角可以看到编码，不是 UTF-8 就点一下改。</p>
+<p>所有文件保存为 <strong>UTF-8</strong>。VS Code 右下角可以看到编码，不是 UTF-8 请点击修改。</p>
 <h3>3. 改完怎么生效</h3>
 <ul>
 <li>电脑：<code>Ctrl + F5</code>；</li>
@@ -89,7 +89,7 @@
 <p>就是普通网页：<code>index.html</code> 引入 CSS 和一堆 <code>.js</code>，浏览器直接执行。所有 js <strong>共享同一个全局作用域</strong>：<code>data.js</code> 里定义的 <code>saveAllData()</code>，<code>chat_core.js</code> 可以直接调用。</p>
 <h3>2. 加载顺序很重要</h3>
 <p><code>index.html</code> 底部按顺序加载：</p>
-<pre><code>data.js → chat_sound.js → chat_core.js → ... → chat_mood.js → router.js → custom_icons.js → pwa.js</code></pre>
+<pre><code>data.js → chat_sound.js → chat_core.js → ... → mood_pools.js → chat_mood.js → router.js → custom_icons.js → pwa.js</code></pre>
 <ul>
 <li><code>data.js</code> 必须最先，因为它定义 <code>chatSettings</code>、<code>chatHistory</code>、<code>PALETTES</code>；</li>
 <li><code>router.js</code> 靠后，负责初始化渲染；</li>
@@ -155,11 +155,13 @@
 <li>浏览器先显示 <code>#bootScreen</code>（写在 <code>index.html</code> 里）；</li>
 <li>所有 js 执行，<code>router.js</code> 最后渲染聊天记录、配色、状态栏；</li>
 <li><code>router.js</code> 最后一行的 <code>window.__appReady = true</code> 告诉启动画面“画完了”；</li>
-<li>启动画面再等字体、至少 1.5 秒，然后淡出；12 秒兜底。</li>
+<li>启动画面再等字体、至少 1.5 秒，然后淡出；15 秒兜底；</li>
+<li>淡出结束、<code>display:none</code> 之后，设置 <code>window.__appRevealed = true</code> 并派发 <code>app-revealed</code>；</li>
+<li><code>chat_mood.js</code> 在此之前用 <code>moodBootReady</code> 拦截情绪刷新，收到事件后才首次绘制情绪气泡，让出现动画完整可见。</li>
 </ol>
 <hr>
 <h2>三、文件结构</h2>
-<table><thead><tr><th>文件</th><th>负责</th></tr></thead><tbody><tr><td><code>index.html</code></td><td>页面骨架、弹窗、启动画面、脚本顺序</td></tr><tr><td><code>style.css</code></td><td>全部样式、30 套配色、动画</td></tr><tr><td><code>data.js</code></td><td>全局数据、默认设置、配色表、通用函数</td></tr><tr><td><code>chat_core.js</code></td><td>画气泡、发消息、随机回复、拍一拍、引用</td></tr><tr><td><code>chat_stickers.js</code></td><td>表情面板</td></tr><tr><td><code>chat_tools.js</code></td><td>图片、拍照、位置、互动、录音</td></tr><tr><td><code>chat_call.js</code></td><td>语音通话、来电、小窗、通话心情</td></tr><tr><td><code>chat_money.js</code></td><td>红包、转账、支付密码、礼物商城</td></tr><tr><td><code>manage_cards.js</code></td><td>字卡库、标签、批量、查重</td></tr><tr><td><code>manage_settings.js</code></td><td>聊天设置、配色选择、头像裁剪</td></tr><tr><td><code>manage_history.js</code></td><td>聊天记录页、字卡统计</td></tr><tr><td><code>manage_data.js</code></td><td>导出、导入、清理</td></tr><tr><td><code>manage_music.js</code></td><td>音乐管理页</td></tr><tr><td><code>music_lyrics.js</code></td><td>内置歌词</td></tr><tr><td><code>chat_music.js</code></td><td>播放器、歌单、歌词同步、导入</td></tr><tr><td><code>chat_mood.js</code></td><td>情绪池、概率、久别回来</td></tr><tr><td><code>router.js</code></td><td>页面切换、配色、状态栏、初始化</td></tr><tr><td><code>custom_icons.js</code></td><td>把 emoji 图标换成图片</td></tr><tr><td><code>pwa.js</code> / <code>sw.js</code></td><td>安装到桌面</td></tr></tbody></table>
+<table><thead><tr><th>文件</th><th>负责</th></tr></thead><tbody><tr><td><code>index.html</code></td><td>页面骨架、弹窗、启动画面、脚本顺序</td></tr><tr><td><code>style.css</code></td><td>全部样式、35 套配色、动画</td></tr><tr><td><code>data.js</code></td><td>全局数据、默认设置、配色表、通用函数</td></tr><tr><td><code>chat_core.js</code></td><td>画气泡、发消息、随机回复、拍一拍、引用</td></tr><tr><td><code>chat_stickers.js</code></td><td>表情面板</td></tr><tr><td><code>chat_tools.js</code></td><td>图片、拍照、位置、互动、录音</td></tr><tr><td><code>chat_call.js</code></td><td>语音通话、来电、小窗、通话心情</td></tr><tr><td><code>chat_money.js</code></td><td>红包、转账、支付密码、礼物商城</td></tr><tr><td><code>manage_cards.js</code></td><td>字卡库、标签、批量、查重</td></tr><tr><td><code>manage_settings.js</code></td><td>聊天设置、配色选择、头像裁剪</td></tr><tr><td><code>manage_history.js</code></td><td>聊天记录页、字卡统计</td></tr><tr><td><code>manage_data.js</code></td><td>导出、导入、清理</td></tr><tr><td><code>manage_music.js</code></td><td>音乐管理页</td></tr><tr><td><code>music_lyrics.js</code></td><td>内置歌词</td></tr><tr><td><code>chat_music.js</code></td><td>播放器、歌单、歌词同步、导入</td></tr><tr><td><code>mood_pools.js</code></td><td>16 档情绪数据、通用补充、基础权重、emoji、动画映射</td></tr><tr><td><code>chat_mood.js</code></td><td>情绪抽签、权重衰减、事件、渲染</td></tr><tr><td><code>router.js</code></td><td>页面切换、配色、状态栏、初始化</td></tr><tr><td><code>custom_icons.js</code></td><td>把 emoji 图标换成图片</td></tr><tr><td><code>pwa.js</code> / <code>sw.js</code></td><td>安装到桌面</td></tr></tbody></table>
 <hr>
 <h2>四、数据模型</h2>
 <h3>1. localStorage 键</h3>
@@ -209,9 +211,11 @@ playSfx('send');                                    // 试听音效</code></pre>
 <h3>6.1 昵称、头像、签名、时间格式</h3>
 <p><strong>原理</strong>：设置存在 <code>chat_settings</code>；<code>applyChatSettings()</code> 把昵称、壁纸、签名套到页面上。</p>
 <p><strong>改默认值</strong>（新存档生效）：<code>data.js</code></p>
-<pre><code>if (!chatSettings.otherName) chatSettings.otherName = '陆昀霏';
+<pre><code>if (!chatSettings.otherName) chatSettings.otherName = '小云';
 if (!chatSettings.myName) chatSettings.myName = '你';
-if (!chatSettings.signature) chatSettings.signature = '这个人很懒';</code></pre>
+if (!chatSettings.signature) chatSettings.signature = '我喜欢夏天和你淋雨。';</code></pre>
+<p><strong>默认头像</strong>：对方没有上传头像时，<code>chat_core.js</code> 使用 <code>icons/icon-heart-192.png</code>，并加 <code>default-heart-avatar</code> 类，通过 <code>filter: var(--heart-avatar-filter, var(--icon-filter))</code> 跟随当前配色。白天直接用配色块的 <code>--icon-filter</code>；黑夜模式由 <code>router.js</code> 把白天滤镜写入 <code>--heart-avatar-filter</code>，因此爱心颜色与白天一致，普通图标仍使用黑夜自己的 <code>--icon-filter</code>。</p>
+<p><strong>恢复默认</strong>：设置页的「恢复默认头像 / 恢复默认壁纸」把 <code>pendingSettings</code> 对应字段置空，保存后由 <code>refreshAvatarDOM()</code> 和 <code>applyChatSettings()</code> 立即更新。</p>
 <p><strong>时间格式</strong>：<code>chat_core.js</code> → <code>getTimeStr(time)</code>。保存设置后，<code>refreshTimeLabels()</code> 会就地重刷所有时间，不用重启。</p>
 <p><strong>签名自动切换</strong>：<code>chat_core.js</code> 底部。</p>
 <ul>
@@ -222,7 +226,7 @@ if (!chatSettings.signature) chatSettings.signature = '这个人很懒';</code><
 <li>正在播放音乐时只更新 <code>savedSignatureText</code>，不覆盖歌词栏。</li>
 </ul>
 <p><strong>检查</strong>：Console 里 <code>pickDifferentSignature()</code>、<code>changeSignatureNow()</code>；设置页的「签名切换间隔」现在最小 15 分钟。</p>
-<p><strong>坑</strong>：设置页没点保存就退出，会弹「未保存」提醒。</p>
+<p><strong>注意</strong>：设置页没点保存就退出，会弹「未保存」提醒。</p>
 <h3>6.2 回复节奏</h3>
 <p><strong>原理</strong>：<code>sendMessage</code> 之后不会立刻回复，而是 <code>simulateReplyWithDelay()</code> 定时调 <code>randomReply()</code>。</p>
 <p><strong>改延迟</strong>：设置页滑块 → <code>chatSettings.replyDelay</code>（分钟）。实际延迟：</p>
@@ -231,27 +235,27 @@ if (!chatSettings.signature) chatSettings.signature = '这个人很懒';</code><
 }</code></pre>
 <p><strong>改条数</strong>：<code>chatSettings.replyCount</code>，用于 💌 按钮和自动回复。</p>
 <p><strong>改自动回复</strong>：<code>chatSettings.autoReplyTime</code>（分钟，0 关闭），每 5 秒检查一次。</p>
-<p><strong>坑</strong>：延迟设 0 会几乎秒回；条数太大一次会刷很多条。</p>
+<p><strong>注意</strong>：延迟设 0 会几乎秒回；条数太大一次会刷很多条。</p>
 <h3>6.3 字卡与标签</h3>
 <p><strong>原理</strong>：<code>randomReply()</code> 里 <code>contents.filter(item =&gt; item.type === 'text')</code>，随机抽一条发送。</p>
 <p><strong>加字卡</strong>：后台 → 自定义回复；或直接改 <code>data.js</code> 初始数据（只对新存档生效）。</p>
 <p><strong>标签</strong>：<code>tags</code> 数组；卡片用 <code>tagId</code> 关联。标签名会参与情绪关键词判断。</p>
-<p><strong>坑</strong>：字卡库为空时他会回「（字卡库是空的）」；标签删掉后卡片自动归「未分类」。</p>
+<p><strong>注意</strong>：字卡库为空时不再发消息，改为弹出提示并可跳转「自定义回复」；标签删掉后卡片自动归「未分类」。</p>
 <h3>6.4 表情包</h3>
 <p><strong>原理</strong>：<code>contents</code> 里 <code>type: 'image'</code>；<code>myEmojis</code> 是“我的表情”。</p>
 <p><strong>改法</strong>：后台/表情面板导入；太大的图会被压缩或拒绝。</p>
-<p><strong>坑</strong>：GIF 太大可能压缩失败。</p>
+<p><strong>注意</strong>：GIF 太大可能压缩失败。</p>
 <h3>6.5 互动与拍一拍</h3>
 <p><strong>原理</strong>：</p>
 <ul>
-<li>互动：<code>sendInteract(it)</code> 发一张 <code>interact</code> 卡片，1.5–3 秒后用 <code>it.replies</code> 或 <code>INTERACT_REPLIES[名字]</code> 回一句；</li>
+<li>互动：<code>sendInteract(it)</code> 发一张 <code>interact</code> 卡片，1.5–3 秒后回应；五成用 <code>it.replies</code> / <code>INTERACT_REPLIES[名字]</code>，五成用 <code>sendRandomTextCardReply()</code> 抽字卡；字卡库为空时必定用内置回复；</li>
 <li>拍一拍：<code>triggerPat(isMe)</code> 直接往 <code>chatHistory</code> push 一条 <code>role: 'system'</code> 的消息，并画成居中的 <code>.sys</code> 灰字；</li>
 <li>他拍你：从 <code>pokeLibrary</code> 随机抽一条，<code>[我]</code> / <code>[他]</code> 替换成昵称。</li>
 </ul>
 <p><strong>加互动</strong>：<code>data.js</code> 的 <code>interactLibrary</code>；回复加 <code>INTERACT_REPLIES</code>。</p>
 <p><strong>改我的拍一拍</strong>：设置页两个输入框 → <code>myPatAction</code> / <code>myPatSuffix</code>。</p>
 <p><strong>检查</strong>：双击他的头像，中间出现灰字；刷新后仍然是灰字。</p>
-<p><strong>坑</strong>：如果把拍一拍存成普通消息（不是 <code>role: system</code>），刷新后会变成气泡。</p>
+<p><strong>注意</strong>：如果把拍一拍存成普通消息（不是 <code>role: system</code>），刷新后会变成气泡。</p>
 <h3>6.6 红包、转账、礼物</h3>
 <p><strong>原理</strong>：</p>
 <ul>
@@ -267,20 +271,34 @@ if (!chatSettings.signature) chatSettings.signature = '这个人很懒';</code><
 8 + Math.floor(Math.random() * 193)      // 红包 8~200</code></pre>
 <p><strong>改特殊数字</strong>：<code>MONEY_SPECIALS</code> 的 <code>v</code>（金额）和 <code>w</code>（权重，越大越常见）。</p>
 <p><strong>检查</strong>：Console 里 <code>randomMoneyPayload('redpacket')</code> 多抽几次；<code>pickRandomGift()</code> 看档位。</p>
-<p><strong>坑</strong>：礼物拆开后图标由 <code>getGiftIcon()</code> 按名字猜，最好在礼物数据里直接写 <code>icon</code>。</p>
+<p><strong>注意</strong>：礼物拆开后图标由 <code>getGiftIcon()</code> 按名字猜，最好在礼物数据里直接写 <code>icon</code>。</p>
 <h3>6.7 语音通话</h3>
-<p><strong>原理</strong>：<code>chat_call.js</code> 管理来电/拨打/接通/挂断；每 5 分钟 4% 概率触发来电；结束后 <code>moodAfterCall()</code> 影响心情。</p>
+<p><strong>原理</strong>：<code>chat_call.js</code> 管理来电/拨打/接通/挂断；每 5 分钟 4% 概率触发来电；结束后 <code>moodAfterCall()</code> 影响心情，并由 <code>scheduleCallReply()</code> 安排一条通话后的回复。</p>
+<p><strong>通话记录</strong>：<code>endCall()</code> 写入 <code>type: 'call'</code> 的消息，<code>content.callState</code> 记录具体结果，<code>addMessageDOM()</code> 渲染为带 SVG 电话图标的普通气泡。</p>
+<table>
+<tr><th><code>callState</code></th><th>场景</th><th>显示文字</th></tr>
+<tr><td><code>missed_in</code></td><td>他打给你，铃声响完你未接</td><td>未接来电</td></tr>
+<tr><td><code>missed_out</code></td><td>你打给他，铃声响完他未接</td><td>对方未接来电</td></tr>
+<tr><td><code>rejected_other</code></td><td>你打给他，他未接就挂断</td><td>对方已挂断</td></tr>
+<tr><td><code>rejected_me</code></td><td>他打给你，你未接就挂断</td><td>已挂断</td></tr>
+<tr><td><code>completed</code></td><td>接通后结束</td><td>通话结束 + 时长</td></tr>
+<tr><td><code>cancelled</code></td><td>尚未接通就取消</td><td>已取消</td></tr>
+</table>
+<p>未接和挂断的图标为红色，<code>cancelled</code> 为灰色，其余使用主题色。<code>getQuoteDisplayText()</code> 和聊天记录页也会把 <code>type: 'call'</code> 显示为 <code>[通话] ...</code>。</p>
+<p><strong>通话后的混合回复</strong>：<code>CALL_REPLY_LINES</code> 按 <code>callState</code> 分池；<code>CALL_REPLY_CARD_RATE</code> 控制抽字卡的概率（未接/挂断 0.4，通话结束/已取消 0.5），其余走内置句子。字卡库为空时 <code>sendRandomTextCardReply()</code> 返回 <code>false</code>，自动退回内置句子。内置句子约 42% 在末尾追加 <code>CALL_REPLY_EMOJI</code> 中的 emoji，延迟约 1.4～3.6 秒。</p>
+<p><strong>通话后的情绪</strong>：<code>moodAfterCall()</code> 先按 78% 概率决定是否有反应，再用 <code>pushMoodEvent()</code> 显示即时情绪，并用 <code>boostMood()</code> 临时提高对应权重。未接来电偏等待、不安；对方挂断偏为难、心虚；自己挂断偏失落；通话结束偏开心、亲密。</p>
 <p><strong>改铃声</strong>：<code>sound/call-request.mp3</code>、<code>sound/call-tone.mp3</code>。</p>
 <p><strong>改来电概率</strong>：<code>Math.random() &lt; 0.04</code>。</p>
 <p><strong>改自动挂断</strong>：<code>callTimeout</code> 的 <code>30000</code> 毫秒。</p>
-<p><strong>坑</strong>：手机浏览器要求先有用户点击才能播放声音。</p>
+<p><strong>改通话后回复</strong>：改 <code>chat_call.js</code> 的 <code>CALL_REPLY_LINES</code>、<code>CALL_REPLY_CARD_RATE</code> 和 <code>CALL_REPLY_EMOJI</code>。</p>
+<p><strong>注意</strong>：手机浏览器要求先有用户点击才能播放声音。</p>
 <h3>6.8 录音</h3>
 <p><strong>原理</strong>：<code>startVoice()</code> 用 <code>getUserMedia</code> + <code>MediaRecorder</code>；最长 60 秒；取消/切页面会作废权限请求并停麦克风。</p>
 <p><strong>改时长</strong>：<code>chat_tools.js</code> 里 <code>s &gt;= 60</code> 和两处「60 秒」提示。</p>
 <p><strong>改码率</strong>：<code>audioBitsPerSecond: 24000</code>；越大越清晰也越大。</p>
 <p><strong>改大小上限</strong>：<code>blob.size &gt; 1.6 * 1024 * 1024</code>。</p>
 <p><strong>检查</strong>：https 下录音 → 发送 → 语音气泡；取消后等 10 秒不应再发。</p>
-<p><strong>坑</strong>：<code>file://</code> 下麦克风被浏览器拒绝；旧页面可能残留麦克风指示，强刷即可。</p>
+<p><strong>注意</strong>：<code>file://</code> 下麦克风被浏览器拒绝；旧页面可能残留麦克风指示，强刷即可。</p>
 <h3>6.9 音乐</h3>
 <p><strong>原理</strong>：</p>
 <ul>
@@ -308,19 +326,22 @@ if (!chatSettings.signature) chatSettings.signature = '这个人很懒';</code><
 <li>音频事件：<code>loadstart</code> / <code>waiting</code> 开始计时，<code>canplay</code> / <code>playing</code> 清除；</li>
 <li>20 秒还没加载完，会显示「加载超时」，避免一直转；</li>
 <li><code>preloadCurrentSong()</code> 在打开歌单时先预载当前歌曲，点播放会更快；</li>
-<li>我发出的「一起听」被接受时，<code>acceptMyMusicInvite()</code> 会把卡片改成「已接受」并调用 <code>playSongByTitle()</code>；</li>
+<li>工具面板点「音乐」只 <code>openMusicBar()</code>，保持暂停；点播放按钮才播上次那首，点播放器上的歌名 <code>openMusicList()</code>；</li>
+<li>我发出的「一起听」被接受时，<code>acceptMyMusicInvite()</code> 先把卡片改成「已接受」；如果邀请的歌正好在播，只打开播放器、不重播，否则才 <code>playSongByTitle()</code>；对方发来的邀请在 <code>openOtherCard()</code> 的 <code>musicinvite</code> 分支里做同样判断；</li>
+<li><code>shareSongToChat()</code> 发出推荐卡片后会调用 <code>scheduleMusicShareReply()</code>：三成从 <code>MUSIC_SHARE_REPLIES</code> 挑一句，七成用 <code>sendRandomTextCardReply()</code> 抽字卡；内置回复会小幅提升开心/亲密；</li>
 <li>音乐管理「批量管理」行里的「检测」用 <code>fetch</code> 逐个检查 <code>src</code>，结果显示在工具栏下方。</li>
 </ul>
-<p><strong>坑</strong>：<code>.ncm</code> 不能播；文件名有空格/中文时 <code>src</code> 必须完全一致；mp3 太大传不上 GitHub。</p>
+<p><strong>注意</strong>：<code>.ncm</code> 不能播；文件名有空格/中文时 <code>src</code> 必须完全一致；mp3 太大传不上 GitHub。</p>
 <h3>6.10 情绪池</h3>
 <p><strong>原理</strong>：</p>
 <ul>
-<li><code>MOOD_POOLS</code> 定义十种情绪和文案；</li>
+<li><code>MOOD_POOLS</code> 定义十六种情绪和文案；对外可解释为三个阶段：日常 / 刚分开 / 久未回，未拆卡片会临时覆盖；</li>
 <li><code>moodWeights()</code> 按场景给权重（日常 / 等他回 / 久未回 / 红包没拆）；</li>
 <li><code>moodAfterMessage()</code> 处理消息和特殊互动；</li>
 <li><code>moodTickChance()</code> 决定干等时多久变一次；</li>
 <li><code>boostMood()</code> 临时加权；<code>boostMoodFromCard()</code> 处理字卡标签/正文；</li>
-<li><code>maybeReunionMood()</code> 处理久别回来。</li>
+<li><code>maybeReunionMood()</code> 处理久别回来；</li>
+<li><code>chatSettings.moodEnabled === false</code> 时，<code>refreshMood()</code> 和 <code>pushMoodEvent()</code> 直接返回并隐藏气泡；设置页的「情绪气泡」开关控制该值，默认开启。</li>
 </ul>
 <p><strong>改文案</strong>：</p>
 <pre><code>calm: { tone: 'mood-calm', pairs: [['平静','在忙'], ['懒散','晒太阳']] }</code></pre>
@@ -330,31 +351,39 @@ if (!chatSettings.signature) chatSettings.signature = '这个人很懒';</code><
 <p><strong>检查</strong>：<code>moodWeights()</code>、<code>refreshMood(true)</code>；模拟久别：</p>
 <pre><code>localStorage.setItem('echo_mood_seen_at', String(Date.now() - 13*3600*1000));
 location.reload();</code></pre>
-<p><strong>坑</strong>：最后一条是你发的时气泡隐藏；标签判断是“标签或正文任一命中”。</p>
+<p><strong>注意</strong>：最后一条是你发的时气泡隐藏；标签判断是“标签或正文任一命中”。</p>
 <h3>6.11 配色</h3>
 <p><strong>原理</strong>：<code>data.js</code> 的 <code>PALETTES</code> 决定列表和分组；<code>style.css</code> 里同 id 的块决定实际颜色；<code>applyPalette(id)</code> 给 <code>&lt;html&gt;</code> 加 <code>data-palette</code>。</p>
 <p><strong>加一套</strong>：</p>
 <ol start="1">
 <li><code>PALETTES</code> 加一行；</li>
 <li><code>style.css</code> 加 <code>html[data-palette="id"]:not([data-theme="dark"]) { ... }</code>；</li>
-<li>渐变再加 <code>--bubble-grad</code>（对方）/ <code>--bubble-me-grad</code>（我）。</li>
+<li>渐变再加 <code>--bubble-grad</code>（对方）/ <code>--bubble-me-grad</code>（我）；</li>
+<li>需要「深色气泡 + 白字」时，加 <code>--bubble-me-text</code> 或 <code>--bubble-other-text</code>。</li>
 </ol>
-<p><strong>检查</strong>：设置页出现新配色，点一下整页变色。</p>
-<p><strong>坑</strong>：id 对不上、漏 <code>--primary-rgb</code>、只改数组没改 CSS。</p>
+<p><strong>分组</strong>：<code>PALETTE_GROUPS</code> 有单色、撞色、渐变、科技、其他。模拟社交软件放在 <code>social</code> 分组。</p>
+<p><strong>微信配色</strong>：我的绿色、对方白色、背景灰色，对应 <code>--bubble-me: #95EC69</code>、<code>--bubble-other: #FFFFFF</code>、<code>--bg-color: #EDEDED</code>。</p>
+<p><strong>黑夜模式</strong>：<code>applyPalette()</code> 在黑夜模式调用 <code>applyDarkPalette()</code>，从主色算出 <code>--primary</code>、<code>--primary-rgb</code>、<code>--primary-dark</code>、<code>--primary-light</code>，按钮和强调色跟随当前配色；气泡背景用 <code>--palette-main</code> + <code>color-mix()</code> 轻微着色。切回白天时清掉这些内联变量。</p>
+<p><strong>图标</strong>：黑夜模式按主色色相写入 <code>--icon-filter</code>，供普通图标使用。默认像素爱心不走这个变量：<code>readDayIconFilter()</code> 会临时移除 <code>data-theme</code>，读取该配色白天规则里的 <code>--icon-filter</code>，再写入 <code>--heart-avatar-filter</code>。因此 35 套配色在黑夜模式下的爱心都与白天同色，但普通图标仍保留适合黑夜的亮度。</p>
+<p><strong>启动页</strong>：<code>applyBootTint()</code> 把主色混成 <code>--boot-bg1/2/3</code>、<code>--boot-name</code>、<code>--boot-sub</code>、<code>--boot-accent</code>，启动页背景、文字、圆点、进度条和爱心滤镜都会跟随配色。</p>
+<p><strong>检查</strong>：设置页出现新配色，点击后整页变色；同时检查「我的气泡」和「对方气泡」是否与目标应用一致。</p>
+<p><strong>注意</strong>：id 对不上、漏 <code>--primary-rgb</code>、只改数组没改 CSS、我的/对方气泡写反。</p>
 <h3>6.12 启动画面</h3>
 <p><strong>原理</strong>：<code>index.html</code> 的 <code>#bootScreen</code> + 一段脚本；<code>router.js</code> 末尾 <code>window.__appReady = true</code> 是“画完了”的信号。</p>
 <p><strong>改时长</strong>：<code>MIN_SHOW</code>（最短）、<code>MAX_WAIT</code>（兜底）。</p>
 <p><strong>改动画</strong>：<code>#bootLogo</code> 的 <code>background-position</code> + <code>steps(8)</code>；精灵表 <code>icons/heart-spin.png</code> 768×96。</p>
-<p><strong>坑</strong>：某个 js 报错会导致 <code>__appReady</code> 不置位，12 秒后才放行；看 Console 第一条红字。</p>
+<p><strong>改颜色</strong>：<code>router.js</code> 的 <code>applyBootTint()</code> 会把当前主色混成启动页背景、文字、圆点、进度条和爱心滤镜的 CSS 变量。</p>
+<p><strong>情绪首次出现</strong>：启动页完全退出后才会派发 <code>app-revealed</code>；如需调整首枚情绪气泡的延迟或触发条件，改 <code>chat_mood.js</code> 底部的 <code>startInitialMood()</code> 和 <code>waitForMoodBoot</code> 兜底。</p>
+<p><strong>注意</strong>：某个 js 报错会导致 <code>__appReady</code> 不置位，15 秒后才放行；看 Console 第一条红字。若启动页被移除但没有派发事件，<code>chat_mood.js</code> 会在检测到 <code>display:none</code> 或 15 秒兜底后自行启动。</p>
 <p>完整的三块结构、精灵图和放行条件见第九节。</p>
 <h3>6.13 数据导出导入</h3>
 <p><strong>原理</strong>：<code>manage_data.js</code> 的 <code>performExport(type)</code> 组装 JSON；<code>processImportedData()</code> 还原并调 <code>refreshAfterImport()</code>。</p>
 <p><strong>改导出内容</strong>：在 <code>performExport</code> 的 <code>type === 'all'</code> 里加字段； <strong>改导入还原</strong>：在 <code>processImportedData</code> 对应分支加回写。</p>
-<p><strong>坑</strong>：新增的数据键如果没加进导出/导入，换设备会丢。</p>
+<p><strong>注意</strong>：新增的数据键如果没加进导出/导入，换设备会丢。</p>
 <h3>6.14 桌面图标与 PWA</h3>
 <p><strong>原理</strong>：<code>manifest.webmanifest</code> 登记名称、图标、颜色；<code>sw.js</code> 提供 Service Worker；<code>pwa.js</code> 注册。</p>
 <p><strong>换图标</strong>：覆盖 <code>icons/icon-192.png</code>、<code>icon-512.png</code>、<code>icon-maskable-512.png</code>、<code>apple-touch-icon.png</code>。</p>
-<p><strong>坑</strong>：没上传 icons、用 file://、QQ 浏览器只做快捷方式，都会导致图标不对。</p>
+<p><strong>注意</strong>：没上传 icons、用 file://、QQ 浏览器只做快捷方式，都会导致图标不对。</p>
 <p>完整的图标清单、maskable 留边、换图步骤见第八节。</p>
 <hr>
 <h3>6.15 加号工具面板</h3>
@@ -399,7 +428,7 @@ location.reload();</code></pre>
 <li>点「词」能看到歌词滚动；</li>
 <li>Network 里 mp3 是 200，不是 404。</li>
 </ul>
-<p><strong>坑</strong></p>
+<p><strong>注意</strong></p>
 <ul>
 <li>没有 <code>src</code> 会变成模拟播放：只有歌词，没有声音；</li>
 <li><code>.ncm</code> 是加密格式，浏览器不能播，要先导出 mp3；</li>
@@ -456,7 +485,7 @@ location.reload();</code></pre>
 <li>拆开后图标和名字正确；</li>
 <li>Console 里 <code>pickRandomGift()</code> 多抽几次看档位。</li>
 </ul>
-<p><strong>坑</strong></p>
+<p><strong>注意</strong></p>
 <ul>
 <li><code>type</code> 写了分类里不存在的 id，商城筛不到；</li>
 <li>礼物图标用的是 Emoji，不支持直接放图片；</li>
@@ -485,7 +514,7 @@ location.reload();</code></pre>
 <pre><code>const strong = /抱|贴|亲|吻|靠|牵/.test((content &amp;&amp; content.name) || '');</code></pre>
 <p>把新动作的关键字加进正则。</p>
 <p><strong>怎么检查</strong>：加号 → 互动，能看到新动作；发送后 1.5–3 秒他回一句；如果是亲密动作，情绪气泡更容易变亲密。</p>
-<p><strong>坑</strong></p>
+<p><strong>注意</strong></p>
 <ul>
 <li>只加动作没加回复：会回「（接受了你的xx）」；</li>
 <li>老存档里的动作没有 <code>replies</code>，<code>data.js</code> 会按名字自动补；</li>
@@ -524,7 +553,7 @@ location.reload();</code></pre>
 <li>在需要的地方调用 <code>playSfx('gift')</code>。</li>
 </ol>
 <p>收到红包/礼物的「叮咚」是 WebAudio 现场合成的，不占文件，在 <code>chat_sound.js</code> 的 <code>playReceiveChime()</code> 里改音高。</p>
-<p><strong>坑</strong>：手机浏览器要求先点一下页面才允许出声，代码里已经用 <code>pointerdown</code> 解锁。</p>
+<p><strong>注意</strong>：手机浏览器要求先点击页面任意位置才允许出声，代码里已经用 <code>pointerdown</code> 解锁。</p>
 <h3>7.7 加一种新情绪</h3>
 <p><strong>位置</strong>：<code>chat_mood.js</code> + <code>style.css</code>。</p>
 <ol start="1">
@@ -551,7 +580,7 @@ location.reload();</code></pre>
 <li>想让它被文字触发：在 <code>MOOD_SENTIMENT</code> 加一组，或在 <code>MY_MOOD_REACTION</code> 加反应。</li>
 </ol>
 <p><strong>怎么检查</strong>：Console 里 <code>boostMood('sleepy', 10, 300000)</code>，气泡应该立刻变成新颜色和新文案。</p>
-<p><strong>坑</strong>：只加文案没加权重 = 不出现；只加权重没加 CSS = 有文字没颜色。</p>
+<p><strong>注意</strong>：只加文案没加权重 = 不出现；只加权重没加 CSS = 有文字没颜色。</p>
 <h3>7.8 加一套配色</h3>
 <p>见前面 6.11：<code>PALETTES</code> 加一行 + <code>style.css</code> 加一段。渐变再加 <code>--bubble-grad</code> / <code>--bubble-me-grad</code>。</p>
 <h3>7.9 加一个新的工具按钮（进阶）</h3>
@@ -571,7 +600,7 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 <li>如果要弹窗，在 <code>index.html</code> 加 <code>.modal</code> 结构，样式照抄现有弹窗。</li>
 </ol>
 <p><strong>怎么检查</strong>：加号面板里出现新图标，点了有反应。</p>
-<p><strong>坑</strong>：id 写错、js 没加载、忘了 <code>closePanels()</code>。</p>
+<p><strong>注意</strong>：id 写错、js 没加载、忘了 <code>closePanels()</code>。</p>
 <hr>
 <h2>八、网站图标（浏览器标签 + 桌面图标）</h2>
 <h3>1. 一共用到哪些图标</h3>
@@ -618,7 +647,7 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 <li>F12 → Application → Manifest，能看到名称和三个图标；</li>
 <li>手机上重新安装后看桌面。</li>
 </ul>
-<p><strong>坑</strong></p>
+<p><strong>注意</strong></p>
 <ul>
 <li>只换 favicon 不换 maskable：安卓安装后还是旧图；</li>
 <li>用 file:// 打开：快捷方式拿不到图标；</li>
@@ -661,15 +690,15 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 <li>字体加载完（<code>document.fonts.ready</code>，最多多等 3 秒）；</li>
 <li>启动画面至少显示 <strong>1.5 秒</strong>（从打开页面开始算）。</li>
 </ol>
-<p>之后连等两帧再淡出；后台标签页 rAF 被暂停时，450ms 计时器兜底；12 秒强制作废。</p>
+<p>之后连等两帧再淡出；后台标签页 rAF 被暂停时，450ms 计时器兜底；15 秒强制作废。淡出结束并设置 <code>display:none</code> 后，才会设置 <code>window.__appRevealed = true</code> 并派发 <code>app-revealed</code>；<code>chat_mood.js</code> 收到这个事件后才首次绘制情绪气泡。</p>
 <h3>4. 想改的话</h3>
 <ul>
 <li>文案：<code>#bootName</code> / <code>#bootSub</code>；</li>
 <li>爱心大小：<code>#bootLogo</code> 的 <code>width/height</code>（精灵表单帧也要跟着改）；</li>
 <li>转速：<code>1.6s</code>；</li>
 <li>弹跳幅度：<code>@keyframes bootBounce</code> 的 <code>translateY</code>；</li>
-<li>最短停留：<code>MIN_SHOW = 1500</code>；</li>
-<li>最长兜底：<code>MAX_WAIT = 12000</code>；</li>
+<li>最短停留：<code>MIN_SHOW = 1600</code>；</li>
+<li>最长兜底：<code>MAX_WAIT = 15000</code>；</li>
 <li>背景：<code>#bootScreen</code> 的 <code>radial-gradient</code>；</li>
 <li>想加进度条：在 <code>#bootScreen</code> 里加一个元素，脚本里按需改宽度。</li>
 </ul>
@@ -677,12 +706,12 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 <ul>
 <li>强刷，看它等聊天记录画完才淡出；</li>
 <li>F12 → Network 调成 Slow 3G，启动画面应该停得更久；</li>
-<li>如果 12 秒才进去，说明 <code>__appReady</code> 没置位，去 Console 看第一个红色报错。</li>
+<li>如果 15 秒才进去，说明 <code>__appReady</code> 没置位，去 Console 看第一个红色报错。</li>
 </ul>
-<p><strong>坑</strong></p>
+<p><strong>注意</strong></p>
 <ul>
 <li>精灵图尺寸不对：爱心会只显示一角或错帧；</li>
-<li>某个 js 报错：<code>__appReady</code> 永远不会 true，只能等 12 秒兜底；</li>
+<li>某个 js 报错：<code>__appReady</code> 永远不会 true，只能等 15 秒兜底；</li>
 <li>在后台标签页打开：rAF 暂停，切回来才淡出，这是浏览器的行为；</li>
 <li>改得太快：把 <code>MIN_SHOW</code> 调大。</li>
 </ul>
@@ -710,7 +739,7 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 <h3>10.4 他随机回什么（<code>chat_core.js</code> → <code>randomReply()</code>）</h3>
 <p>依次判定，前面的命中就不再往后走：</p>
 <table><thead><tr><th>顺序</th><th>内容</th><th>概率</th></tr></thead><tbody><tr><td>1</td><td>拍一拍</td><td>6%</td></tr><tr><td>2</td><td>分享/邀请听歌</td><td>5%；其中分享 50%、邀请 50%</td></tr><tr><td>3</td><td>礼物/红包/转账</td><td>5%</td></tr><tr><td>4</td><td>引用你最近的话</td><td>20%</td></tr><tr><td>5</td><td>回图片</td><td>12%（图库非空时）</td></tr><tr><td>6</td><td>从字卡抽一条文字</td><td>剩余概率</td></tr><tr><td>7</td><td>文字后附带 Emoji</td><td>30%（有 Emoji 库时）</td></tr></tbody></table>
-<p>邀请一起听时，50% 指定一首歌、50% 只发“一起听”不指定。引用是从最近 20 条你的文字里随机挑一条。字卡为空时，他会回「（字卡库是空的）」。</p>
+<p>邀请一起听时，50% 指定一首歌、50% 只发“一起听”不指定。引用是从最近 20 条你的文字里随机挑一条。字卡为空时，普通聊天会弹出提示并可跳转「自定义回复」。</p>
 <h3>10.5 红包、转账、礼物</h3>
 <p><strong>触发</strong>：每条回复 5% 概率进入金钱事件。</p>
 <table><thead><tr><th>类型</th><th>占金钱事件</th></tr></thead><tbody><tr><td>礼物</td><td>55%</td></tr><tr><td>红包</td><td>30%</td></tr><tr><td>转账</td><td>15%</td></tr></tbody></table>
@@ -723,11 +752,12 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 <table><thead><tr><th>金额</th><th>权重</th></tr></thead><tbody><tr><td>6</td><td>8</td></tr><tr><td>52</td><td>16</td></tr><tr><td>66</td><td>10</td></tr><tr><td>88</td><td>10</td></tr><tr><td>520</td><td>12</td></tr><tr><td>521</td><td>7</td></tr><tr><td>666</td><td>5</td></tr><tr><td>710</td><td>3</td></tr><tr><td>888</td><td>4</td></tr><tr><td>1112</td><td>2.5</td></tr><tr><td>1314</td><td>2</td></tr><tr><td>5200</td><td>1.6</td></tr><tr><td>8888</td><td>0.9</td></tr><tr><td>13140</td><td>0.4</td></tr><tr><td>52000</td><td>0.2</td></tr></tbody></table>
 <p>备注也是从各自的小词库里随机抽一句。</p>
 <h3>10.6 语音通话</h3>
-<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>他主动来电</td><td>每 5 分钟 4% 概率，平均约 2 小时一次</td></tr><tr><td>你打给他：无人接听</td><td>15%</td></tr><tr><td>你打给他：拒接</td><td>10%</td></tr><tr><td>你打给他：接通</td><td>75%</td></tr><tr><td>等待接通时间</td><td>2.5–5.5 秒</td></tr><tr><td>来电无人接</td><td>30 秒后自动挂断</td></tr><tr><td>通话结束影响心情</td><td>78% 会有反应，22% 没反应</td></tr></tbody></table>
+<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>他主动来电</td><td>每 5 分钟 4% 概率，平均约 2 小时一次</td></tr><tr><td>你打给他：无人接听</td><td>15%</td></tr><tr><td>你打给他：拒接</td><td>10%</td></tr><tr><td>你打给他：接通</td><td>75%</td></tr><tr><td>等待接通时间</td><td>2.5–5.5 秒</td></tr><tr><td>来电无人接</td><td>30 秒后自动挂断</td></tr><tr><td>通话结束影响心情</td><td>78% 会有反应，22% 没反应</td></tr><tr><td>通话后回复延迟</td><td>1.4–3.6 秒</td></tr><tr><td>通话后抽字卡</td><td>未接/挂断 40%，通话结束/已取消 50%；字卡库为空时使用内置句子</td></tr><tr><td>通话后内置句子带 emoji</td><td>42%</td></tr><tr><td>通话后的情绪权重</td><td>未接偏等待、不安；对方挂断偏为难、心虚；自己挂断偏失落；通话结束偏开心、亲密，约持续 5–8 分钟</td></tr></tbody></table>
 <h3>10.7 互动、音乐、位置</h3>
 <table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>互动回应</td><td>1.5–3 秒；从该动作的回复词库随机抽一句</td></tr><tr><td>随机挑歌</td><td>整个歌单均匀随机</td></tr><tr><td>一起听回应</td><td>1.6–3 秒</td></tr><tr><td>随机播放下一首</td><td>从除当前歌以外的曲目里均匀随机</td></tr><tr><td>列表循环下一首</td><td>按歌单顺序 +1</td></tr><tr><td>单曲循环</td><td>从头重播</td></tr><tr><td>「他在哪」</td><td>从位置库均匀随机</td></tr></tbody></table>
 <p>录音没有随机数，只有最长 60 秒和大小上限。</p>
 <h3>10.8 情绪池（<code>chat_mood.js</code>）</h3>
+<p>v13 的三格路径、基础权重和衰减实现见第十七节；本节保留事件概率总表。</p>
 <p><strong>消息触发轻刷</strong></p>
 <table><thead><tr><th>消息</th><th>概率</th></tr></thead><tbody><tr><td>你发文字</td><td>30%</td></tr><tr><td>他发文字</td><td>42%</td></tr><tr><td>图片/语音</td><td>20%</td></tr><tr><td>纯 Emoji</td><td>55%</td></tr></tbody></table>
 <p>关键词、口是心非属于“情绪事件”，见下面的「文字情绪」，和上面的轻刷是两回事。</p>
@@ -814,6 +844,192 @@ applyPalette('aurora');</code></pre>
 <li>再改下一处。</li>
 </ol>
 <p>遇到报错不要慌，先看 Console 第一条红字，再对照上面的「常见代码错误」。实在找不到，就把报错那行和最近改的地方发给我。</p>
+<h2>十五、v12 改动索引</h2>
+
+<ul>
+<li><b>音乐不自动播放</b>：<code>chat_music.js</code> 的 <code>toolMusic</code> 只打开播放器，不调用 <code>musicPlay()</code>；点播放按钮才播上次那首，点歌名进歌单；导入改为 <code>autoPlay:false</code>；<code>musicAudio.playsInline = true</code>。</li>
+<li><b>一起听不重播</b>：<code>acceptMyMusicInvite()</code> 发现邀请的歌正好在播时，只打开播放器，不调用 <code>playSongByTitle()</code>。</li>
+<li><b>推荐歌曲的回应</b>：<code>shareSongToChat()</code> 发出推荐卡后调用 <code>scheduleMusicShareReply()</code>；40% 内置听歌回复，60% 抽字卡。</li>
+<li><b>互动的混合回复</b>：<code>sendInteract()</code> 50% 用互动词库，50% 抽字卡；字卡库为空时 100% 内置。</li>
+<li><b>后台使用手册</b>：<code>index.html</code> 新增 <code>#pageManual</code>，<code>router.js</code> 绑定入口，样式在 <code>style.css</code> 的 <code>.manual-*</code>。</li>
+<li><b>微信 / 其他配色</b>：微信改为「我绿、对方白、灰底」；新增 social 分组：Telegram、QQ、LINE、WhatsApp、iMessage。</li>
+<li><b>像素爱心默认头像</b>：对方未上传头像时用 <code>icons/icon-heart-192.png</code>，<code>--icon-filter</code> 跟随配色。</li>
+<li><b>混合比例</b>：互动 <code>HYBRID_INTERACT_CARD_RATE</code> 0.5，推荐歌曲 <code>HYBRID_MUSIC_CARD_RATE</code> 0.6，通话后 <code>CALL_REPLY_CARD_RATE</code> 0.4/0.5。</li>
+<li><b>通话记录图标与五种结果</b>：<code>chat_call.js</code> 的 <code>endCall()</code> 与 <code>chat_core.js</code> 的 <code>addMessageDOM()</code> 新增 <code>type: 'call'</code>。</li>
+<li><b>通话后的情绪与回复</b>：<code>moodAfterCall()</code> 调整事件和权重；<code>scheduleCallReply()</code> 按内置句子/字卡混合回复，内置句子可接 emoji。</li>
+<li><b>修复输入中情绪气泡位置</b>：自己发言后 <code>sendMessage()</code> 调用 <code>refreshMood(false)</code>，最后一条真实消息为「我」时立即收起普通情绪。</li>
+<li><b>首屏情绪动画延后</b>：启动页 <code>display:none</code> 后派发 <code>app-revealed</code>；<code>moodBootReady</code> 在此之前拦截 <code>refreshMood()</code>。</li>
+<li><b>黑夜爱心头像配色</b>：<code>readDayIconFilter()</code> 临时切回白天读取 <code>--icon-filter</code>，写入 <code>--heart-avatar-filter</code>；普通图标继续使用黑夜滤镜。</li>
+<li><b>黑夜按钮与启动页</b>：<code>applyDarkPalette()</code> 派生黑夜主色，<code>applyBootTint()</code> 染色启动页。</li>
+<li><b>恢复默认外观</b>：设置页的「恢复默认头像 / 壁纸」清空 <code>pendingSettings</code>，保存后立即更新。</li>
+<li><b>情绪气泡开关</b>：<code>chatSettings.moodEnabled</code> 默认 true；关闭后 <code>refreshMood()</code> 隐藏气泡。</li>
+<li><b>列表循环</b>：<code>autoAdvance()</code> 用 <code>nextPlayableIndex()</code> 跳过没有音频的占位歌，最后一首回到第一首。</li>
+<li><b>歌词补齐</b>：<code>music_lyrics.js</code> 补了《茉莉》，内容来自 <code>music/</code> 里的同名 .lrc。</li>
+<li><b>单色配色</b>：<code>style.css</code> 的 7 个单色 <code>data-palette</code> 块，背景、卡片、边框、图标滤镜、阴影都往主色加深。</li>
+<li><b>启动进度条</b>：<code>index.html</code> 新增 <code>#bootProgress</code>；启动脚本等 load、<code>__appReady</code>、字体、图片和 settle 后再淡出。</li>
+<li><b>备份提醒</b>：<code>manage_data.js</code> 用 <code>echo_last_export_at</code> 记录导出时间，打开数据管理时最多一天提醒一次。</li>
+<li><b>情绪扩充</b>：<code>chat_mood.js</code> 新增 sleepy / clingy / playful / proud / thoughtful 五档，气泡支持 1~3 段。</li>
+<li><b>新默认值</b>：<code>data.js</code> 前 20 行的文字卡、Emoji、拍一拍、签名、位置和昵称。</li>
+<li><b>外卖礼物</b>：<code>chat_money.js</code> 的 <code>GIFT_ITEMS</code> 新增早餐、外卖、零食。</li>
+<li><b>选择功能</b>：新文件 <code>chat_choice.js</code>；卡片渲染在 <code>chat_core.js</code> 的 <code>type === 'choice'</code> 分支；消息内容包含 <code>options</code>、<code>pickCount</code>、<code>chosen</code>。</li>
+</ul>
+
+<p>调试选择卡：<code>chatHistory.filter(m =&gt; m.type === 'choice').slice(-3)</code>。</p>
+<h2>十六、内置回复文案与混合概率</h2>
+
+<h3>1. 混合规则</h3>
+<table>
+<tr><th>场景</th><th>内置回复</th><th>抽字卡</th><th>说明</th></tr>
+<tr><td>互动（摸摸头、抱抱等）</td><td>50%</td><td>50%</td><td>字卡库为空时回到 100% 内置</td></tr>
+<tr><td>推荐歌曲给他</td><td>40%</td><td>60%</td><td>字卡库为空时回到 100% 内置</td></tr>
+<tr><td>通话后：未接来电 / 对方已挂断 / 已挂断</td><td>60%</td><td>40%</td><td>字卡库为空时回到 100% 内置</td></tr>
+<tr><td>通话后：通话结束 / 已取消</td><td>50%</td><td>50%</td><td>字卡库为空时回到 100% 内置</td></tr>
+</table>
+<p>抽字卡逻辑统一在 <code>chat_core.js</code> 的 <code>sendRandomTextCardReply()</code>：从 <code>contents</code> 里 <code>type === 'text'</code> 的卡随机抽一张；15% 引用你最近 20 条文字消息；带“吃醋/亲密”标签会触发 <code>boostMoodFromCard()</code>；30% 在末尾追加 Emoji 库里的表情。</p>
+<p>改比例：互动改 <code>HYBRID_INTERACT_CARD_RATE</code>，推荐歌曲改 <code>HYBRID_MUSIC_CARD_RATE</code>，通话后回复改 <code>chat_call.js</code> 的 <code>CALL_REPLY_CARD_RATE</code>。<code>HYBRID_TEXT_CARD_RATE</code> 只是其他场景的通用兜底，不再被互动和推荐歌曲共用。</p>
+
+<h3>2. 互动内置回复（<code>data.js</code> 的 <code>INTERACT_REPLIES</code>）</h3>
+<table>
+<tr><th>动作</th><th>内置回复</th></tr>
+<tr><td>摸摸头</td><td>嗯……再摸一会儿也行 / 被你摸得都困了 / 头只能你摸，别人不行 / 乖，换我摸摸你</td></tr>
+<tr><td>戳戳脸</td><td>别戳啦，痒~ / 你再戳，我可就亲回去了 / 戳一下要给钱的 / 脸都被你戳软了</td></tr>
+<tr><td>抱抱</td><td>（一把抱住你） / 抱紧点，别松手 / 你身上好香 / 再抱十秒</td></tr>
+<tr><td>贴贴</td><td>（凑过来贴贴） / 贴这么近，还让不让人学习了 / 行吧，今天格外黏你 / （把下巴搁在你肩上）</td></tr>
+<tr><td>捏捏脸</td><td>哎呀脸都要捏红啦 / 捏坏了你负责 / 再捏我就咬你 / 轻点，脸都被你捏变形了</td></tr>
+<tr><td>举高高</td><td>哇——飞起来啦！ / 再来一次，我还想飞 / 你举我一点都不费劲 / 转一圈？</td></tr>
+</table>
+<p>没有 <code>replies</code> 时的兜底（<code>chat_tools.js</code> 的 <code>REPLY_FALLBACK</code>）：摸摸头“嘿嘿，被你摸到啦~”；戳戳脸“别戳啦，痒~”；抱抱“（一把抱住你）”；贴贴“（凑过来贴贴）”；捏捏脸“哎呀脸都要捏红啦”；举高高“哇——飞起来啦！”。</p>
+
+<h3>3. 推荐歌曲的回复（<code>chat_music.js</code> 的 <code>MUSIC_SHARE_REPLIES</code>）</h3>
+<table>
+<tr><th>文案</th></tr>
+<tr><td>《{title}》？我去听听。</td></tr>
+<tr><td>听完了，这首很像你。</td></tr>
+<tr><td>你怎么知道我喜欢这种。</td></tr>
+<tr><td>收下了，今晚单曲循环。</td></tr>
+<tr><td>耳机分你一半，一起听？</td></tr>
+<tr><td>突然发歌，是不是想我了。</td></tr>
+<tr><td>这首我要存进「想你」歌单。</td></tr>
+<tr><td>前奏一响就想到你了。</td></tr>
+<tr><td>你推荐的我都听。</td></tr>
+</table>
+<p><code>{title}</code> 会替换成你推荐的那首歌名。选内置回复时，会小幅提升「开心 / 亲密」心情。</p>
+
+<h3>3.1 通话后的回复（<code>chat_call.js</code> 的 <code>CALL_REPLY_LINES</code>）</h3>
+<table>
+<tr><th><code>callState</code></th><th>内置句子</th></tr>
+<tr><td><code>missed_in</code></td><td>怎么没接电话呀 / 在忙吗？看到回我一下 / 刚刚给你打电话了 / 手机没在身边吗 / 方便的时候回拨给我</td></tr>
+<tr><td><code>missed_out</code></td><td>刚才在忙，没接到 / 手机放远了，抱歉 / 看到未接来电了，怎么啦 / 刚刚不方便接，现在可以 / 我错过了什么吗</td></tr>
+<tr><td><code>rejected_other</code></td><td>刚刚不方便接 / 在忙，晚点打给你 / 怎么啦，突然打电话 / 现在有点事，稍后说 / 嗯？找我</td></tr>
+<tr><td><code>rejected_me</code></td><td>怎么挂啦 / 不方便接吗 / 在忙的话跟我说一声 / 刚想跟你说点事 / 好吧，那晚点再说</td></tr>
+<tr><td><code>completed</code></td><td>刚挂就开始想你了 / 刚才好像没说够 / 下次再聊一会儿 / 听到你声音就安心了 / 挂得有点快</td></tr>
+<tr><td><code>cancelled</code></td><td>怎么取消了 / 还没接通就挂啦 / 是不方便吗 / 有事的话直接说 / 我还在呢</td></tr>
+</table>
+<p><code>CALL_REPLY_CARD_RATE</code>：<code>missed_in</code> / <code>missed_out</code> / <code>rejected_other</code> / <code>rejected_me</code> 为 <code>0.4</code>，<code>completed</code> / <code>cancelled</code> 为 <code>0.5</code>。抽字卡失败时退回同池内置句子；内置句子有 42% 概率追加 <code>CALL_REPLY_EMOJI</code> 中的一个 emoji。</p>
+
+<h3>4. 其他固定文案</h3>
+<table>
+<tr><th>场景</th><th>文案</th><th>位置</th></tr>
+<tr><td>我邀请一起听，对方接受</td><td>好呀，一起听。</td><td><code>chat_music.js</code> 的 <code>inviteTogether()</code></td></tr>
+<tr><td>对方离线后回来</td><td>刚刚没看手机，怎么啦？ / 不好意思，我睡着了.. / 我才忙完回来，我好想你 / 刚上线，我把你的消息看完了 / 立刻朝你飞奔过来</td><td><code>data.js</code> 的 <code>offlineReplyLines</code></td></tr>
+<tr><td>字卡库为空</td><td>弹出提示，可直接跳转「自定义回复」</td><td><code>chat_core.js</code> 的 <code>promptEmptyCardLibrary()</code></td></tr>
+</table>
+
+<h3>5. 概率相关的其他入口</h3>
+<table>
+<tr><th>行为</th><th>概率/延迟</th><th>位置</th></tr>
+<tr><td>互动回应延迟</td><td>1.5–3 秒</td><td><code>chat_tools.js</code> 的 <code>sendInteract()</code></td></tr>
+<tr><td>推荐歌曲回应延迟</td><td>1.5–3.5 秒</td><td><code>chat_music.js</code> 的 <code>scheduleMusicShareReply()</code></td></tr>
+<tr><td>一起听自动接受</td><td>1.6–3 秒</td><td><code>chat_music.js</code> 的 <code>inviteTogether()</code></td></tr>
+<tr><td>回复里夹带 Emoji</td><td>30%</td><td><code>sendRandomTextCardReply()</code></td></tr>
+<tr><td>字卡引用你最近的话</td><td>15%</td><td><code>sendRandomTextCardReply()</code></td></tr>
+</table>
+<h2>十七、v13 情绪池</h2>
+<p>v13 把情绪数据拆到 <code>mood_pools.js</code>，<code>chat_mood.js</code> 只负责抽签、权重、事件和渲染。</p>
+
+<h3>1. 数据结构</h3>
+<pre><code>happy: {
+  tone: 'mood-happy',
+  first:  ['开心', '雀跃', '满足'],        // 第一格
+  second: ['心里发甜', '想笑', '偷偷高兴'], // 第二格
+  third:  ['摸鱼', '喝奶茶', '等你夸'],     // 第三格
+  emoji:  ['😁', '☺️', '😊', '✨', '🥰']
+}</code></pre>
+<p>另有 <code>MOOD_SUPPLEMENTS</code>（等待、看手机、发呆等）、<code>MOOD_BASE_WEIGHTS</code>（基础权重）和 <code>MOOD_ANIM_BY_TEXT</code>（第三格动画）。</p>
+
+<h3>2. 路径生成</h3>
+<ol>
+<li>第一格从 <code>first</code> 抽情绪；</li>
+<li>先按 30% / 40% / 30% 决定显示 1 / 2 / 3 格；</li>
+<li>第二格 45% 同情绪进一步，30% 通用补充，15% 另一条情绪，10% 刷新；</li>
+<li>第三格按第二格来源分支，最多三格；</li>
+<li>同情绪第二格约 4% 出现 <code>开心+</code>；第二格是 <code>开心+</code> 时，第三格约 45% 变成 <code>开心++</code>；</li>
+<li>第三格约 12% 换成该情绪的 emoji。</li>
+</ol>
+<p>刷新重判重新调用 <code>moodWeights()</code> 并重新选深度，最多刷新一次。</p>
+<p>待机 ticker：45% 升一档（只追加新段），25% 不变，30% 切换情绪。</p>
+
+<h3>3. 权重</h3>
+<ul>
+<li>从 <code>MOOD_BASE_WEIGHTS</code> 开始；</li>
+<li>未处理卡片提高期待/不安/吃醋；</li>
+<li>他最后一条消息后，按空闲时间提高期待/不安/吃醋/惦记；</li>
+<li>15 分钟以上平静最多约 30%～32%，等待/惦记不会归零；</li>
+<li><code>applyMoodBoosts()</code> 把临时热度按剩余时间线性衰减。</li>
+</ul>
+
+<h3>4. 拍一拍</h3>
+<p>普通情绪在最后一条 DOM 是 <code>.sys</code> 时隐藏，等下一次真实消息；事件情绪仍显示，并通过 <code>pat-mode</code> 居中放在拍一拍下方。</p>
+
+<h3>5. 混合比例</h3>
+<p><code>HYBRID_TEXT_CARD_RATE = 0.7</code>；互动 <code>HYBRID_INTERACT_CARD_RATE = 0.5</code>；推荐歌曲 <code>HYBRID_MUSIC_CARD_RATE = 0.6</code>；通话后 <code>CALL_REPLY_CARD_RATE</code> 未接/挂断 <code>0.4</code>、通话结束/已取消 <code>0.5</code>。</p>
+
+<h3>6. 调试</h3>
+<pre><code>debugMoodSample('happy', 200)
+debugMoodWeights()
+debugMoodSwitch('sad')   // 强制换一次情绪，看换色/高光动画
+debugMoodUpgrade()       // 给当前气泡追加一格，看横向长开/新段弹入
+pushMoodEvent('happy', ['开心', '开心+', '开心++'], 120000, 'test')</code></pre>
+<p>前两个分别打印 1/2/3 格分布和当前权重；后两个只用于预览动画，不改变正常概率。当前已经三格时 <code>debugMoodUpgrade()</code> 会返回提示，可以先用 <code>debugMoodSwitch()</code> 或等刚分开时只有一两格再试。</p>
+<p>测试久未回：<code>lastInteractionTime = Date.now() - 20 * 60 * 1000; debugMoodWeights(); refreshMood(true);</code></p>
+<h2>十八、v13.0 追加修正</h2>
+
+<h3>情绪池补充</h3>
+<ul>
+<li>新增 <code>anxiety</code>（焦虑）档，基础权重同步；不安第一格增加「担心」；</li>
+<li><code>MOOD_TRANSITIONS</code> 控制另一条情绪的亲和权重：伤心更容易接期待，开心更容易接激动，低概率仍保留其他情绪；</li>
+<li>第三格和字面重复的动画在 <code>paintMoodBubble()</code> 中逐段延迟，颜色变化由 <code>.mood-bubble</code> 的 transition 负责。</li>
+<li><code>paintMoodBubble(tier, pair, mode)</code> 的 <code>mode</code> 决定整体动画：<code>appear</code> 首次出现、<code>refresh</code> 同情绪轻刷、<code>switch</code> 换情绪。换情绪会缩放回弹、扫过高光并逐段翻入；<code>appendMoodPart()</code> 只给新追加的分隔符和词段加 <code>.mood-new</code>，并给气泡加 <code>.mood-upgrade</code>，所以升档只横向长开，不整颗变色。</li>
+</ul>
+
+<h3>熬夜</h3>
+<ul>
+<li><code>maybeLateNightMood()</code>：00:00–05:00 登录，一晚最多一次，约 75% 触发；</li>
+<li><code>checkLateNightStay()</code>：深夜停留超过 45 分钟后，每 5 分钟检查一次，约 35% 触发；</li>
+<li>权重倾向：担心/不安 50%、焦虑 30%、生气 20%；触发后提高这些情绪的热度。</li>
+</ul>
+
+<h3>离线</h3>
+<ul>
+<li>深夜（00:00–05:00）<code>rollOtherStatus()</code> 把离线权重乘以 2.5；</li>
+<li><code>offlineReplyLines</code> 已换成新的五句；</li>
+<li>离线自动回复带 <code>autoReply: true</code>，气泡前显示「[自动回复]」；</li>
+<li>离线回复有 55% 概率在结尾追加 😭 或 🥺；回到在线后的新消息不再带标记。</li>
+</ul>
+
+<h3>其他</h3>
+<ul>
+<li>单条本地曲目删除增加二次确认；</li>
+<li>字卡库为空时改成提示弹窗，可直接跳转「自定义回复」；</li>
+<li>一起听邀请弹窗标题改为主题色，红包/转账仍保留红色；</li>
+<li>礼物商城分类行左右留白加大；</li>
+<li><code>mood-plus</code> 改为内联 span，避免「疲惫+」不居中。</li>
+</ul>
+
+<h3>测试</h3>
+<pre><code>debugMoodSample('anxiety', 200)
+debugMoodSample('happy', 200)
+debugMoodWeights()</code></pre>
 </div>
 <script>
   var toc = document.getElementById('toc');

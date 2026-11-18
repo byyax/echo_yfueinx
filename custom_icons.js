@@ -6,9 +6,9 @@
 // id 对照：
 //   工具栏：toolCamera 拍照、toolImg 图片、toolCall 语音通话、toolLoc 他在哪、
 //           toolRed 红包、toolGift 送礼物、toolTrans 转账、toolPat 互动、
-//           toolMusic 音乐、toolVoice 录音
+//           toolChoice 选择、toolMusic 音乐、toolVoice 录音
 //   后台卡片：menuSettings 聊天设置、menuHistory 聊天记录、menuCards 自定义回复、
-//             menuData 数据管理、menuMusic 音乐管理
+//             menuData 数据管理、menuMusic 音乐管理、menuManual 使用手册
 //
 // 留空就用现在的 emoji。登记的图标会自动继承"图标跟随配色"的滤镜。
 const CUSTOM_ICONS = {

@@ -3,6 +3,22 @@ const msgInput = document.getElementById('msgInput');
 let currentQuote = null;
 let isTyping = false; // 正在输入状态
 
+function refreshAvatarDOM() {
+  document.querySelectorAll('.avatar.other').forEach(av => {
+    if (chatSettings.otherAvatar) {
+      av.classList.remove('heart-avatar');
+      av.innerHTML = `<img src="${chatSettings.otherAvatar}">`;
+    } else {
+      av.classList.add('heart-avatar');
+      av.innerHTML = `<img src="icons/icon-heart-192.png" class="default-heart-avatar" alt="">`;
+    }
+  });
+  document.querySelectorAll('.avatar.me').forEach(av => {
+    if (chatSettings.myAvatar) av.innerHTML = `<img src="${chatSettings.myAvatar}">`;
+    else av.textContent = chatSettings.myName.charAt(0);
+  });
+}
+
 function applyChatSettings() {
   const titleEl = document.getElementById('chatTitle'); if(titleEl) titleEl.textContent = chatSettings.otherName;
   // 壁纸挂在整页上：播放器/工具面板开合只推动气泡，背景不会跟着放大缩小
@@ -12,6 +28,7 @@ function applyChatSettings() {
   const sigEl = document.getElementById('signatureBar');
   if (sigEl && !sigEl.classList.contains('lyric-bubble')) sigEl.textContent = chatSettings.signature;
   refreshTimeLabels();
+  refreshAvatarDOM();
 }
 
 function getTimeStr(time) {
@@ -55,6 +72,7 @@ function getQuoteDisplayText(content, type) {
   if (type === 'interact') return '[互动] ' + (content.name || '');
   if (type === 'location') return '[位置] ' + (content.val || '');
   if (type === 'audio') return '[语音]';
+  if (type === 'call') return '[通话] ' + (content.val || '');
   return (content && content.val !== undefined && content.val !== null) ? String(content.val) : '';
 }
 
@@ -163,6 +181,7 @@ function openOtherCard(time, type) {
   const closeBtn = document.getElementById('closeGiftOpenBtn');
   
   mAmount.style.display = 'none';
+  mTitle.style.color = (type === 'redpacket' || type === 'transfer') ? '#fa5151' : 'var(--primary-dark)';
   btn.textContent = '拆开';
   closeBtn.style.display = 'block';
   closeBtn.textContent = '暂时不领';
@@ -217,7 +236,17 @@ function openOtherCard(time, type) {
         const s = pickRandomSong();
         title = s && s.title;
       }
-      if (title && typeof playSongByTitle === 'function') playSongByTitle(title);
+      if (!title || typeof playSongByTitle !== 'function') return;
+      // 已经在听同一首就不重播，只把播放器叫出来
+      const same = typeof findSongIndexByTitle === 'function'
+        && typeof musicIndex !== 'undefined'
+        && findSongIndexByTitle(title) === musicIndex;
+      if (same && typeof musicPlaying !== 'undefined' && musicPlaying) {
+        openMusicBar();
+        updateMusicBarUI();
+        return;
+      }
+      playSongByTitle(title);
     };
   }
   
@@ -296,8 +325,15 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
     const row = document.createElement('div'); row.className = 'row' + (isMe ? ' me' : '');
     const avatar = document.createElement('div'); avatar.className = 'avatar ' + (isMe ? 'me' : 'other');
     const avatarUrl = isMe ? chatSettings.myAvatar : chatSettings.otherAvatar;
-    if (avatarUrl) { avatar.innerHTML = `<img src="${avatarUrl}">`; } 
-    else { avatar.textContent = isMe ? chatSettings.myName.charAt(0) : chatSettings.otherName.charAt(0); }
+    if (avatarUrl) {
+      avatar.innerHTML = `<img src="${avatarUrl}">`;
+    } else if (!isMe) {
+      // 对方没有上传头像时，用像素爱心作为默认头像，并跟随当前配色
+      avatar.classList.add('heart-avatar');
+      avatar.innerHTML = `<img src="icons/icon-heart-192.png" class="default-heart-avatar" alt="">`;
+    } else {
+      avatar.textContent = chatSettings.myName.charAt(0);
+    }
     avatar.ondblclick = () => { if (!isMe) triggerPat(true); };
     
     const wrap = document.createElement('div'); wrap.className = 'bubble-wrap';
@@ -338,7 +374,23 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
       bodyDiv.className = 'voice-body';
       bodyDiv.innerHTML = `<span class="voice-play">▶</span><span class="voice-wave">${'<i></i>'.repeat(5)}</span><span class="voice-dur">${dur}″</span>`;
       bodyDiv.onclick = (e) => { e.stopPropagation(); playVoice(bodyDiv, content.val); };
-    } else if (type === 'location' || type === 'redpacket' || type === 'transfer' || type === 'gift' || type === 'interact' || type === 'musicshare' || type === 'musicinvite') {
+    } else if (type === 'call') {
+      // 通话记录：电话图标 + 结果文字，保留普通气泡的归属（我/对方）
+      bubble.classList.add('call-bubble');
+      const st = String(content.callState || '');
+      const kind = st.indexOf('missed') === 0 ? 'missed'
+        : st.indexOf('rejected') === 0 ? 'rejected'
+        : st === 'cancelled' ? 'cancelled' : 'completed';
+      bodyDiv.className = 'call-log ' + kind;
+      const icon = document.createElement('span');
+      icon.className = 'call-log-icon';
+      icon.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.49a1 1 0 0 1 1 1c0 1.24.2 2.45.57 3.57a1 1 0 0 1-.24 1.02l-2.2 2.2z"/></svg>';
+      const label = document.createElement('span');
+      label.className = 'call-log-text';
+      label.textContent = content.val || '';
+      bodyDiv.appendChild(icon);
+      bodyDiv.appendChild(label);
+    } else if (type === 'location' || type === 'redpacket' || type === 'transfer' || type === 'gift' || type === 'interact' || type === 'musicshare' || type === 'musicinvite' || type === 'choice') {
       bubble.classList.add('special-card');
       if (content.isOpened) bubble.classList.add('opened');
       
@@ -385,9 +437,18 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
         colorClass = 'music';
         subTitle = content.name ? `想和你听《${content.name}》` : '想和你一起听';
       }
-      
+      if (type === 'choice') {
+        const opts = content.options || [];
+        const pickN = Math.min(Math.max(1, content.pickCount || 1), opts.length || 1);
+        icon = '☑️';
+        title = content.title || '帮我选一下';
+        colorClass = 'choice';
+        subTitle = `${opts.length}选${pickN}`;
+      }
+
       let bottomText = '';
       if (type === 'location') bottomText = '位置信息';
+      else if (type === 'choice') bottomText = content.chosen ? '已选择 · 点击展开' : (isMe ? '等待对方选择 · 点击展开' : '点击展开');
       else if (type === 'musicshare') bottomText = content.isOpened ? '已播放' : '点击播放';
       else if (type === 'musicinvite') bottomText = content.isOpened ? '已接受' : (isMe ? '等待对方回应' : '点击接受');
       else if (type === 'transfer') bottomText = content.isOpened ? '已收款' : '未收款';
@@ -412,14 +473,44 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
         if (bottom) bodyDiv.insertBefore(noteEl, bottom); else bodyDiv.appendChild(noteEl);
       }
 
+      // 选择卡：选项默认收起，点卡片展开；选过的选项打勾
+      if (type === 'choice') {
+        bubble.classList.add('choice-card');
+        const optsBox = document.createElement('div');
+        optsBox.className = 'choice-options';
+        const chosen = Array.isArray(content.chosen) ? content.chosen : [];
+        (content.options || []).forEach((opt, i) => {
+          const rowEl = document.createElement('div');
+          rowEl.className = 'choice-opt' + (chosen.indexOf(opt.text) >= 0 ? ' picked' : '');
+          const num = document.createElement('span');
+          num.className = 'num';
+          num.textContent = String(i + 1);
+          const txt = document.createElement('span');
+          txt.textContent = opt.text;
+          rowEl.appendChild(num); rowEl.appendChild(txt);
+          optsBox.appendChild(rowEl);
+        });
+        const bottomEl = bodyDiv.querySelector('.card-bottom');
+        if (bottomEl) bodyDiv.insertBefore(optsBox, bottomEl); else bodyDiv.appendChild(optsBox);
+        bodyDiv.onclick = () => bubble.classList.toggle('expanded');
+      }
+
       if (type === 'musicshare') {
         bodyDiv.onclick = () => { if (typeof playSongByTitle === 'function') playSongByTitle(content.name); };
-      } else if (!isMe && !content.isOpened && type !== 'location') {
+      } else if (type !== 'choice' && !isMe && !content.isOpened && type !== 'location') {
         bodyDiv.onclick = () => openOtherCard(time, type);
       }
     } else {
       const textVal = (content.val === undefined || content.val === null) ? '' : String(content.val);
-      bodyDiv.textContent = textVal;
+      if (content.autoReply) {
+        const tag = document.createElement('span');
+        tag.className = 'auto-reply-tag';
+        tag.textContent = '[自动回复] ';
+        bodyDiv.appendChild(tag);
+        bodyDiv.appendChild(document.createTextNode(textVal));
+      } else {
+        bodyDiv.textContent = textVal;
+      }
       
       // 只有"纯表情"才放大去气泡：数字/字母/中文都算正常消息，别被 \p{Emoji} 误吞
       const emojiOnly = /^[\p{Extended_Pictographic}\p{Emoji_Modifier}\p{Regional_Indicator}‍️\s]+$/u.test(textVal)
@@ -482,6 +573,12 @@ function sendMessage(val, type = 'text', isMe = true, customQuote = null) {
   saveAllData();
   lastInteractionTime = Date.now();
 
+  // 他还在输入时我插话：把输入提示留在最下面，避免它被挤到我的消息上方
+  if (isMe && chatEl) {
+    const typing = document.getElementById('typingIndicator');
+    if (typing && typing.parentElement === chatEl) chatEl.appendChild(typing);
+  }
+
   // 音效：收发消息一声轻响；他发来红包/礼物/转账换成两声铃
   if (isMe) {
     if (typeof playSfx === 'function') playSfx('send');
@@ -493,6 +590,10 @@ function sendMessage(val, type = 'text', isMe = true, customQuote = null) {
 
   // 心情：普通消息按概率轻刷，关键词/特殊互动按各自概率触发
   if (typeof moodAfterMessage === 'function') moodAfterMessage(isMe, type, content);
+
+  // 自己发言后，最后一条真实消息变成了“我”：普通情绪要立即收起。
+  // 否则“对方正在输入”或新 DOM 插入时，watchChat 会把旧情绪气泡挪到我的消息下面。
+  if (isMe && typeof refreshMood === 'function') refreshMood(false);
 
   if (isMe && (type === 'redpacket' || type === 'transfer' || type === 'gift' || type === 'interact')) {
     const delay = 2000 + Math.random() * 3000;
@@ -534,10 +635,12 @@ function triggerPat(isMePatting) {
   const sys = document.createElement('div'); 
   sys.className = 'sys'; 
   sys.textContent = patText; 
-  if(chatEl) { 
-    chatEl.appendChild(sys); 
-    chatEl.scrollTop = chatEl.scrollHeight; 
+  if(chatEl) {
+    chatEl.appendChild(sys);
+    chatEl.scrollTop = chatEl.scrollHeight;
   }
+  // 普通情绪先藏起来，等下一次真实消息；事件情绪会居中显示
+  if (typeof refreshMood === 'function') refreshMood(true);
   if (isMePatting) {
     setTimeout(() => { 
       const reactions = ['干嘛呀~', '嘿嘿', '怎么啦？', '戳我干嘛', '我在呢']; 
@@ -548,18 +651,22 @@ function triggerPat(isMePatting) {
 
 function getRandomDelay() { return Math.floor(Math.random() * ((chatSettings.replyDelay || 1) * 60 * 1000)); }
 
-function showTypingIndicator() {
+function showTypingIndicator(labelText) {
   if(!chatEl) return;
   if (document.getElementById('typingIndicator')) return;
   const row = document.createElement('div');
   row.id = 'typingIndicator';
   row.className = 'row';
   const avatar = document.createElement('div'); avatar.className = 'avatar other';
-  if (chatSettings.otherAvatar) avatar.innerHTML = `<img src="${chatSettings.otherAvatar}">`;
-  else avatar.textContent = chatSettings.otherName.charAt(0);
+  if (chatSettings.otherAvatar) {
+    avatar.innerHTML = `<img src="${chatSettings.otherAvatar}">`;
+  } else {
+    avatar.classList.add('heart-avatar');
+    avatar.innerHTML = `<img src="icons/icon-heart-192.png" class="default-heart-avatar" alt="">`;
+  }
   const wrap = document.createElement('div'); wrap.className = 'bubble-wrap';
   const bubble = document.createElement('div'); bubble.className = 'bubble typing-bubble';
-  const label = document.createElement('span'); label.className = 'typing-label'; label.textContent = `${chatSettings.otherName} 正在输入`;
+  const label = document.createElement('span'); label.className = 'typing-label'; label.textContent = labelText || `${chatSettings.otherName} 正在输入`;
   bubble.appendChild(label);
   for (let i = 0; i < 3; i++) { const d = document.createElement('span'); d.className = 'typing-dot'; bubble.appendChild(d); }
   wrap.appendChild(bubble); row.appendChild(avatar); row.appendChild(wrap);
@@ -570,6 +677,54 @@ function showTypingIndicator() {
 function hideTypingIndicator() {
   const typing = document.getElementById('typingIndicator');
   if (typing) typing.remove();
+}
+
+// 有内置回复的场景：抽字卡的比例
+const HYBRID_TEXT_CARD_RATE = 0.7;       // 通用兜底
+const HYBRID_INTERACT_CARD_RATE = 0.5;   // 互动：五五开
+const HYBRID_MUSIC_CARD_RATE = 0.6;      // 推荐歌曲：字卡略多
+
+// 从自己的字卡里抽一条回复（互动、推荐歌曲的“混合模式”共用）
+// 返回 false 表示字卡库为空，调用方可以退回固定内置回复。
+function sendRandomTextCardReply(opts) {
+  const options = opts || {};
+  const textCards = contents.filter(item => item && item.type === 'text' && item.val);
+  if (!textCards.length) return false;
+
+  let quote = null;
+  const quoteChance = options.quoteChance == null ? 0.2 : options.quoteChance;
+  if (Math.random() < quoteChance) {
+    const recent = chatHistory.slice(-20).filter(m => m.role === 'me' && m.type === 'text' && m.content);
+    if (recent.length) {
+      const target = recent[Math.floor(Math.random() * recent.length)];
+      quote = { sender: chatSettings.myName, text: target.content.val, time: target.time };
+    }
+  }
+
+  const picked = textCards[Math.floor(Math.random() * textCards.length)];
+  if (typeof boostMoodFromCard === 'function') boostMoodFromCard(picked);
+  let text = String(picked.val);
+  const emojis = contents.filter(item => item && item.type === 'emoji' && item.val);
+  if (emojis.length && Math.random() < 0.3) {
+    text += ' ' + emojis[Math.floor(Math.random() * emojis.length)].val;
+  }
+  sendMessage(text, 'text', false, quote);
+  return true;
+}
+
+let lastEmptyCardPromptAt = 0;
+function promptEmptyCardLibrary() {
+  const now = Date.now();
+  if (now - lastEmptyCardPromptAt < 15000) return;
+  lastEmptyCardPromptAt = now;
+  if (typeof showConfirm === 'function') {
+    showConfirm('字卡库为空', '请进入「自定义回复」添加字卡。是否现在前往？', () => {
+      const btn = document.getElementById('menuCards');
+      if (btn) btn.click();
+    });
+  } else if (typeof showToast === 'function') {
+    showToast('字卡库为空，请进入自定义回复添加字卡');
+  }
 }
 
 function randomReply() {
@@ -637,7 +792,7 @@ function randomReply() {
   }
 
   if (imageCards.length > 0 && Math.random() < 0.12) { sendMessage(imageCards[Math.floor(Math.random() * imageCards.length)].val, 'image', false, quote); return; }
-  if (textCards.length === 0) { sendMessage('（字卡库是空的）', 'text', false, quote); return; }
+  if (textCards.length === 0) { promptEmptyCardLibrary(); return; }
   
   const pickedCard = textCards[Math.floor(Math.random() * textCards.length)];
   // 他抽到带"吃醋/嫉妒"或"亲密"标签的字卡时，接下来一段时间的心情会往那边偏
@@ -661,7 +816,12 @@ function simulateReplyWithDelay() {
     setTimeout(() => {
       if (typeof setOtherOnline === 'function') setOtherOnline();
       const lines = (typeof offlineReplyLines !== 'undefined' && offlineReplyLines.length) ? offlineReplyLines : ['刚看到消息！怎么啦'];
-      sendMessage(lines[Math.floor(Math.random() * lines.length)], 'text', false);
+      let line = lines[Math.floor(Math.random() * lines.length)];
+      // 离线回来的自动回复，结尾有较高概率带 😭 / 🥺
+      if (Math.random() < 0.55) {
+        line += ' ' + (Math.random() < 0.5 ? '😭' : '🥺');
+      }
+      sendMessage({ val: line, autoReply: true }, 'text', false);
       setTimeout(randomReply, 1200 + Math.random() * 1500);
     }, extra);
     return;

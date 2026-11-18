@@ -25,13 +25,15 @@
       #bootScreen {
         position: fixed; inset: 0; z-index: 99999;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        gap: 20px; background: radial-gradient(130% 95% at 50% 0%, #f9fcf2 0%, #f2f7e6 48%, #edf2dd 100%);
+        gap: 20px;
+        background: radial-gradient(130% 95% at 50% 0%,
+          var(--boot-bg1, #f9fcf2) 0%, var(--boot-bg2, #f2f7e6) 48%, var(--boot-bg3, #edf2dd) 100%);
         transition: opacity .45s ease, transform .45s ease;
       }
       #bootScreen.boot-hide { opacity: 0; transform: scale(1.03); pointer-events: none; }
       #bootHeart {
         animation: bootBounce 1.8s ease-in-out infinite;
-        filter: drop-shadow(0 10px 16px rgba(94, 138, 34, 0.3));
+        filter: drop-shadow(0 10px 16px rgba(var(--primary-rgb, 94, 138, 34), 0.3));
       }
       /* 8 帧旋转：背景图是一张 8 连拍的精灵表，用 steps 逐帧切换 */
       #bootLogo {
@@ -40,6 +42,7 @@
         background-size: 768px 96px;
         background-repeat: no-repeat;
         image-rendering: pixelated;
+        filter: var(--icon-filter, none);
         animation: bootSpin 1.6s steps(8) infinite;
       }
       @keyframes bootSpin {
@@ -51,20 +54,31 @@
         45% { transform: translateY(-16px); }
         70% { transform: translateY(0); }
       }
-      #bootName { font-size: 27px; font-weight: 600; letter-spacing: 11px; color: #4f6b2a; text-indent: 11px; }
-      #bootSub { font-size: 12px; letter-spacing: 4px; color: #8fa06a; margin-top: -16px; }
+      #bootName { font-size: 27px; font-weight: 600; letter-spacing: 11px; color: var(--boot-name, #4f6b2a); text-indent: 11px; }
+      #bootSub { font-size: 12px; letter-spacing: 4px; color: var(--boot-sub, #8fa06a); margin-top: -16px; }
       #bootDots { display: flex; gap: 8px; margin-top: 4px; }
-      #bootDots i { width: 7px; height: 7px; border-radius: 50%; background: #8FBF3A; opacity: .3; animation: bootDot 1.1s ease-in-out infinite; }
+      #bootDots i { width: 7px; height: 7px; border-radius: 50%; background: var(--boot-accent, #8FBF3A); opacity: .3; animation: bootDot 1.1s ease-in-out infinite; }
       #bootDots i:nth-child(2) { animation-delay: .15s; }
       #bootDots i:nth-child(3) { animation-delay: .3s; }
       @keyframes bootDot {
         0%, 100% { opacity: .3; transform: translateY(0); }
         40% { opacity: 1; transform: translateY(-5px); }
       }
+      #bootProgress {
+        width: 168px; height: 4px; border-radius: 999px; margin-top: -4px;
+        background: var(--boot-accent-soft, rgba(143, 191, 58, .18)); overflow: hidden;
+      }
+      #bootBar {
+        display: block; height: 100%; width: 0; border-radius: inherit;
+        background: linear-gradient(90deg, var(--boot-accent-light, #C3E283), var(--boot-accent, #8FBF3A));
+        transition: width .28s ease;
+      }
+      #bootStatus { font-size: 11px; letter-spacing: 1px; color: var(--boot-sub, #8fa06a); min-height: 15px; }
       @media (prefers-color-scheme: dark) {
-        #bootScreen { background: radial-gradient(130% 95% at 50% 0%, #2a3320 0%, #1c2216 55%, #141414 100%); }
-        #bootName { color: #cfe6a3; }
-        #bootSub { color: #7f8f63; }
+        #bootScreen { background: radial-gradient(130% 95% at 50% 0%,
+          var(--boot-dark1, #2a3320) 0%, var(--boot-dark2, #1c2216) 55%, var(--boot-dark3, #141414) 100%); }
+        #bootName { color: var(--boot-dark-name, #cfe6a3); }
+        #bootSub { color: var(--boot-dark-sub, #7f8f63); }
       }
     </style>
 </head>
@@ -74,6 +88,8 @@
       <div id="bootName">ECHO</div>
       <div id="bootSub">yfueinx</div>
       <div id="bootDots"><i></i><i></i><i></i></div>
+      <div id="bootProgress"><i id="bootBar"></i></div>
+      <div id="bootStatus">正在唤醒页面…</div>
     </div>
     <div class="app" id="appContainer">
       <!-- 聊天页 -->
@@ -159,6 +175,7 @@
             </div>
             <div class="tool-page">
               <div class="tool-grid">
+                <div class="tool-item" id="toolChoice"><div class="tool-icon">☑️</div><span>选择</span></div>
                 <div class="tool-item" id="toolMusic"><div class="tool-icon">🎵</div><span>音乐</span></div>
                 <div class="tool-item" id="toolVoice" style="display:none;"><div class="tool-icon">🎙️</div><span>录音</span></div>
               </div>
@@ -216,6 +233,7 @@
           <div class="manager-card" id="menuCards"><div class="icon">📇</div><span>自定义回复</span></div>
           <div class="manager-card" id="menuData"><div class="icon">🗄️</div><span>数据管理</span></div>
           <div class="manager-card wide" id="menuMusic"><div class="icon">🎵</div><span>音乐管理</span></div>
+          <div class="manager-card wide" id="menuManual"><div class="icon">📖</div><span>使用手册</span></div>
         </div>
       </div>
 
@@ -247,6 +265,250 @@
         <input type="file" id="musicManageFile" accept="audio/*,.lrc" multiple hidden>
       </div>
       <input type="file" id="lrcFileInput" accept=".lrc,text/plain" hidden>
+
+      <!-- 使用手册 -->
+      <div class="page" id="pageManual">
+        <div class="navbar">
+          <button class="back" id="backFromManual">‹</button>
+          <div class="title">使用手册</div>
+        </div>
+        <div class="manual-scroll">
+          <div class="manual-wrap">
+            <p class="manual-lead">本手册按照页面结构编写，从聊天页开始，依次说明加号面板、后台管理和数据管理。所有功能都可以在实际页面中直接找到，遇到不熟悉的项目时查看对应章节即可。</p>
+            <div class="manual-note">聊天记录、设置和字卡都保存在当前浏览器中，不会上传到服务器。更换设备、清理浏览器数据或使用无痕模式前，请先在「后台管理 → 数据管理」中导出备份。</div>
+
+            <div class="manual-toc">
+              <a href="#manual-chat">聊天页</a>
+              <a href="#manual-tools">加号面板</a>
+              <a href="#manual-manager">后台管理</a>
+              <a href="#manual-settings">聊天设置</a>
+              <a href="#manual-cards">自定义回复</a>
+              <a href="#manual-music">音乐</a>
+              <a href="#manual-data">数据管理</a>
+              <a href="#manual-prob">概率说明</a>
+              <a href="#manual-faq">常见问题</a>
+            </div>
+
+            <section class="manual-section" id="manual-chat">
+              <h2>一、聊天页</h2>
+              <p>聊天页由顶栏、签名栏、消息区和输入栏四部分组成。</p>
+
+              <h3>1. 顶栏</h3>
+              <ul>
+                <li>左侧显示对方昵称，昵称下方是状态气泡、网络和电量信息。</li>
+                <li>🌙 / ☀️ 用于切换夜间模式和白天模式。夜间模式的按钮和气泡会跟随当前配色，其余界面使用统一的深色方案。</li>
+                <li>🖥️ 用于切换电脑宽屏布局；在手机上通常不需要开启。</li>
+                <li>⋯ 进入后台管理，聊天设置、字卡库、音乐管理、数据管理等都在这里。</li>
+              </ul>
+
+              <h3>2. 签名栏</h3>
+              <p>签名栏显示对方的个性签名，并按设定时间自动轮换。播放音乐时，签名栏会临时变成歌词显示区；暂停或关闭播放器后恢复为签名。</p>
+
+              <h3>3. 消息区</h3>
+              <ul>
+                <li>普通文字、图片、语音和各类卡片都按时间顺序排列。</li>
+                <li>双击某条消息可以引用回复；长按消息或点击鼠标右键可以打开操作菜单，进行引用、复制或删除。</li>
+                <li>双击对方头像可以触发一次「拍一拍」。</li>
+                <li>他最新一条消息下方可能出现情绪气泡，表示他此刻的心情；没有显示时，说明当前最后一条消息不是他发的，或情绪尚未刷新。</li>
+              </ul>
+
+              <h3>4. 输入栏</h3>
+              <ul>
+                <li>输入文字后点击「发送」或按回车键发送。</li>
+                <li>😄 打开表情面板，可选择 Emoji 或已保存的表情图片。</li>
+                <li>＋ 打开加号面板，包含图片、通话、红包、礼物、选择、音乐等工具。</li>
+                <li>💌 让他主动发消息，发送数量由聊天设置中的「回复条数」决定。</li>
+              </ul>
+            </section>
+
+            <section class="manual-section" id="manual-tools">
+              <h2>二、加号面板</h2>
+              <p>加号面板分为两页，可以左右滑动，也可以点击底部的两个小圆点切换。电脑上可用鼠标滚轮翻页。</p>
+
+              <h3>第一页</h3>
+              <ul>
+                <li><b>拍照 / 图片：</b>发送相机拍摄或相册中的图片。图片过大时会自动压缩。</li>
+                <li><b>语音通话：</b>发起通话；对方可能接听、拒接或无人接听，结果会记录在聊天中。通话记录带电话图标，未接来电和已挂断使用红色图标，正常结束使用主题色图标，已取消为灰色图标。</li>
+                <li><b>他在哪：</b>先发送「你在哪呀？」，随后由对方回复一个位置卡片。</li>
+                <li><b>红包 / 转账：</b>输入金额和备注，按提示完成支付密码验证后发送。</li>
+                <li><b>送礼物：</b>按价位和类型筛选礼物，选择后发送；对方收到的礼物需要拆开。</li>
+                <li><b>互动：</b>发送摸摸头、抱抱、贴贴等互动请求，对方会给出对应回应。</li>
+              </ul>
+
+              <h3>通话的五种结果</h3>
+              <ul>
+                <li>他打给你，铃声响完你未接：记录为「未接来电」。</li>
+                <li>你打给他，铃声响完他未接：记录为「对方未接来电」。</li>
+                <li>你打给他，他未接就挂断：记录为「对方已挂断」。</li>
+                <li>他打给你，你未接就挂断：记录为「已挂断」。</li>
+                <li>接通后结束：记录为「通话结束 时长」。</li>
+              </ul>
+              <p>通话记录之后，他通常会按情况回复一句。未接和挂断约 60% 使用内置句子、40% 抽取字卡；通话结束和已取消约 50% / 50%。字卡库为空时使用内置句子；内置句子约 42% 在末尾带 emoji。通话结果也会临时提高对应情绪权重：他打来但你没接到时偏等待、不安；你打给他但他没接到时偏抱歉、心虚；通话结束偏开心、亲密。</p>
+
+              <h3>第二页</h3>
+              <ul>
+                <li><b>选择：</b>创建一张选择卡。默认两个选项，可以继续添加；设置「从中选几个」后发送。对方会先显示「思考中」，再回复「我选……」。</li>
+                <li><b>音乐：</b>打开播放器，不会自动播放。点击播放按钮播放上一次听的歌曲，点击播放器上的歌名进入歌单。</li>
+                <li><b>录音：</b>仅在浏览器支持麦克风时显示。按住录音、松开发送；首次使用需要允许麦克风权限。</li>
+              </ul>
+            </section>
+
+            <section class="manual-section" id="manual-manager">
+              <h2>三、后台管理</h2>
+              <p>点击聊天页右上角的「⋯」进入后台管理。后台包含以下入口：</p>
+              <ul>
+                <li><b>聊天设置：</b>昵称、头像、壁纸、回复节奏、时间格式、主题与配色等。</li>
+                <li><b>聊天记录：</b>查看历史消息、按条件筛选和清理。</li>
+                <li><b>自定义回复：</b>管理文字字卡、Emoji、表情图片和标签。</li>
+                <li><b>数据管理：</b>查看占用空间、导出、导入和清理数据。</li>
+                <li><b>音乐管理：</b>排序、隐藏、删除曲目，导入音频和歌词。</li>
+                <li><b>使用手册：</b>即当前页面。</li>
+              </ul>
+              <p>各页面左上角的「‹」返回上一级；聊天设置页如有未保存的修改，返回时会提示保存或放弃。</p>
+            </section>
+
+            <section class="manual-section" id="manual-settings">
+              <h2>四、聊天设置</h2>
+
+              <h3>1. 基本信息</h3>
+              <ul>
+                <li><b>昵称：</b>分别设置你的昵称和对方的昵称，会显示在消息、拍一拍和系统提示中。</li>
+                <li><b>头像与壁纸：</b>选择图片后可裁剪为方形或圆形；壁纸不需要裁剪。对方未上传头像时，默认显示像素爱心，并跟随当前配色。</li>
+                <li><b>恢复默认：</b>「恢复默认头像」会清除双方的自定义头像；「恢复默认壁纸」会清除聊天背景。两项都需要点击保存后生效。</li>
+                <li><b>拍一拍：</b>设置你拍对方时使用的动作和附加文字，下方会实时显示预览。</li>
+              </ul>
+
+              <h3>2. 回复节奏</h3>
+              <ul>
+                <li><b>回复延迟：</b>控制对方回复前的等待时间。实际延迟会在 0 到这个时间之间随机取值。</li>
+                <li><b>回复条数：</b>控制一次回复发送几条消息。</li>
+                <li><b>签名刷新：</b>控制个性签名自动轮换的间隔，最短 15 分钟。</li>
+                <li><b>自动回复：</b>开启后，在设定的无互动时间后主动发来消息；设置为 0 表示关闭。</li>
+              </ul>
+
+              <h3>3. 显示与外观</h3>
+              <ul>
+                <li><b>时间格式：</b>选择 12 小时制或 24 小时制，并可选择是否显示秒。</li>
+                <li><b>界面配色：</b>分为单色、撞色、科技和渐变四组。点击配色会立即预览，保存后生效。</li>
+                <li><b>显示「正在输入」：</b>关闭后，对方回复前不再显示输入提示。</li>
+                <li><b>消息音效：</b>控制发送和接收消息时的提示音。</li>
+                <li><b>情绪气泡：</b>控制他最后一条消息下方是否显示心情气泡，默认开启。</li>
+                <li><b>图标色调：</b>可选择原色、柔和或跟随配色。</li>
+              </ul>
+              <p>修改完成后请点击右上角保存。部分外观设置需要保存后才会应用到所有页面。</p>
+            </section>
+
+            <section class="manual-section" id="manual-cards">
+              <h2>五、自定义回复</h2>
+              <p>「自定义回复」用于管理对方聊天时可能使用的文字和表情。页面分为三个标签：</p>
+              <ul>
+                <li><b>字卡：</b>纯文字回复，可以按标签分类。</li>
+                <li><b>Emoji：</b>单个或多个表情，会以一定概率附加在回复末尾。</li>
+                <li><b>表情包：</b>图片表情，发送时会以图片消息出现。</li>
+              </ul>
+
+              <h3>常用操作</h3>
+              <ul>
+                <li>可以直接新增，也可以批量导入多行文字。</li>
+                <li>「查重」会找出重复的文字字卡，并可选择保留最早的一条。</li>
+                <li>「批量管理」用于多选、移动标签或删除。</li>
+                <li>标签用于区分不同语气或场景，例如日常、亲密、吃醋。对方抽到带特定标签的卡片时，情绪会短暂受到影响。</li>
+              </ul>
+              <p>字卡库为空时，会弹出提示并可直接前往「自定义回复」添加字卡，不会发送空白消息。互动和推荐歌曲采用「内置回复 + 字卡」的混合模式：互动五五开，推荐歌曲约 40% 内置、60% 字卡。具体比例见第八节。</p>
+            </section>
+
+            <section class="manual-section" id="manual-music">
+              <h2>六、音乐</h2>
+
+              <h3>1. 播放器</h3>
+              <ul>
+                <li>点击加号面板中的「音乐」只打开播放器，不会自动播放。</li>
+                <li>点击播放按钮播放上一次听的歌曲；点击播放器上的歌名或歌手进入歌单。</li>
+                <li>播放器支持列表循环、单曲循环和随机播放。列表循环到最后一首后会回到第一首。</li>
+                <li>没有音频文件的占位歌曲会标注「暂无音频」，播放时会给出提示。</li>
+              </ul>
+
+              <h3>2. 歌单与本地音乐</h3>
+              <ul>
+                <li>歌单中可以直接选歌、推荐给对方，或邀请对方一起听。</li>
+                <li>点击「＋」可以导入本地 mp3；文件保存在浏览器本地数据库中，关闭页面后仍然保留。</li>
+                <li>歌词支持导入 .lrc 文件，也可以使用内置歌词。内置歌词在打包时写入，不依赖网络读取。</li>
+              </ul>
+
+              <h3>3. 一起听</h3>
+              <p>推荐歌曲后，对方会在几秒内给出回应。邀请对方一起听时，如果这首歌正好是当前正在播放的歌曲，不会从头重新播放。</p>
+
+              <h3>4. 音乐管理</h3>
+              <p>后台的「音乐管理」可以调整曲目顺序、隐藏不常听的曲目、批量删除，并检查音频文件是否存在。删除本地曲目前会二次确认；隐藏的曲目可以从同一页面恢复。</p>
+            </section>
+
+            <section class="manual-section" id="manual-data">
+              <h2>七、数据管理</h2>
+              <ul>
+                <li><b>占用空间：</b>显示当前浏览器中聊天数据、字卡和图片/语音的大致体积。</li>
+                <li><b>导出：</b>可以导出全部数据、字卡与表情库、聊天记录或聊天设置。导出前可选择是否包含图片和语音。</li>
+                <li><b>导入：</b>选择之前导出的 JSON 文件，或粘贴导出的文本内容。导入会覆盖对应类别的现有数据，操作前建议先备份。</li>
+                <li><b>清理图片/语音：</b>只移除图片和语音，文字消息保留。</li>
+                <li><b>清空聊天记录：</b>删除全部聊天消息，字卡和设置不受影响。</li>
+              </ul>
+              <p>如果超过 7 天没有导出，或从未导出过，进入数据管理时会收到一次备份提醒；同一天最多提醒一次。</p>
+            </section>
+
+            <section class="manual-section" id="manual-prob">
+              <h2>八、概率说明</h2>
+              <p>以下比例用于让对话更接近日常聊天，不是固定流程。每次触发都会重新随机。</p>
+
+              <h3>情绪气泡的三个阶段</h3>
+              <p>情绪气泡按场景分为三个阶段：<b>日常阶段</b>没有等待中的回复，以平静、开心为主；<b>刚分开阶段</b>是他刚发完消息的一小段时间，期待和等待会上升；<b>久未回阶段</b>时间越长越偏平静，焦虑先升后降。未拆的红包或礼物会临时压过其他情绪，偏向等待和不安。同一状态通常至少保持约 40 秒，避免频繁变化。</p>
+              <p>气泡最多显示三段，但每次刷新不一定三段都有：可能只有一段、两段或三段。第一段一定是情绪，第二、三段可能是进一步状态、等待/看手机这类通用补充，或另一条情绪。部分情绪会出现「开心 / 开心+ / 开心++」这样的强度标记；第三段也可能以 emoji 收尾。切到另一条情绪时按亲和权重，不是完全平均：委屈更容易接期待，开心更容易接激动，但其他情绪仍保留低概率。待机久了可能升一档，也可能切换情绪。换情绪时整颗气泡会缩放回弹、扫过一道高光并变色；升一档时只有气泡横向长开、新加的那一段弹进来，颜色保持不变，两种效果有明显区别。拍一拍之后，普通情绪会先隐藏，等下一次真实消息再显示。</p>
+
+              <h3>熬夜与离线</h3>
+              <p>00:00～05:00 登录，或在深夜长时间停留在界面，会提高担心、不安、焦虑、生气的权重，并可能出现一次熬夜相关的情绪。深夜离线的概率会略高。离线自动回复会带「[自动回复]」标记，回到在线后的新消息不再带这个标记。</p>
+              <table class="manual-table">
+                <tr><th>项目</th><th>规则</th></tr>
+                <tr><td>普通文字回复</td><td>从字卡库随机抽取；约 20% 会引用你最近说过的一句话；约 30% 会在末尾附加一个 Emoji。</td></tr>
+                <tr><td>回复中的额外行为</td><td>约 6% 触发拍一拍；约 5% 分享或邀请一起听歌；约 5% 发送礼物、红包或转账。</td></tr>
+                <tr><td>互动回应</td><td>50% 使用该互动的内置回复，50% 抽取你的字卡；字卡库为空时使用内置回复；延迟约 1.5～3 秒。</td></tr>
+                <tr><td>推荐歌曲的回应</td><td>40% 使用听歌专用回复，60% 抽取你的字卡；字卡库为空时使用内置回复；延迟约 1.5～3.5 秒。</td></tr>
+                <tr><td>通话后的回应</td><td>未接来电 / 对方已挂断 / 已挂断：60% 内置、40% 字卡；通话结束 / 已取消：50% / 50%。字卡库为空时使用内置句子；延迟约 1.4～3.6 秒；内置句子约 42% 末尾带 emoji。</td></tr>
+                <tr><td>一起听</td><td>约 1.6～3 秒后接受；同一首歌正在播放时不会重播。</td></tr>
+                <tr><td>情绪气泡</td><td>按当前场景加权：日常以平静、开心为主；久等会提高等待和不安；亲密互动、红包等会短暂提高对应情绪。同一状态至少保持约 40 秒。</td></tr>
+                <tr><td>待机时的情绪刷新</td><td>空闲 1 分钟内约 30%；1～5 分钟约 25%；5～15 分钟约 18%；15 分钟以上约 12%。</td></tr>
+                <tr><td>选择卡</td><td>对方思考约 2～4 秒，然后按设定的数量随机选择，并回复「我选……」。</td></tr>
+                <tr><td>自动回复</td><td>仅在开启并设置分钟数后生效；没有新的互动时才会触发。</td></tr>
+                <tr><td>深夜</td><td>00:00～05:00 登录或长时间停留，会提高担心、不安、焦虑、生气，并可能触发熬夜情绪。</td></tr>
+                <tr><td>字卡库为空</td><td>弹出提示，可直接前往「自定义回复」添加字卡。</td></tr>
+                <tr><td>离线后回来</td><td>约 90～240 秒后重新上线，并先发送一句离线回复。</td></tr>
+              </table>
+              <p>以上数值可以在代码中调整。具体位置见《代码说明》对应章节。</p>
+            </section>
+
+            <section class="manual-section" id="manual-faq">
+              <h2>九、常见问题</h2>
+
+              <h3>1. 聊天记录在哪里？</h3>
+              <p>全部保存在当前浏览器中。清理浏览器缓存、更换浏览器或使用无痕模式都可能导致记录消失。建议定期导出备份。</p>
+
+              <h3>2. 换设备后如何继续？</h3>
+              <p>在旧设备导出「全部数据」，将 JSON 文件发送到新设备，再在新设备的数据管理中导入。两台设备之间不会自动同步。</p>
+
+              <h3>3. 内置音乐无法播放怎么办？</h3>
+              <p>本地导入的 mp3 和歌词可以正常播放。内置曲目需要整个 <code>music</code> 文件夹随网站一起部署，而不只是打开 <code>index.html</code>；没有音频文件的曲目会显示「暂无音频」。手机浏览器需要由用户主动点击播放按钮。</p>
+
+              <h3>4. 安装到桌面后图标是字母怎么办？</h3>
+              <p>请确认网站使用 https 访问、<code>icons</code> 文件夹已上传，然后删除旧快捷方式、清理缓存并重新添加。</p>
+
+              <h3>5. 忘记支付密码怎么办？</h3>
+              <p>支付密码保存在本机，无法找回。只能清理站点数据后重新设置，请在操作前确认已经备份重要内容。</p>
+
+              <h3>6. 为什么有时回复很快，有时很久？</h3>
+              <p>回复延迟由聊天设置决定，并在设定范围内随机。空闲时间、是否离线、是否有未领取的卡片也会影响情绪和回复节奏。</p>
+            </section>
+
+            <p class="manual-foot">本手册随功能更新同步维护。如需调整具体数值或文案，请参考《代码说明》。</p>
+          </div>
+        </div>
+      </div>
 
       <!-- 数据管理 -->
       <div class="page" id="pageData">
@@ -417,10 +679,13 @@
                 <span class="file-name" id="setWallpaperName"></span>
               </div>
             </div>
+            <div class="setting-row clickable" id="resetAvatars"><label>恢复默认头像</label><span>›</span></div>
+            <div class="setting-row clickable" id="resetWallpaper"><label>恢复默认壁纸</label><span>›</span></div>
           </div>
           <div class='setting-group'>
             <div class='setting-row'><label>显示“正在输入”气泡</label><label class='switch'><input type='checkbox' id='setShowTyping'><span class='knob'></span></label></div>
             <div class='setting-row'><label>消息与通话音效</label><label class='switch'><input type='checkbox' id='setSound'><span class='knob'></span></label></div>
+            <div class='setting-row'><label>情绪气泡</label><label class='switch'><input type='checkbox' id='setMoodEnabled'><span class='knob'></span></label></div>
           </div>
           <div class='setting-group'>
             <div class='setting-row-col'>
@@ -461,11 +726,12 @@
                 <button type="button" data-pgroup="clash">撞色</button>
                 <button type="button" data-pgroup="grad">渐变</button>
                 <button type="button" data-pgroup="tech">科技</button>
+                <button type="button" data-pgroup="social">其他</button>
               </div>
               <div class="palette-scroll" id="paletteScroll">
                 <div class="palette-grid" id="paletteGrid"></div>
               </div>
-              <p class="palette-hint">只改变白天模式，黑夜模式不变。</p>
+              <p class="palette-hint">白天完整应用；黑夜模式的气泡会按主色轻微着色。</p>
             </div>
           </div>
           <div class="setting-group">
@@ -670,6 +936,19 @@
         </div>
       </div>
 
+      <!-- 选择：写几个选项，让他选一个或几个 -->
+      <div class="modal" id="choiceModal">
+        <div class="panel">
+          <h3>☑️ 做个选择</h3>
+          <p class="choice-hint">写下选项，发过去让他选</p>
+          <input type="text" id="choiceTitle" class="choice-title" placeholder="标题（可选），比如：今晚吃什么" maxlength="30">
+          <div id="choiceOptions"></div>
+          <button type="button" id="choiceAddOption" class="choice-add">＋ 添加选项</button>
+          <div class="choice-pick-row">从中选 <input type="number" id="choicePickCount" min="1" value="1"> 个</div>
+          <div class="btns"><button class="btn-cancel" id="choiceCancel">取消</button><button class="btn-save" id="choiceSend">发送</button></div>
+        </div>
+      </div>
+
       <!-- 录音（不支持麦克风的浏览器会隐藏入口） -->
       <div class="modal" id="voiceModal" onclick="if(event.target===this) cancelVoice()">
         <div class="panel voice-panel">
@@ -743,6 +1022,7 @@
     <script src="chat_core.js"></script>
     <script src="chat_stickers.js"></script>
     <script src="chat_tools.js"></script>
+    <script src="chat_choice.js"></script>
     <script src="chat_call.js"></script>
     <script src="chat_money.js"></script>
     <script src="manage_cards.js"></script>
@@ -752,6 +1032,7 @@
     <script src="music_lyrics.js"></script>
     <script src="chat_music.js"></script>
     <script src="manage_music.js"></script>
+    <script src="mood_pools.js"></script>
     <script src="chat_mood.js"></script>
     <script src="router.js"></script>
     <script src="custom_icons.js"></script>
@@ -765,23 +1046,74 @@
         // 从"打开页面"开始计时（不是从脚本跑完开始），慢手机不会再多等一段
         var now = function () { return (window.performance && performance.now) ? performance.now() : Date.now(); };
         var shownAt = now();
-        var MIN_SHOW = 1500;   // 至少停留 1.5 秒，别一闪而过
-        var MAX_WAIT = 12000;  // 兜底：最多等 12 秒，卡住了也先放人进去
+        var MIN_SHOW = 1600;   // 至少停留一会儿，别一闪而过
+        var MAX_WAIT = 15000;  // 兜底：卡住了也先放人进去
         var loadDone = document.readyState === 'complete';
         var appReady = window.__appReady === true;
-        // 字体（Noto Serif SC）晚到会让文字重新排版，也一起等，但最多多等 3 秒
         var fontsDone = !(document.fonts && document.fonts.ready);
+        var imagesDone = false;
+        var settleDone = false;
+
+        // ===== 进度条：只做视觉反馈，真正放行仍看下面几个条件 =====
+        var bar = document.getElementById('bootBar');
+        var statusEl = document.getElementById('bootStatus');
+        var progress = 4, target = 12;
+        function setStage(v, label) {
+          if (v > target) target = v;
+          if (label && statusEl) statusEl.textContent = label;
+        }
+        function tickProgress() {
+          progress += Math.max(0.5, (target - progress) * 0.16);
+          if (progress > target) progress = target;
+          if (bar) bar.style.width = Math.min(100, progress).toFixed(1) + '%';
+          if (progress < 99.5) setTimeout(tickProgress, 110);
+        }
+        tickProgress();
+
+        // 页面上已有的图片（头像、壁纸、表情）先解码完，避免进聊天页后一张张跳出来
+        function waitImages(cb) {
+          var imgs = Array.prototype.slice.call(document.images || []);
+          var pending = imgs.filter(function (img) {
+            return img.getAttribute('src') && !img.complete;
+          });
+          if (!pending.length) return cb();
+          var left = pending.length, done = false;
+          function fin() { if (done) return; done = true; cb(); }
+          pending.forEach(function (img) {
+            var f = function () { if (--left <= 0) fin(); };
+            img.addEventListener('load', f, { once: true });
+            img.addEventListener('error', f, { once: true });
+          });
+          setTimeout(fin, 2500);
+        }
+        waitImages(function () {
+          imagesDone = true;
+          setStage(92, '正在整理你的世界…');
+          tryHide();
+        });
+
         if (!fontsDone) {
-          document.fonts.ready.then(function () { fontsDone = true; tryHide(); });
-          setTimeout(function () { fontsDone = true; tryHide(); }, 3000);
+          document.fonts.ready.then(function () { fontsDone = true; setStage(84, '正在排版文字…'); tryHide(); });
+          setTimeout(function () { fontsDone = true; setStage(84, '正在排版文字…'); tryHide(); }, 3000);
+        } else {
+          setStage(84, '正在排版文字…');
         }
 
         var revealed = false;
         function reveal() {
           if (revealed) return;
           revealed = true;
-          splash.classList.add('boot-hide');
-          setTimeout(function () { splash.style.display = 'none'; }, 500);
+          setStage(100, '准备好了');
+          if (bar) bar.style.width = '100%';
+          setTimeout(function () {
+            splash.classList.add('boot-hide');
+            setTimeout(function () {
+              splash.style.display = 'none';
+              // 启动页真正退场后再放行情绪气泡，让首屏能看到出现动画
+              window.__appRevealed = true;
+              try { window.dispatchEvent(new Event('app-revealed')); } catch (e) {}
+            }, 500);
+          }, 180);
         }
         function hide() {
           if (hidden) return;
@@ -794,15 +1126,23 @@
           setTimeout(go, 450);
         }
         function tryHide() {
-          if (!loadDone || !appReady || !fontsDone) return;
+          if (hidden) return;
+          if (!loadDone || !appReady || !fontsDone || !imagesDone) return;
+          if (!settleDone) {
+            // app-ready 后再留一小段时间，让最后一批 DOM 和滚动位置稳定下来
+            settleDone = true;
+            setStage(96, '马上就好…');
+            setTimeout(tryHide, 260);
+            return;
+          }
           var rest = MIN_SHOW - (now() - shownAt);
           setTimeout(hide, rest > 0 ? rest : 0);
         }
-        if (loadDone) tryHide();
-        else window.addEventListener('load', function () { loadDone = true; tryHide(); });
+        if (loadDone) { setStage(46, '正在读取聊天记录…'); tryHide(); }
+        else window.addEventListener('load', function () { loadDone = true; setStage(46, '正在读取聊天记录…'); tryHide(); });
         // 信号可能在本文脚本之前就发出，所以先直接读一次标志
-        if (appReady) tryHide();
-        window.addEventListener('app-ready', function () { appReady = true; tryHide(); });
+        if (appReady) { setStage(72, '正在唤醒聊天…'); tryHide(); }
+        window.addEventListener('app-ready', function () { appReady = true; setStage(72, '正在唤醒聊天…'); tryHide(); });
 
         setTimeout(hide, MAX_WAIT);
       })();

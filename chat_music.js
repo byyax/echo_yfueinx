@@ -199,6 +199,9 @@ let lyricTitle = '';
 
 const musicAudio = new Audio();
 musicAudio.preload = 'auto';
+musicAudio.playsInline = true;
+musicAudio.setAttribute('playsinline', '');
+musicAudio.setAttribute('webkit-playsinline', '');
 
 function currentSong() { return MUSIC_PLAYLIST[musicIndex] || null; }
 function isLocalSong(song) { return !!(song && song.src); }
@@ -221,7 +224,8 @@ function updateMusicBarUI() {
   }
   if (musicTitleEl) musicTitleEl.textContent = song.title;
   if (musicArtistEl) {
-    const tag = song.trackId ? '本地导入' : (song.src ? '本地文件' : (song.kind === 'book' ? '听书' : '歌单'));
+    const tag = (song.kind === 'song' && !song.src) ? '暂无音频'
+      : (song.trackId ? '本地导入' : (song.src ? '本地文件' : (song.kind === 'book' ? '听书' : '歌单')));
     const status = musicLoading ? ' · 加载中…' : (musicError ? ' · ' + musicError : '');
     musicArtistEl.textContent = `${song.artist} · ${tag}${lyricBadge(song)} · ${musicIndex + 1}/${MUSIC_PLAYLIST.length}${status}`;
   }
@@ -408,6 +412,13 @@ function rememberSong() {
 function musicPlay() {
   const song = currentSong();
   if (!song) return showToast('歌单是空的，先导入一首吧');
+  if (song.kind === 'song' && !song.src) {
+    musicPause();
+    return showToast('这首还没有音频文件，点歌名进歌单换一首');
+  }
+  if (song.kind === 'book' && !song.src) {
+    showToast('听书是文字节选，没有音频，只会滚动文字');
+  }
   musicPlaying = true;
   simTime = 0;
   musicError = '';
@@ -453,7 +464,16 @@ function musicPause() {
 
 function musicGoto(delta) {
   if (!MUSIC_PLAYLIST.length) return;
-  musicIndex = (musicIndex + delta + MUSIC_PLAYLIST.length) % MUSIC_PLAYLIST.length;
+  const len = MUSIC_PLAYLIST.length;
+  musicIndex = (musicIndex + delta + len) % len;
+  // 正在播放时切歌：跳过没有音频的占位条目
+  if (musicPlaying) {
+    const dir = delta >= 0 ? 1 : -1;
+    let guard = 0;
+    while (currentSong() && currentSong().kind === 'song' && !currentSong().src && guard++ < len) {
+      musicIndex = (musicIndex + dir + len) % len;
+    }
+  }
   simTime = 0;
   musicError = '';
   if (musicPlaying) {
@@ -504,6 +524,17 @@ function closeMusicBar() {
   hideMusicList();
 }
 
+// 下一首可播放的歌：跳过歌单里没有音频文件的占位条目，仍然首尾相接
+function nextPlayableIndex(from) {
+  const len = MUSIC_PLAYLIST.length;
+  for (let step = 1; step <= len; step++) {
+    const i = (from + step) % len;
+    const s = MUSIC_PLAYLIST[i];
+    if (s && (s.src || s.lines)) return i;
+  }
+  return (from + 1) % len;
+}
+
 // 一首放完：按当前模式决定重播、随机还是下一首
 function autoAdvance() {
   if (playMode === 'one') {
@@ -517,7 +548,10 @@ function autoAdvance() {
   }
   if (playMode === 'shuffle' && MUSIC_PLAYLIST.length > 1) {
     let idx = musicIndex;
-    while (idx === musicIndex) idx = Math.floor(Math.random() * MUSIC_PLAYLIST.length);
+    let guard = 0;
+    while ((idx === musicIndex || (MUSIC_PLAYLIST[idx] && MUSIC_PLAYLIST[idx].kind === 'song' && !MUSIC_PLAYLIST[idx].src)) && guard++ < 60) {
+      idx = Math.floor(Math.random() * MUSIC_PLAYLIST.length);
+    }
     musicIndex = idx;
     simTime = 0;
     if (musicPlaying) {
@@ -530,7 +564,10 @@ function autoAdvance() {
     renderMusicList();
     return;
   }
-  musicGoto(1);
+  // 顺序播放：最后一首放完回到第一首，中间跳过没有音频的文件
+  const target = nextPlayableIndex(musicIndex);
+  const len = MUSIC_PLAYLIST.length;
+  musicGoto(((target - musicIndex + len) % len) || 1);
 }
 
 musicAudio.addEventListener('ended', autoAdvance);
@@ -584,13 +621,17 @@ musicAudio.addEventListener('error', () => {
 });
 
 // ===== 对外：按歌名播放 / 随机挑一首 / 分享 =====
-function playSongByTitle(title) {
-  if (!title) return;
+function findSongIndexByTitle(title) {
+  if (!title) return -1;
   const key = String(title);
   let idx = MUSIC_PLAYLIST.findIndex(s => s.title === key);
   if (idx < 0) idx = MUSIC_PLAYLIST.findIndex(s => s.title.indexOf(key) >= 0 || key.indexOf(s.title) >= 0);
-  if (idx < 0) idx = 0;
-  musicIndex = idx;
+  return idx;
+}
+function playSongByTitle(title) {
+  if (!title) return;
+  const idx = findSongIndexByTitle(title);
+  musicIndex = idx < 0 ? 0 : idx;
   openMusicBar();
   musicPlay();
 }
@@ -598,12 +639,41 @@ function pickRandomSong() {
   if (!MUSIC_PLAYLIST.length) return null;
   return MUSIC_PLAYLIST[Math.floor(Math.random() * MUSIC_PLAYLIST.length)];
 }
+// 推荐歌曲之后，他的回应（像互动一样有固定词库，不是每次都抽字卡）
+const MUSIC_SHARE_REPLIES = [
+  '《{title}》？我去听听。',
+  '听完了，这首很像你。',
+  '你怎么知道我喜欢这种。',
+  '收下了，今晚单曲循环。',
+  '耳机分你一半，一起听？',
+  '突然发歌，是不是想我了。',
+  '这首我要存进「想你」歌单。',
+  '前奏一响就想到你了。',
+  '你推荐的我都听。'
+];
+function scheduleMusicShareReply(song) {
+  const delay = 1500 + Math.random() * 2000;
+  setTimeout(() => {
+    // 六成抽一张你的字卡，四成用专门的听歌回复
+    if (Math.random() < HYBRID_MUSIC_CARD_RATE && typeof sendRandomTextCardReply === 'function'
+      && sendRandomTextCardReply({ quoteChance: 0.15 })) return;
+    const title = (song && song.title) || '这首';
+    let text = MUSIC_SHARE_REPLIES[Math.floor(Math.random() * MUSIC_SHARE_REPLIES.length)];
+    text = text.replace(/\{title\}/g, () => title);
+    if (typeof boostMood === 'function') {
+      boostMood('happy', 1.6, 3 * 60000);
+      boostMood('intimate', 1.4, 3 * 60000);
+    }
+    sendMessage(text, 'text', false);
+  }, delay);
+}
 function shareSongToChat(i) {
   const s = MUSIC_PLAYLIST[i];
   if (!s) return;
   sendMessage({ name: s.title, artist: s.artist, val: s.title }, 'musicshare', true);
   hideMusicList();
   showToast('已分享到聊天');
+  scheduleMusicShareReply(s);
 }
 // 我发出的「一起听」被接受：更新卡片并开始播放
 function acceptMyMusicInvite(title) {
@@ -633,7 +703,16 @@ function acceptMyMusicInvite(title) {
     const r = pickRandomSong();
     t = r && r.title;
   }
-  if (t) playSongByTitle(t);
+  if (!t) return;
+  // 已经在听同一首：不重新播放，只把播放器叫出来
+  const same = findSongIndexByTitle(t) === musicIndex;
+  if (same && musicPlaying) {
+    openMusicBar();
+    updateMusicBarUI();
+    showToast('已经在听这首了');
+    return;
+  }
+  playSongByTitle(t);
 }
 
 function inviteTogether(i) {
@@ -820,7 +899,12 @@ async function importMusicFiles(files, opts) {
   let last = '';
   try { last = localStorage.getItem('echo_last_song') || ''; } catch (e) {}
   const hit = MUSIC_PLAYLIST.findIndex(s => s.title === last);
+  // 有上次听的歌就停在那首；第一次打开才落到第一首有音频的歌
   if (hit >= 0) musicIndex = hit;
+  else {
+    const firstAudio = MUSIC_PLAYLIST.findIndex(s => s.src);
+    if (firstAudio >= 0) musicIndex = firstAudio;
+  }
   updateMusicBarUI();
   renderMusicList();
   if (typeof renderMusicManageList === 'function') renderMusicManageList();
@@ -829,17 +913,21 @@ async function importMusicFiles(files, opts) {
 function removeLocalTrack(i) {
   const song = MUSIC_PLAYLIST[i];
   if (!song || !song.trackId) return;
-  MUSIC_PLAYLIST.splice(i, 1);
-  saveMusicOrder();
-  if (i < musicIndex) musicIndex--;
-  if (musicIndex >= MUSIC_PLAYLIST.length) musicIndex = 0;
-  if (MUSIC_PLAYLIST.length === 0) musicPause();
-  else if (musicPlaying) { loadAudioForCurrent(); if (isLocalSong(currentSong())) musicAudio.play().catch(() => {}); startLyricSession(); }
-  dbDelete(song.trackId);
-  updateMusicBarUI();
-  renderMusicList();
-  if (typeof renderMusicManageList === 'function') renderMusicManageList();
-  showToast('已从曲库移除');
+  showConfirm('删除曲目', `确定从曲库删除《${song.title}》吗？本地音频也会一起移除。`, () => {
+    const idx = MUSIC_PLAYLIST.findIndex(s => s.trackId === song.trackId);
+    if (idx < 0) return;
+    MUSIC_PLAYLIST.splice(idx, 1);
+    saveMusicOrder();
+    if (idx < musicIndex) musicIndex--;
+    if (musicIndex >= MUSIC_PLAYLIST.length) musicIndex = 0;
+    if (MUSIC_PLAYLIST.length === 0) musicPause();
+    else if (musicPlaying) { loadAudioForCurrent(); if (isLocalSong(currentSong())) musicAudio.play().catch(() => {}); startLyricSession(); }
+    dbDelete(song.trackId);
+    updateMusicBarUI();
+    renderMusicList();
+    if (typeof renderMusicManageList === 'function') renderMusicManageList();
+    showToast('已从曲库移除');
+  });
 }
 
 // ===== 歌词导入（.lrc）=====
@@ -892,7 +980,8 @@ function renderMusicList() {
   MUSIC_PLAYLIST.forEach((s, i) => {
     const item = document.createElement('div');
     item.className = 'music-item' + (i === musicIndex ? ' active' : '');
-    const badge = s.trackId ? '本地' : (s.kind === 'book' ? '听书' : '歌单');
+    const badge = (s.kind === 'song' && !s.src) ? '无音频'
+      : (s.trackId ? '本地' : (s.kind === 'book' ? '听书' : '歌单'));
     const hasLyric = lyricsFor(s).length > 0;
     item.innerHTML = `<span class="mi-index">${i === musicIndex && musicPlaying ? '▶' : i + 1}</span>
       <div class="mi-main">
@@ -949,16 +1038,15 @@ if (musicAddBtn && musicFileInput) {
   musicFileInput.onchange = (e) => {
     const files = Array.from(e.target.files || []);
     e.target.value = '';
-    importMusicFiles(files, { autoPlay: true });
+    importMusicFiles(files, { autoPlay: false });
   };
 }
 
-// 工具面板入口
+// 工具面板入口：只打开播放器，不自动播放；点播放按钮听上次那首，点歌名进歌单
 const toolMusic = document.getElementById('toolMusic');
 if (toolMusic) toolMusic.onclick = () => {
   closePanels();
   openMusicBar();
-  if (!musicPlaying) musicPlay();
 };
 
 if (musicPlayBtn) musicPlayBtn.onclick = () => musicPlaying ? musicPause() : musicPlay();

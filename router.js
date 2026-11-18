@@ -11,10 +11,98 @@ if (currentTheme === 'dark') {
   document.documentElement.setAttribute('data-theme', 'dark');
   if (themeToggleBtn) setIconText(themeToggleBtn, '☀️');
 }
-// 界面配色：只改变白天模式
+// 颜色混合：t 是 b 的占比，用来从主色推黑夜模式和启动页的配色
+function hexToRgb(hex) {
+  const h = String(hex || '').replace('#', '');
+  if (h.length !== 6) return { r: 164, g: 198, b: 57 };
+  return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) };
+}
+function rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+}
+function mixHex(a, b, t) {
+  const A = hexToRgb(a), B = hexToRgb(b);
+  return rgbToHex(A.r + (B.r - A.r) * t, A.g + (B.g - A.g) * t, A.b + (B.b - A.b) * t);
+}
+function hexToHue(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  const rn = r / 255, gn = g / 255, bn = b / 255;
+  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+  if (max === min) return 0;
+  let h;
+  if (max === rn) h = ((gn - bn) / (max - min)) % 6;
+  else if (max === gn) h = (bn - rn) / (max - min) + 2;
+  else h = (rn - gn) / (max - min) + 4;
+  h *= 60;
+  return h < 0 ? h + 360 : h;
+}
+function applyDarkPalette(main, dayIconFilter) {
+  const root = document.documentElement;
+  const primary = mixHex(main, '#202326', 0.52);
+  const primaryDark = mixHex(main, '#ffffff', 0.18);
+  const primaryLight = mixHex(main, '#1b1d1f', 0.18);
+  const rgb = hexToRgb(primary);
+  const hue = Math.round((hexToHue(main) - 35 + 360) % 360);
+  root.style.setProperty('--primary', primary);
+  root.style.setProperty('--primary-rgb', `${rgb.r},${rgb.g},${rgb.b}`);
+  root.style.setProperty('--primary-dark', primaryDark);
+  root.style.setProperty('--primary-light', primaryLight);
+  // 普通图标仍用适合黑夜的亮度；默认爱心单独使用白天同一套滤镜。
+  root.style.setProperty('--icon-filter', `grayscale(1) sepia(1) saturate(2.8) hue-rotate(${hue}deg) brightness(0.95)`);
+  if (dayIconFilter) root.style.setProperty('--heart-avatar-filter', dayIconFilter);
+}
+
+// 黑夜模式下读取白天配色规则里的 --icon-filter。
+// 做法是同步移除 data-theme（不会真正绘制），让白天的 CSS 规则生效后读计算值。
+function readDayIconFilter() {
+  const root = document.documentElement;
+  if (root.getAttribute('data-theme') !== 'dark') return '';
+  const inline = root.style.getPropertyValue('--icon-filter');
+  let value = '';
+  try {
+    root.removeAttribute('data-theme');
+    root.style.removeProperty('--icon-filter');
+    value = getComputedStyle(root).getPropertyValue('--icon-filter').trim();
+  } finally {
+    root.setAttribute('data-theme', 'dark');
+    if (inline) root.style.setProperty('--icon-filter', inline);
+  }
+  return value;
+}
+function clearDarkPalette() {
+  const s = document.documentElement.style;
+  ['--primary', '--primary-rgb', '--primary-dark', '--primary-light', '--icon-filter', '--heart-avatar-filter'].forEach(k => s.removeProperty(k));
+}
+function applyBootTint(main) {
+  const root = document.documentElement;
+  root.style.setProperty('--boot-bg1', mixHex(main, '#ffffff', 0.92));
+  root.style.setProperty('--boot-bg2', mixHex(main, '#ffffff', 0.86));
+  root.style.setProperty('--boot-bg3', mixHex(main, '#ffffff', 0.80));
+  root.style.setProperty('--boot-name', mixHex(main, '#1f2a12', 0.55));
+  root.style.setProperty('--boot-sub', mixHex(main, '#6b7280', 0.45));
+  root.style.setProperty('--boot-accent', main);
+  root.style.setProperty('--boot-accent-light', mixHex(main, '#ffffff', 0.40));
+  root.style.setProperty('--boot-accent-soft', mixHex(main, '#ffffff', 0.75));
+  root.style.setProperty('--boot-dark1', mixHex(main, '#141414', 0.82));
+  root.style.setProperty('--boot-dark2', mixHex(main, '#1c1c1c', 0.90));
+  root.style.setProperty('--boot-dark3', '#141414');
+  root.style.setProperty('--boot-dark-name', mixHex(main, '#ffffff', 0.55));
+  root.style.setProperty('--boot-dark-sub', mixHex(main, '#ffffff', 0.28));
+}
+
+// 界面配色：白天完整应用；黑夜模式用主色派生按钮色，并给气泡轻微着色
 function applyPalette(id) {
-  const p = (typeof PALETTES !== 'undefined' && PALETTES.find(x => x.id === id)) || { id: 'olive' };
+  const p = (typeof PALETTES !== 'undefined' && PALETTES.find(x => x.id === id)) || { id: 'olive', main: '#A4C639' };
+  const main = p.main || '#A4C639';
   document.documentElement.setAttribute('data-palette', p.id);
+  document.documentElement.style.setProperty('--palette-main', main);
+  if (document.documentElement.getAttribute('data-theme') === 'dark') {
+    const dayIconFilter = readDayIconFilter();
+    applyDarkPalette(main, dayIconFilter);
+  } else {
+    clearDarkPalette();
+  }
+  applyBootTint(main);
 }
 chatSettings.palette = chatSettings.palette || 'olive';
 applyPalette(chatSettings.palette);
@@ -58,6 +146,8 @@ if (themeToggleBtn) {
       localStorage.setItem('theme', 'dark');
       setIconText(themeToggleBtn, '☀️');
     }
+    // 黑夜/白天的主色不同，切换后重新套一次配色
+    if (typeof applyPalette === 'function') applyPalette(chatSettings.palette || 'olive');
   };
 }
 
@@ -72,6 +162,19 @@ if (menuMusic) menuMusic.onclick = () => {
 };
 const backFromMusic = document.getElementById('backFromMusic');
 if (backFromMusic) backFromMusic.onclick = () => switchPage('pageManager');
+
+// 使用手册
+const menuManual = document.getElementById('menuManual');
+if (menuManual) menuManual.onclick = () => switchPage('pageManual');
+const backFromManual = document.getElementById('backFromManual');
+if (backFromManual) backFromManual.onclick = () => switchPage('pageManager');
+document.querySelectorAll('.manual-toc a').forEach(a => {
+  a.onclick = (e) => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+});
 
 // 修复：每次点击进来自定义回复，强制刷新 UI
 const menuCards = document.getElementById('menuCards'); 
@@ -127,6 +230,8 @@ const menuSettings = document.getElementById('menuSettings'); if(menuSettings) m
   if (typingBox) typingBox.checked = chatSettings.showTyping !== false;
   const soundBox = document.getElementById('setSound');
   if (soundBox) soundBox.checked = chatSettings.sound !== false;
+  const moodBox = document.getElementById('setMoodEnabled');
+  if (moodBox) moodBox.checked = chatSettings.moodEnabled !== false;
   if (typeof renderIconTintSeg === 'function') renderIconTintSeg();
   if (typeof refreshFileLabels === 'function') refreshFileLabels();
 
@@ -231,7 +336,12 @@ function renderOtherStatus() {
 }
 
 function rollOtherStatus() {
-  otherStatus.main = pickWeighted(STATUS_MAIN);
+  const list = STATUS_MAIN.map(s => (
+    s.id === 'offline' && isLateNightHour()
+      ? Object.assign({}, s, { weight: s.weight * 2.5 })
+      : s
+  ));
+  otherStatus.main = pickWeighted(list);
   otherStatus.sub = (Math.random() < 0.45) ? pickWeighted(STATUS_SUB) : null;
   nextStatusChangeAt = Date.now() + (8 + Math.random() * 17) * 60 * 1000;
   renderOtherStatus();

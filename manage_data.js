@@ -33,6 +33,32 @@ function exportWithMedia() {
   try { return localStorage.getItem('export_media') !== '0'; } catch (e) { return true; }
 }
 
+// ===== 备份提醒：只在你打开数据管理时提醒，不在主界面打扰 =====
+const BACKUP_LAST_KEY = 'echo_last_export_at';
+const BACKUP_PROMPT_KEY = 'echo_backup_prompt_at';
+function markBackupDone() {
+  try { localStorage.setItem(BACKUP_LAST_KEY, String(Date.now())); } catch (e) {}
+}
+function backupReminderOnEnter() {
+  let last = 0, prompted = 0;
+  try {
+    last = parseInt(localStorage.getItem(BACKUP_LAST_KEY) || '0', 10) || 0;
+    prompted = parseInt(localStorage.getItem(BACKUP_PROMPT_KEY) || '0', 10) || 0;
+  } catch (e) {}
+  // 一天最多提醒一次
+  if (Date.now() - prompted < 24 * 60 * 60 * 1000) return;
+  const days = last ? Math.floor((Date.now() - last) / (24 * 60 * 60 * 1000)) : -1;
+  if (last && days < 7) return;
+  try { localStorage.setItem(BACKUP_PROMPT_KEY, String(Date.now())); } catch (e) {}
+  const head = last ? `距离上次备份已经 ${days} 天了。` : '你还没有备份过聊天数据。';
+  setTimeout(() => {
+    showConfirm('要备份一下吗', `${head} 数据只存在这台设备里，清理浏览器或换设备都可能丢失。现在导出全部数据吗？`, () => {
+      performExport('all');
+      markBackupDone();
+    });
+  }, 350);
+}
+
 const menuData = document.getElementById('menuData');
 if(menuData) menuData.onclick = () => {
   switchPage('pageData');
@@ -45,6 +71,7 @@ if(menuData) menuData.onclick = () => {
   if (mediaEl) mediaEl.textContent = formatSize(mediaBytesOf(chatHistory));
   const exportSw = document.getElementById('setExportMedia');
   if (exportSw) exportSw.checked = exportWithMedia();
+  backupReminderOnEnter();
 };
 
 const exportMediaSwitch = document.getElementById('setExportMedia');
@@ -129,9 +156,9 @@ document.getElementById('copyExportBtn').onclick = () => {
   textArea.select(); textArea.setSelectionRange(0, 999999); 
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(textArea.value).then(() => showToast('复制成功！请去备忘录粘贴保存'));
+      navigator.clipboard.writeText(textArea.value).then(() => { showToast('复制成功！请去备忘录粘贴保存'); markBackupDone(); });
     } else {
-      document.execCommand('copy'); showToast('复制成功！');
+      document.execCommand('copy'); showToast('复制成功！'); markBackupDone();
     }
   } catch (err) { showToast('请手动长按文本框全选复制'); }
 };
@@ -196,6 +223,7 @@ function performExport(type) {
   } else {
     showExportModal(data);
   }
+  markBackupDone();
 }
 
 

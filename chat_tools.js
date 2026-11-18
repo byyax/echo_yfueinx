@@ -110,8 +110,10 @@ const REPLY_FALLBACK = {
 
 function sendInteract(it) {
   sendMessage({ name: it.name, icon: it.icon, val: `想${it.name}`, isOpened: false, interact: true }, 'interact', true);
-  // 对方回应：同一个动作，回话从它自己的词库里随机挑
+  // 对方回应：五成抽字卡，五成用动作自己的词库
   setTimeout(() => {
+    if (Math.random() < HYBRID_INTERACT_CARD_RATE && typeof sendRandomTextCardReply === 'function'
+      && sendRandomTextCardReply({ quoteChance: 0.15 })) return;
     const pool = (it.replies && it.replies.length) ? it.replies : REPLY_FALLBACK[it.name];
     const text = (pool && pool.length)
       ? pool[Math.floor(Math.random() * pool.length)]

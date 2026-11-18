@@ -114,10 +114,15 @@ function renderHistory(filterDate = '') {
       else if (msg.type === 'redpacket') content = `[红包 ${c.note || ''}]`;
       else if (msg.type === 'location') content = c.val || '[位置]';
       else if (msg.type === 'interact') content = `[互动 ${c.name || ''}]`;
+      else if (msg.type === 'call') content = `[通话] ${c.val || ''}`;
       else content = '[卡片]';
       
       const av = isMe ? chatSettings.myAvatar : chatSettings.otherAvatar;
-      const avImg = av ? `<img src="${av}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">` : escapeHtml(isMe ? chatSettings.myName.charAt(0) : chatSettings.otherName.charAt(0));
+      const avImg = av
+        ? `<img src="${av}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`
+        : (isMe
+          ? escapeHtml(chatSettings.myName.charAt(0))
+          : `<img src="icons/icon-heart-192.png" class="default-heart-avatar" style="width:84%;height:84%;object-fit:contain;">`);
       
       list.innerHTML += `<div style="display:flex; flex-direction:${isMe?'row-reverse':'row'}; margin-bottom:15px; gap:10px;">
           <div style="width:44px; height:44px; background:#ccc; border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; flex-shrink:0;">${avImg}</div>

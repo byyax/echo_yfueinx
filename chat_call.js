@@ -49,6 +49,80 @@ function formatDuration(seconds) {
   return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
+// ===== 通话后的混合回复 =====
+// 字卡概率：未接/挂断 40%（60% 内置），通话结束/取消 50%。
+// 字卡库为空时自动退回内置句子。
+const CALL_REPLY_LINES = {
+  missed_in: [
+    '怎么没接电话呀',
+    '在忙吗？看到回我一下',
+    '刚刚给你打电话了',
+    '手机没在身边吗',
+    '方便的时候回拨给我'
+  ],
+  missed_out: [
+    '刚才在忙，没接到',
+    '手机放远了，抱歉',
+    '看到未接来电了，怎么啦',
+    '刚刚不方便接，现在可以',
+    '我错过了什么吗'
+  ],
+  rejected_other: [
+    '刚刚不方便接',
+    '在忙，晚点打给你',
+    '怎么啦，突然打电话',
+    '现在有点事，稍后说',
+    '嗯？找我'
+  ],
+  rejected_me: [
+    '怎么挂啦',
+    '不方便接吗',
+    '在忙的话跟我说一声',
+    '刚想跟你说点事',
+    '好吧，那晚点再说'
+  ],
+  completed: [
+    '刚挂就开始想你了',
+    '刚才好像没说够',
+    '下次再聊一会儿',
+    '听到你声音就安心了',
+    '挂得有点快'
+  ],
+  cancelled: [
+    '怎么取消了',
+    '还没接通就挂啦',
+    '是不方便吗',
+    '有事的话直接说',
+    '我还在呢'
+  ]
+};
+const CALL_REPLY_CARD_RATE = {
+  missed_in: 0.4,
+  missed_out: 0.4,
+  rejected_other: 0.4,
+  rejected_me: 0.4,
+  completed: 0.5,
+  cancelled: 0.5
+};
+const CALL_REPLY_EMOJI = ['😌', '🥺', '😭', '😶', '😔', '🙂'];
+
+function scheduleCallReply(stateKey) {
+  const pool = CALL_REPLY_LINES[stateKey];
+  if (!pool || !pool.length) return;
+  const delay = 1400 + Math.random() * 2200;
+  setTimeout(() => {
+    const cardRate = CALL_REPLY_CARD_RATE[stateKey] == null ? 0.4 : CALL_REPLY_CARD_RATE[stateKey];
+    if (typeof sendRandomTextCardReply === 'function' && Math.random() < cardRate) {
+      if (sendRandomTextCardReply({ quoteChance: 0.05 })) return;
+    }
+    let line = pool[Math.floor(Math.random() * pool.length)];
+    if (Math.random() < 0.42) {
+      line += ' ' + CALL_REPLY_EMOJI[Math.floor(Math.random() * CALL_REPLY_EMOJI.length)];
+    }
+    if (typeof sendMessage === 'function') sendMessage(line, 'text', false);
+  }, delay);
+}
+
 function startCallTimer() {
   callSeconds = 0;
   callTimeLarge.style.display = 'block';
@@ -64,8 +138,13 @@ function startCallTimer() {
 }
 
 function initCallUI(isIncoming) {
-  callAvatar.src = chatSettings.otherAvatar || '';
-  callAvatarSmall.src = chatSettings.otherAvatar || '';
+  const callAv = chatSettings.otherAvatar || 'icons/icon-heart-192.png';
+  callAvatar.src = callAv;
+  callAvatarSmall.src = callAv;
+  [callAvatar, callAvatarSmall].forEach(el => {
+    if (!el) return;
+    el.classList.toggle('default-heart-avatar', !chatSettings.otherAvatar);
+  });
   callNameLarge.textContent = chatSettings.otherName;
   callNameSmall.textContent = chatSettings.otherName;
   
@@ -98,31 +177,53 @@ function endCall(state, who) {
   resetSmallViewPosition();
   
   // 通话记录用气泡呈现（更有存在感，跟微信一致）
-  let bubbleText = '', bubbleIsMe = null;
+  // 五种主要情况：他打给我未接 / 我打给他未接 / 他挂断我的 / 我挂断他的 / 通话结束
+  let bubbleText = '', bubbleIsMe = null, callStateKey = '';
   if (state === 'completed') {
     bubbleText = `通话结束 ${formatDuration(callSeconds)}`;
     bubbleIsMe = (callDirection === 'in'); // 他打给我 -> 我是被叫 -> 我这边发
+    callStateKey = 'completed';
   } else if (state === 'rejected') {
-    bubbleText = '拒绝了语音通话';
+    if (who === 'me') {
+      bubbleText = '已挂断';                 // 他打给我，我没接就挂了
+      callStateKey = 'rejected_me';
+    } else {
+      bubbleText = '对方已挂断';             // 我打给他，他没接就挂了
+      callStateKey = 'rejected_other';
+    }
     bubbleIsMe = (who === 'me');
   } else if (state === 'cancelled') {
     bubbleText = '已取消';
     bubbleIsMe = (who === 'me');
+    callStateKey = 'cancelled';
   } else if (state === 'unanswered') {
-    if (callDirection === 'in') { bubbleText = '未接来电'; bubbleIsMe = true; }
-    else { bubbleText = '抱歉刚才在忙，没接到你的电话'; bubbleIsMe = false; }
+    if (callDirection === 'in') {
+      bubbleText = '未接来电';               // 他打给我，铃声响完我没接
+      bubbleIsMe = true;
+      callStateKey = 'missed_in';
+    } else {
+      bubbleText = '对方未接来电';           // 我打给他，铃声响完他没接
+      bubbleIsMe = false;
+      callStateKey = 'missed_out';
+    }
   }
 
   if (bubbleText) {
     const time = Date.now();
-    const content = { val: bubbleText };
-    chatHistory.push({ role: bubbleIsMe ? 'me' : 'other', type: 'text', content, time });
+    const content = { val: bubbleText, callState: callStateKey };
+    chatHistory.push({ role: bubbleIsMe ? 'me' : 'other', type: 'call', content, time });
     saveAllData();
-    addMessageDOM(content, bubbleIsMe, 'text', time);
+    addMessageDOM(content, bubbleIsMe, 'call', time);
+    lastInteractionTime = Date.now();
   }
 
   // 这通电话也会影响他的心情
   if (typeof moodAfterCall === 'function') moodAfterCall(state, who);
+  // 通话记录本身也是“最后一条消息”：没有事件情绪时，普通情绪按规则收起
+  if (typeof refreshMood === 'function') refreshMood(false);
+
+  // 电话之后，他有一条混合回复：内置句子或字卡库
+  if (callStateKey) scheduleCallReply(callStateKey);
 }
 
 // 发起通话（我打给他）

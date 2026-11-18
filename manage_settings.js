@@ -152,6 +152,37 @@ bindAvatarUpload('setOtherAvatar', 'otherAvatar');
 bindAvatarUpload('setMyAvatar', 'myAvatar');
 bindAvatarUpload('setWallpaper', 'wallpaper');
 
+// 恢复默认头像 / 壁纸：先暂存，点保存后才生效
+const resetAvatarsBtn = document.getElementById('resetAvatars');
+if (resetAvatarsBtn) {
+  resetAvatarsBtn.onclick = () => {
+    showConfirm('恢复默认头像', '将清除你和对方的自定义头像，恢复默认显示。确定吗？', () => {
+      if (!pendingSettings) pendingSettings = {};
+      pendingSettings.otherAvatar = '';
+      pendingSettings.otherAvatarName = '';
+      pendingSettings.myAvatar = '';
+      pendingSettings.myAvatarName = '';
+      setFileLabel('setOtherAvatar', '');
+      setFileLabel('setMyAvatar', '');
+      markSettingsDirty();
+      showToast('已恢复默认头像，点击保存后生效');
+    });
+  };
+}
+const resetWallpaperBtn = document.getElementById('resetWallpaper');
+if (resetWallpaperBtn) {
+  resetWallpaperBtn.onclick = () => {
+    showConfirm('恢复默认壁纸', '将清除当前聊天壁纸，恢复默认背景。确定吗？', () => {
+      if (!pendingSettings) pendingSettings = {};
+      pendingSettings.wallpaper = '';
+      pendingSettings.wallpaperName = '';
+      setFileLabel('setWallpaper', '');
+      markSettingsDirty();
+      showToast('已恢复默认壁纸，点击保存后生效');
+    });
+  };
+}
+
 // ===== 裁剪弹窗逻辑（方形/圆形；裁剪框最大范围=原图短边，拉条用于放大） =====
 let cropTargetKey = '';
 let cropFileName = '';
@@ -290,6 +321,9 @@ if (saveSettingsBtn) {
     const soundBox = document.getElementById('setSound');
     if (soundBox) chatSettings.sound = soundBox.checked;
 
+    const moodBox = document.getElementById('setMoodEnabled');
+    if (moodBox) chatSettings.moodEnabled = moodBox.checked;
+
     // 暂存的图片正式写入
     if (pendingSettings) {
       if (pendingSettings.otherAvatar !== undefined) chatSettings.otherAvatar = pendingSettings.otherAvatar;
@@ -303,6 +337,7 @@ if (saveSettingsBtn) {
 
     saveAllData();
     applyChatSettings();
+    if (typeof refreshMood === 'function') refreshMood(true);
     settingsDirty = false;
     showToast('保存成功');
     switchPage('pageManager');
@@ -356,6 +391,8 @@ const typingBoxEl = document.getElementById('setShowTyping');
 if (typingBoxEl) typingBoxEl.addEventListener('change', markSettingsDirty);
 const soundBoxEl = document.getElementById('setSound');
 if (soundBoxEl) soundBoxEl.addEventListener('change', markSettingsDirty);
+const moodBoxEl = document.getElementById('setMoodEnabled');
+if (moodBoxEl) moodBoxEl.addEventListener('change', markSettingsDirty);
 // 图标色调：原色 / 柔和 / 跟随配色
 const iconTintSeg = document.getElementById('iconTintSeg');
 function renderIconTintSeg() {
