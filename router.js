@@ -9,8 +9,36 @@ if (currentTheme === 'dark') {
   document.documentElement.setAttribute('data-theme', 'dark');
   if (themeToggleBtn) themeToggleBtn.textContent = '☀️';
 }
-if (!chatSettings.bubbleTheme) chatSettings.bubbleTheme = 'default';
-document.documentElement.setAttribute('data-bubble-theme', chatSettings.bubbleTheme);
+// 界面配色：只改变白天模式
+function applyPalette(id) {
+  const p = (typeof PALETTES !== 'undefined' && PALETTES.find(x => x.id === id)) || { id: 'olive' };
+  document.documentElement.setAttribute('data-palette', p.id);
+}
+chatSettings.palette = chatSettings.palette || 'olive';
+applyPalette(chatSettings.palette);
+
+// 图标是否跟随配色（沿用配色里算好的滤镜）
+function applyIconTint() {
+  const mode = chatSettings.iconTint || 'off';
+  const root = document.documentElement;
+  root.classList.toggle('icon-tint', mode === 'tint');
+  root.classList.toggle('icon-soft', mode === 'soft');
+}
+applyIconTint();
+
+// 把工具 / 后台卡片里的 emoji 包一层，方便整体着色或换成自己画的图
+(function wrapIconGlyphs() {
+  document.querySelectorAll('.tool-icon, .manager-card .icon').forEach(el => {
+    if (el.firstElementChild) return;
+    const txt = (el.textContent || '').trim();
+    if (!txt) return;
+    el.textContent = '';
+    const span = document.createElement('span');
+    span.className = 'icon-glyph';
+    span.textContent = txt;
+    el.appendChild(span);
+  });
+})();
 
 if (themeToggleBtn) {
   themeToggleBtn.onclick = () => {
@@ -29,6 +57,15 @@ if (themeToggleBtn) {
 
 const openManagerBtn = document.getElementById('openManagerBtn'); if(openManagerBtn) openManagerBtn.onclick = () => switchPage('pageManager');
 const backFromManager = document.getElementById('backFromManager'); if(backFromManager) backFromManager.onclick = () => switchPage('pageChat');
+
+// 音乐管理
+const menuMusic = document.getElementById('menuMusic');
+if (menuMusic) menuMusic.onclick = () => {
+  switchPage('pageMusic');
+  if (typeof renderMusicManageList === 'function') renderMusicManageList();
+};
+const backFromMusic = document.getElementById('backFromMusic');
+if (backFromMusic) backFromMusic.onclick = () => switchPage('pageManager');
 
 // 修复：每次点击进来自定义回复，强制刷新 UI
 const menuCards = document.getElementById('menuCards'); 
@@ -66,10 +103,7 @@ const menuSettings = document.getElementById('menuSettings'); if(menuSettings) m
   if (otherShow) otherShow.textContent = chatSettings.otherName || '对方';
   if (typeof updatePatPreview === 'function') updatePatPreview();
 
-  document.querySelectorAll('.theme-option').forEach(o => {
-    if (o.dataset.bubbleTheme === (chatSettings.bubbleTheme || 'default')) o.classList.add('active');
-    else o.classList.remove('active');
-  });
+  if (typeof renderPaletteGrid === 'function') renderPaletteGrid();
 
   if(chatSettings.timeFormat === 'hms') {
     document.querySelector('input[name="timeFormat"][value="hms"]').checked = true;
@@ -85,6 +119,10 @@ const menuSettings = document.getElementById('menuSettings'); if(menuSettings) m
 
   const typingBox = document.getElementById('setShowTyping');
   if (typingBox) typingBox.checked = chatSettings.showTyping !== false;
+  const soundBox = document.getElementById('setSound');
+  if (soundBox) soundBox.checked = chatSettings.sound !== false;
+  if (typeof renderIconTintSeg === 'function') renderIconTintSeg();
+  if (typeof refreshFileLabels === 'function') refreshFileLabels();
 
   document.getElementById('setReplyDelay').value = chatSettings.replyDelay;
   document.getElementById('delayText').textContent = chatSettings.replyDelay.toFixed(1) + ' 分钟';
@@ -96,7 +134,6 @@ const menuSettings = document.getElementById('menuSettings'); if(menuSettings) m
 
 const backFromSettings = document.getElementById('backFromSettings'); if(backFromSettings) backFromSettings.onclick = () => { if (typeof settingsExitGuard === 'function') settingsExitGuard(() => switchPage('pageManager')); else switchPage('pageManager'); };
 const openTagManagerBtn = document.getElementById('openTagManagerBtn'); if(openTagManagerBtn) openTagManagerBtn.onclick = () => { renderTagManager(); document.getElementById('tagManagerModal').classList.add('show'); };
-const backFromTags = document.getElementById('backFromTags'); if(backFromTags) backFromTags.onclick = () => switchPage('pageCards');
 const pcToggleBtn = document.getElementById('pcToggleBtn'); if(pcToggleBtn) pcToggleBtn.onclick = () => document.getElementById('appContainer').classList.toggle('pc-mode');
 const backFromData = document.getElementById('backFromData'); if(backFromData) backFromData.onclick = () => switchPage('pageManager');
 
@@ -125,27 +162,39 @@ if(chatEl) {
 }
 // ===== 仿微信状态引擎 =====
 const STATUS_MAIN = [
-  { id: 'online',   label: '在线',        color: 'st-green',  weight: 46 },
-  { id: 'slacking', label: '在线-摸鱼中', color: 'st-green',  weight: 10 },
-  { id: 'hungry',   label: '在线-饥饿中', color: 'st-orange', weight: 8 },
-  { id: 'working',  label: '工作中',      color: 'st-blue',   weight: 8 },
-  { id: 'studying', label: '沉迷学习',    color: 'st-blue',   weight: 6 },
-  { id: 'busy',     label: '忙碌中',      color: 'st-orange', weight: 6 },
-  { id: 'play',     label: '找我玩',      color: 'st-pink',   weight: 5 },
+  { id: 'online',   label: '在线',        color: 'st-green',  weight: 30 },
+  { id: 'slacking', label: '在线-摸鱼中', color: 'st-green',  weight: 9 },
+  { id: 'waiting',  label: '在线-等你消息', color: 'st-pink', weight: 7 },
+  { id: 'dreaming', label: '在线-发呆中', color: 'st-grey',   weight: 6 },
+  { id: 'happy',    label: '心情不错',    color: 'st-green',  weight: 6 },
+  { id: 'hungry',   label: '在线-饥饿中', color: 'st-orange', weight: 6 },
+  { id: 'working',  label: '工作中',      color: 'st-blue',   weight: 6 },
+  { id: 'studying', label: '沉迷学习',    color: 'st-blue',   weight: 5 },
+  { id: 'busy',     label: '忙碌中',      color: 'st-orange', weight: 5 },
+  { id: 'play',     label: '找我玩',      color: 'st-pink',   weight: 4 },
   { id: 'bored',    label: '无聊',        color: 'st-grey',   weight: 4 },
+  { id: 'music',    label: '听歌中',      color: 'st-pink',   weight: 4, icon: '🎧' },
   { id: 'gym',      label: '健身中',      color: 'st-purple', weight: 3, icon: '🏋️' },
+  { id: 'eat',      label: '干饭中',      color: 'st-orange', weight: 3, icon: '🍚' },
+  { id: 'sleepy',   label: '困了',        color: 'st-grey',   weight: 3, icon: '🥱' },
   { id: 'climb',    label: '攀岩中',      color: 'st-purple', weight: 2, icon: '🧗' },
+  { id: 'ski',      label: '滑雪中',      color: 'st-blue',   weight: 2, icon: '🏂' },
   { id: 'sleep',    label: '睡觉中',      color: 'st-grey',   weight: 2, icon: '😴' },
+  { id: 'trip',     label: '出差中',      color: 'st-blue',   weight: 1, icon: '✈️' },
   { id: 'offline',  label: '离线',        color: 'st-grey',   weight: 1 }
 ];
 const STATUS_SUB = [
-  { label: '攀岩中', icon: '🧗', weight: 8 }, { label: '滑雪中', icon: '🏂', weight: 6 },
-  { label: '冲浪中', icon: '🏄', weight: 6 }, { label: '健身中', icon: '🏋️', weight: 8 },
-  { label: '打球中', icon: '🏀', weight: 7 }, { label: '喝奶茶', icon: '🧋', weight: 8 },
-  { label: '干饭中', icon: '🍚', weight: 7 }, { label: '听歌中', icon: '🎧', weight: 7 },
+  { label: '攀岩中', icon: '🧗', weight: 7 }, { label: '滑雪中', icon: '🏂', weight: 5 },
+  { label: '冲浪中', icon: '🏄', weight: 5 }, { label: '健身中', icon: '🏋️', weight: 7 },
+  { label: '打球中', icon: '🏀', weight: 6 }, { label: '喝奶茶', icon: '🧋', weight: 7 },
+  { label: '干饭中', icon: '🍚', weight: 6 }, { label: '听歌中', icon: '🎧', weight: 7 },
   { label: '发呆中', icon: '😶', weight: 5 }, { label: '吸猫中', icon: '🐱', weight: 5 },
   { label: '睡觉中', icon: '😴', weight: 4 }, { label: '出差中', icon: '✈️', weight: 3 },
-  { label: '玩游戏', icon: '🎮', weight: 5 }, { label: '自拍中', icon: '🤳', weight: 4 }
+  { label: '玩游戏', icon: '🎮', weight: 5 }, { label: '自拍中', icon: '🤳', weight: 4 },
+  { label: '追剧中', icon: '📺', weight: 4 }, { label: '喝咖啡', icon: '☕', weight: 4 },
+  { label: '赶作业', icon: '📚', weight: 3 }, { label: '洗头中', icon: '🧴', weight: 3 },
+  { label: '逛超市', icon: '🛒', weight: 3 }, { label: '遛狗中', icon: '🐕', weight: 3 },
+  { label: '修图中', icon: '🖼️', weight: 3 }, { label: '放空中', icon: '🫧', weight: 3 }
 ];
 
 let otherStatus = { main: STATUS_MAIN[0], sub: null };
@@ -202,3 +251,33 @@ setInterval(() => { if (Date.now() >= nextStatusChangeAt) rollOtherStatus(); }, 
 
 applyChatSettings();
 initStatusBar();
+
+// ===== 弹窗回车确认：带确认键的弹窗统一支持 Enter =====
+const ENTER_CONFIRM = {
+  addModal: 'saveAdd',
+  tagModal: 'saveTagBtn',
+  moveModal: 'saveMoveBtn',
+  confirmModal: 'confirmOkBtn',
+  unsavedModal: 'unsavedSaveBtn',
+  cropModal: 'confirmCrop',
+  moneyModal: 'confirmMoney',
+  importDataModal: 'parseImportBtn',
+  giftOpenModal: 'confirmOpenGiftBtn',
+  voiceModal: 'voiceSendBtn'
+};
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || e.isComposing) return;
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'TEXTAREA') return; // 多行文本里的回车留给换行
+  for (const modalId in ENTER_CONFIRM) {
+    const modal = document.getElementById(modalId);
+    if (!modal || !modal.classList.contains('show')) continue;
+    const btn = document.getElementById(ENTER_CONFIRM[modalId]);
+    if (btn && btn.offsetParent !== null) {
+      e.preventDefault();
+      btn.click();
+    }
+    return;
+  }
+});

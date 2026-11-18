@@ -20,38 +20,15 @@ const callHangupBtn = document.getElementById('callHangupBtn');
 const acceptCallBtn = document.getElementById('acceptCallBtn');
 const rejectCallBtn = document.getElementById('rejectCallBtn');
 
-// 生成柔和铃声
-let ringtoneCtx = null;
-let ringInterval = null;
+// 铃声 / 接通挂断音：走 chat_sound.js 的 audio 文件
 function playRingtone() {
-  if (!window.AudioContext && !window.webkitAudioContext) return;
-  if (!ringtoneCtx) ringtoneCtx = new (window.AudioContext || window.webkitAudioContext)();
-  
-  const playBeep = () => {
-    if (ringtoneCtx.state === 'suspended') ringtoneCtx.resume();
-    const osc = ringtoneCtx.createOscillator();
-    const gain = ringtoneCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(440, ringtoneCtx.currentTime); // A4
-    osc.frequency.exponentialRampToValueAtTime(880, ringtoneCtx.currentTime + 0.1);
-    
-    gain.gain.setValueAtTime(0, ringtoneCtx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.1, ringtoneCtx.currentTime + 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.01, ringtoneCtx.currentTime + 0.5);
-    
-    osc.connect(gain);
-    gain.connect(ringtoneCtx.destination);
-    osc.start();
-    osc.stop(ringtoneCtx.currentTime + 0.5);
-  };
-  
-  playBeep();
-  ringInterval = setInterval(playBeep, 1500);
+  if (typeof playSfx === 'function') playSfx('callRequest');
 }
 function stopRingtone() {
-  if (ringInterval) clearInterval(ringInterval);
-  if (ringtoneCtx && ringtoneCtx.state !== 'closed') ringtoneCtx.close();
-  ringtoneCtx = null;
+  if (typeof stopSfx === 'function') stopSfx('callRequest');
+}
+function playCallTone() {
+  if (typeof playSfx === 'function') playSfx('callTone');
 }
 
 function resetSmallViewPosition() {
@@ -115,12 +92,12 @@ function endCall(state, who) {
   if (callTimer) clearInterval(callTimer);
   if (callTimeout) clearTimeout(callTimeout);
   stopRingtone();
-  
+  if (state === 'completed' || state === 'cancelled') playCallTone();
+
   callWidget.style.display = 'none';
   resetSmallViewPosition();
   
-  // 通话记录以对话气泡呈现：
-  // 接通后挂断 -> 被叫方发“通话结束 时长”；拒接 -> 拒接方发；呼叫中取消 -> 主叫方发；未接通 -> 被叫方发未接提示
+  // 通话记录用气泡呈现（更有存在感，跟微信一致）
   let bubbleText = '', bubbleIsMe = null;
   if (state === 'completed') {
     bubbleText = `通话结束 ${formatDuration(callSeconds)}`;
@@ -135,7 +112,7 @@ function endCall(state, who) {
     if (callDirection === 'in') { bubbleText = '未接来电'; bubbleIsMe = true; }
     else { bubbleText = '抱歉刚才在忙，没接到你的电话'; bubbleIsMe = false; }
   }
-  
+
   if (bubbleText) {
     const time = Date.now();
     const content = { val: bubbleText };
@@ -143,6 +120,9 @@ function endCall(state, who) {
     saveAllData();
     addMessageDOM(content, bubbleIsMe, 'text', time);
   }
+
+  // 这通电话也会影响他的心情
+  if (typeof moodAfterCall === 'function') moodAfterCall(state, who);
 }
 
 // 发起通话（我打给他）
@@ -152,7 +132,8 @@ if(toolCall) toolCall.onclick = () => {
   callDirection = 'out';
   callWidget.style.display = 'flex';
   initCallUI(false);
-  
+  playRingtone();
+
   // 等待对方接通：15% 在忙接不到，10% 拒接，其余接通
   const roll = Math.random();
   const isBusy = roll < 0.15;
@@ -162,6 +143,8 @@ if(toolCall) toolCall.onclick = () => {
     if (callWidget.style.display !== 'flex') return;
     if (isBusy) { endCall('unanswered', 'other'); return; }
     if (willReject) { endCall('rejected', 'other'); return; }
+    stopRingtone();
+    playCallTone();
     callStatusLarge.textContent = '通话中...';
     callTimeLarge.style.display = 'block';
     callMuteBtn.style.visibility = 'visible';
@@ -194,6 +177,7 @@ setInterval(() => {
 // 接听按钮
 if(acceptCallBtn) acceptCallBtn.onclick = () => {
   stopRingtone();
+  playCallTone();
   if (callTimeout) clearTimeout(callTimeout);
   incomingActions.style.display = 'none';
   callHangupBtn.style.display = 'flex';

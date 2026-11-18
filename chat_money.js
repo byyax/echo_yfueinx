@@ -14,10 +14,10 @@ const GIFT_TYPES = [
   { id: 'scent', label: '🧴 香氛美妆' }
 ];
 const GIFT_TIERS = [
-  { id: 'cheap', label: '平价 (0-50)', max: 50 },
-  { id: 'mid', label: '中档 (50-300)', min: 50, max: 300 },
-  { id: 'formal', label: '正式 (300-1500)', min: 300, max: 1500 },
-  { id: 'luxury', label: '奢侈 (1500+)', min: 1500 }
+  { id: 'cheap', label: '¥0-50', max: 50 },
+  { id: 'mid', label: '¥50-300', min: 50, max: 300 },
+  { id: 'formal', label: '¥300-1500', min: 300, max: 1500 },
+  { id: 'luxury', label: '¥1500+', min: 1500 }
 ];
 const GIFT_ITEMS = [
   // 情侣（单人/双人都算）
@@ -134,7 +134,7 @@ function renderTierTabs() {
   const tabs = document.getElementById('giftTierTabs');
   if (!tabs) return;
   tabs.innerHTML = '';
-  const tiers = [{ id: 'all', label: '全部价位' }].concat(GIFT_TIERS);
+  const tiers = [{ id: 'all', label: '全部' }].concat(GIFT_TIERS);
   tiers.forEach(t => {
     const btn = document.createElement('button');
     btn.textContent = t.label;
@@ -242,6 +242,17 @@ function openKeyboard() { currentPayInput = ''; updateDots(); document.getElemen
 function updateDots() { const dots = document.getElementById('payDots'); dots.innerHTML = ''; for (let i = 0; i < 6; i++) { const d = document.createElement('div'); if (i < currentPayInput.length) d.classList.add('filled'); dots.appendChild(d); } }
 const kb = document.getElementById('keyboard'); if(kb){ kb.innerHTML = ''; for (let i = 1; i <= 9; i++) kb.innerHTML += `<button onclick="pressKey('${i}')">${i}</button>`; kb.innerHTML += `<button style="visibility:hidden;"></button><button onclick="pressKey('0')">0</button><button onclick="pressKey('del')">⌫</button>`; }
 window.pressKey = (k) => {
+  // 按物理键盘时，屏幕上的数字键同步闪一下
+  const kbEl = document.getElementById('keyboard');
+  if (kbEl) {
+    const label = k === 'del' ? '⌫' : String(k);
+    kbEl.querySelectorAll('button').forEach(b => {
+      if ((b.textContent || '').trim() === label) {
+        b.classList.add('key-pressed');
+        setTimeout(() => b.classList.remove('key-pressed'), 140);
+      }
+    });
+  }
   if (k === 'del') currentPayInput = currentPayInput.slice(0, -1); else if (currentPayInput.length < 6) currentPayInput += k;
   updateDots();
   if (currentPayInput.length === 6) {

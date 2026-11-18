@@ -5,7 +5,10 @@ let isTyping = false; // 正在输入状态
 
 function applyChatSettings() {
   const titleEl = document.getElementById('chatTitle'); if(titleEl) titleEl.textContent = chatSettings.otherName;
-  if(chatEl) chatEl.style.backgroundImage = chatSettings.wallpaper ? `url(${chatSettings.wallpaper})` : 'none';
+  // 壁纸挂在整页上：播放器/工具面板开合只推动气泡，背景不会跟着放大缩小
+  const pageEl = document.getElementById('pageChat');
+  if (pageEl) pageEl.style.backgroundImage = chatSettings.wallpaper ? `url(${chatSettings.wallpaper})` : 'none';
+  if (chatEl) chatEl.style.backgroundImage = 'none';
   const sigEl = document.getElementById('signatureBar'); if(sigEl) sigEl.textContent = chatSettings.signature;
 }
 
@@ -31,10 +34,13 @@ let bubbleMenuCtx = null;
 function getQuoteDisplayText(content, type) {
   if (type === 'image') return '[图片]';
   if (type === 'redpacket') return '[红包] ' + (content.note || '');
+  if (type === 'musicshare') return '[歌曲] ' + (content.name || '');
+  if (type === 'musicinvite') return '[一起听歌] ' + (content.name || '');
   if (type === 'transfer') return '[转账] ¥' + (content.amount || '0.00');
   if (type === 'gift') return '[礼物] ' + (content.name || content.val || '');
   if (type === 'interact') return '[互动] ' + (content.name || '');
   if (type === 'location') return '[位置] ' + (content.val || '');
+  if (type === 'audio') return '[语音]';
   return (content && content.val !== undefined && content.val !== null) ? String(content.val) : '';
 }
 
@@ -97,6 +103,7 @@ function autoReceiveMyCard(time) {
   if (!msg || !msg.content || msg.content.isOpened) return;
   msg.content.isOpened = true;
   saveAllData();
+  if (typeof refreshMood === 'function') refreshMood();
 
   const bubble = document.querySelector(`.bubble[data-msg-time="${time}"]`);
   if (!bubble) return;
@@ -143,6 +150,7 @@ function openOtherCard(time, type) {
   mAmount.style.display = 'none';
   btn.textContent = '拆开';
   closeBtn.style.display = 'block';
+  closeBtn.textContent = '暂时不领';
 
   closeBtn.onclick = () => modal.classList.remove('show');
   
@@ -180,6 +188,22 @@ function openOtherCard(time, type) {
     mName.textContent = `对方想要${msg.content.name || '互动'}`;
     btn.textContent = '接受';
     btn.onclick = () => finishOpenCard(time, type);
+  } else if (type === 'musicinvite') {
+    mTitle.textContent = '🎧 一起听歌';
+    mIcon.textContent = '🎧';
+    mName.textContent = msg.content.name ? `想和你一起听《${msg.content.name}》` : '想和你一起听首歌';
+    btn.textContent = '好呀';
+    closeBtn.textContent = '下次吧';
+    btn.onclick = () => {
+      finishOpenCard(time, type);
+      let title = msg.content.name;
+      // 没指定歌名就是"一起听歌"，随手放一首
+      if (!title && typeof pickRandomSong === 'function') {
+        const s = pickRandomSong();
+        title = s && s.title;
+      }
+      if (title && typeof playSongByTitle === 'function') playSongByTitle(title);
+    };
   }
   
   modal.classList.add('show');
@@ -189,6 +213,7 @@ function finishOpenCard(time, type) {
   document.getElementById('giftOpenModal').classList.remove('show');
   const msg = chatHistory.find(m => m.time === time && m.role === 'other');
   if (msg) { msg.content.isOpened = true; saveAllData(); }
+  if (typeof refreshMood === 'function') refreshMood();
   
   const bubble = document.querySelector(`.bubble[data-msg-time="${time}"]`);
   if (bubble) {
@@ -210,6 +235,9 @@ function finishOpenCard(time, type) {
       if (icon) { icon.textContent = msg.content.icon || '💞'; icon.className = 'card-icon grey'; }
       if (subtitle) subtitle.textContent = '已接受';
       if (bottom) bottom.textContent = '已接受';
+    } else if (type === 'musicinvite') {
+      if (icon) { icon.textContent = '🎧'; icon.className = 'card-icon grey'; }
+      if (bottom) bottom.textContent = '已接受';
     } else if (type === 'gift') {
       const giftName = msg.content.name || '礼物';
       const giftEmoji = getGiftIcon(msg.content);
@@ -221,9 +249,34 @@ function finishOpenCard(time, type) {
   showToast('已收取');
 }
 
+// 语音消息播放
+let _voiceAudio = null;
+function playVoice(el, src) {
+  if (_voiceAudio) { try { _voiceAudio.pause(); } catch (e) {} _voiceAudio = null; }
+  const icon = el.querySelector('.voice-play');
+  if (icon) icon.textContent = '▶';
+  if (!src) return;
+  const audio = new Audio(src);
+  _voiceAudio = audio;
+  if (icon) icon.textContent = '⏸';
+  audio.onended = () => { if (icon) icon.textContent = '▶'; };
+  audio.onerror = () => { if (icon) icon.textContent = '▶'; showToast('这段语音放不出来'); };
+  const p = audio.play();
+  if (p && p.catch) p.catch(() => { if (icon) icon.textContent = '▶'; });
+}
+
 function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
   try {
     if(!chatEl) return;
+    // 系统提示（通话记录、拍一拍这类）：居中的灰色小字，不做成气泡
+    if (type === 'sys') {
+      const sys = document.createElement('div');
+      sys.className = 'sys';
+      sys.textContent = (content && content.val != null) ? content.val : '';
+      chatEl.appendChild(sys);
+      chatEl.scrollTop = chatEl.scrollHeight;
+      return;
+    }
     const row = document.createElement('div'); row.className = 'row' + (isMe ? ' me' : '');
     const avatar = document.createElement('div'); avatar.className = 'avatar ' + (isMe ? 'me' : 'other');
     const avatarUrl = isMe ? chatSettings.myAvatar : chatSettings.otherAvatar;
@@ -263,10 +316,16 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
       const img = document.createElement('img'); img.src = content.val;
       img.onclick = () => { document.getElementById('previewImg').src = content.val; document.getElementById('imagePreviewModal').classList.add('show'); };
       bodyDiv.appendChild(img);
+    } else if (type === 'audio') {
+      bubble.classList.add('voice-bubble');
+      const dur = Math.max(1, Math.round(content.dur || 0));
+      bodyDiv.className = 'voice-body';
+      bodyDiv.innerHTML = `<span class="voice-play">▶</span><span class="voice-wave">${'<i></i>'.repeat(5)}</span><span class="voice-dur">${dur}″</span>`;
+      bodyDiv.onclick = (e) => { e.stopPropagation(); playVoice(bodyDiv, content.val); };
     } else if (type === 'pat') {
       bubble.style.background = 'transparent'; bubble.style.boxShadow = 'none'; bubble.style.fontSize = '12px'; bubble.style.color = '#888';
       bodyDiv.textContent = content.val;
-    } else if (type === 'location' || type === 'redpacket' || type === 'transfer' || type === 'gift' || type === 'interact') {
+    } else if (type === 'location' || type === 'redpacket' || type === 'transfer' || type === 'gift' || type === 'interact' || type === 'musicshare' || type === 'musicinvite') {
       bubble.classList.add('special-card');
       if (content.isOpened) bubble.classList.add('opened');
       
@@ -290,20 +349,34 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
         colorClass = content.isOpened ? 'grey' : 'interact';
         subTitle = content.isOpened ? '已接受' : '互动请求';
       }
-      if(type === 'gift') { 
+      if(type === 'gift') {
         let gName = content.name || content.val || '神秘礼物';
         if (!isMe && !content.isOpened) gName = '神秘礼物'; // 对方送的一开始不暴露
-        
+
         const gEmoji = content.isOpened ? getGiftIcon(content) : '🎁';
-        
-        icon = gEmoji; 
-        title = content.isOpened ? gName : '礼物'; 
-        colorClass = content.isOpened ? 'grey' : 'red'; 
-        subTitle = '礼物'; 
+
+        icon = gEmoji;
+        title = content.isOpened ? gName : '礼物';
+        colorClass = content.isOpened ? 'grey' : 'red';
+        subTitle = '礼物';
+      }
+      if (type === 'musicshare') {
+        icon = '🎵';
+        title = content.name || '一首歌';
+        colorClass = 'music';
+        subTitle = content.artist ? content.artist : '分享歌曲';
+      }
+      if (type === 'musicinvite') {
+        icon = '🎧';
+        title = '一起听歌';
+        colorClass = 'music';
+        subTitle = content.name ? `想和你听《${content.name}》` : '想和你一起听';
       }
       
       let bottomText = '';
       if (type === 'location') bottomText = '位置信息';
+      else if (type === 'musicshare') bottomText = content.isOpened ? '已播放' : '点击播放';
+      else if (type === 'musicinvite') bottomText = content.isOpened ? '已接受' : (isMe ? '等待对方回应' : '点击接受');
       else if (type === 'transfer') bottomText = content.isOpened ? '已收款' : '未收款';
       else if (content.isOpened) {
         if (type === 'redpacket') bottomText = '已领取';
@@ -316,17 +389,29 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
       }
       
       bodyDiv.innerHTML = `<div class="card-top"><div class="card-icon ${colorClass}">${icon}</div><div class="card-info"><h4>${title}</h4><p>${subTitle}</p></div></div><div class="card-bottom">${bottomText}</div>`;
-      
-      if (!isMe && !content.isOpened && type !== 'location') {
+
+      // 推荐歌曲：卡片里带一句他说的话
+      if (type === 'musicshare' && content.note) {
+        const noteEl = document.createElement('div');
+        noteEl.className = 'card-note';
+        noteEl.textContent = content.note;
+        const bottom = bodyDiv.querySelector('.card-bottom');
+        if (bottom) bodyDiv.insertBefore(noteEl, bottom); else bodyDiv.appendChild(noteEl);
+      }
+
+      if (type === 'musicshare') {
+        bodyDiv.onclick = () => { if (typeof playSongByTitle === 'function') playSongByTitle(content.name); };
+      } else if (!isMe && !content.isOpened && type !== 'location') {
         bodyDiv.onclick = () => openOtherCard(time, type);
       }
     } else {
       const textVal = (content.val === undefined || content.val === null) ? '' : String(content.val);
       bodyDiv.textContent = textVal;
       
-      // 修复：严格判定纯 Emoji，避免像“🍎蹭蹭”这种被误判导致气泡消失
-      const isPureEmoji = /^(\p{Emoji}|\p{Emoji_Modifier}|\p{Emoji_Component}|\s)+$/u.test(textVal);
-      if (textVal.length <= 6 && isPureEmoji) { 
+      // 只有"纯表情"才放大去气泡：数字/字母/中文都算正常消息，别被 \p{Emoji} 误吞
+      const emojiOnly = /^[\p{Extended_Pictographic}\p{Emoji_Modifier}\p{Regional_Indicator}‍️\s]+$/u.test(textVal)
+        && /[\p{Extended_Pictographic}\p{Regional_Indicator}]/u.test(textVal);
+      if (textVal.length <= 12 && emojiOnly) {
         bubble.style.fontSize = '30px'; bubble.style.background = 'transparent'; bubble.style.padding = '0'; bubble.style.boxShadow = 'none'; 
       }
     }
@@ -382,7 +467,20 @@ function sendMessage(val, type = 'text', isMe = true, customQuote = null) {
   addMessageDOM(content, isMe, type, time);
   chatHistory.push({ role: isMe ? 'me' : 'other', type, content, time });
   saveAllData();
-  lastInteractionTime = Date.now(); 
+  lastInteractionTime = Date.now();
+  if (typeof refreshMood === 'function') refreshMood();
+
+  // 音效：收发消息一声轻响；他发来红包/礼物/转账换成两声铃
+  if (isMe) {
+    if (typeof playSfx === 'function') playSfx('send');
+  } else if ((type === 'redpacket' || type === 'gift' || type === 'transfer') && typeof playReceiveChime === 'function') {
+    playReceiveChime();
+  } else {
+    if (typeof playSfx === 'function') playSfx('send');
+  }
+
+  // 两边的语气都可能影响他的心情；只是"可能"，每次都重新掷概率
+  if (type === 'text' && typeof analyzeMoodFromText === 'function') analyzeMoodFromText(content.val, isMe);
 
   if (isMe && (type === 'redpacket' || type === 'transfer' || type === 'gift' || type === 'interact')) {
     const delay = 2000 + Math.random() * 3000;
@@ -467,6 +565,27 @@ function randomReply() {
   if (Math.random() < 0.1) {
     triggerPat(false);
     return;
+  }
+
+  // 他偶尔会分享一首歌，或者邀请你一起听
+  if (Math.random() < 0.07 && typeof pickRandomSong === 'function') {
+    const song = pickRandomSong();
+    if (song) {
+      if (Math.random() < 0.5) {
+        const notes = ['这首好听，听听看', '今天的单曲循环', '歌词写得很像我们', '心情不好就听这个', '突然想到你，就发你了'];
+        sendMessage({
+          name: song.title,
+          artist: song.artist,
+          val: song.title,
+          note: notes[Math.floor(Math.random() * notes.length)]
+        }, 'musicshare', false);
+      } else {
+        // 有时候只是想和你一起听歌，不指定哪一首
+        const name = Math.random() < 0.5 ? song.title : '';
+        sendMessage({ name, artist: song.artist }, 'musicinvite', false);
+      }
+      return;
+    }
   }
 
   const r = Math.random();

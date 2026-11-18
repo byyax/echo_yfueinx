@@ -1,12 +1,76 @@
+// ===== 图片/语音数据：统计 / 导出时剔除 / 单独清理 =====
+function isMediaData(v) { return typeof v === 'string' && (v.indexOf('data:image') === 0 || v.indexOf('data:audio') === 0); }
+
+function mediaBytesOf(history) {
+  let bytes = 0;
+  (history || []).forEach(m => {
+    const v = m && m.content && m.content.val;
+    if (isMediaData(v)) bytes += Math.floor(v.length * 0.75);
+  });
+  return bytes;
+}
+function formatSize(bytes) {
+  if (bytes >= 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+  return Math.max(0, Math.round(bytes / 1024)) + ' KB';
+}
+
+// 把图片/语音换成占位文字，其余字段原样保留
+function stripMedia(history) {
+  return (history || []).map(m => {
+    if (!m || !m.content) return m;
+    if ((m.type === 'image' || m.type === 'audio') && isMediaData(m.content.val)) {
+      const label = m.type === 'audio' ? '[语音已省略]' : '[图片已省略]';
+      return Object.assign({}, m, {
+        type: 'text',
+        content: Object.assign({}, m.content, { val: label })
+      });
+    }
+    return m;
+  });
+}
+
+function exportWithMedia() {
+  try { return localStorage.getItem('export_media') !== '0'; } catch (e) { return true; }
+}
+
 const menuData = document.getElementById('menuData');
-if(menuData) menuData.onclick = () => { 
-  switchPage('pageData'); 
+if(menuData) menuData.onclick = () => {
+  switchPage('pageData');
   let totalSize = 0;
   for (let key in localStorage) { if (localStorage.hasOwnProperty(key)) totalSize += (localStorage[key].length + key.length) * 2; }
   document.getElementById('dataSize').textContent = (totalSize / 1024).toFixed(1) + ' KB';
   document.getElementById('dataMsgCount').textContent = chatHistory.length + ' 条';
   document.getElementById('dataCardCount').textContent = (contents.length + locLibrary.length + pokeLibrary.length + signatureLibrary.length) + ' 项';
+  const mediaEl = document.getElementById('dataMediaSize');
+  if (mediaEl) mediaEl.textContent = formatSize(mediaBytesOf(chatHistory));
+  const exportSw = document.getElementById('setExportMedia');
+  if (exportSw) exportSw.checked = exportWithMedia();
 };
+
+const exportMediaSwitch = document.getElementById('setExportMedia');
+if (exportMediaSwitch) {
+  exportMediaSwitch.onchange = () => {
+    try { localStorage.setItem('export_media', exportMediaSwitch.checked ? '1' : '0'); } catch (e) {}
+    showToast(exportMediaSwitch.checked ? '导出会带上图片' : '导出会跳过图片');
+  };
+}
+
+const clearMediaBtn = document.getElementById('clearMediaBtn');
+if (clearMediaBtn) {
+  clearMediaBtn.onclick = () => {
+    const count = (chatHistory || []).filter(m => m && (m.type === 'image' || m.type === 'audio') && isMediaData((m.content || {}).val)).length;
+    if (!count) return showToast('没有需要清理的图片或语音');
+    const saved = mediaBytesOf(chatHistory);
+    showConfirm('只清理图片/语音', `会移除 ${count} 条图片或语音（约 ${formatSize(saved)}），文字消息都保留。确定吗？`, () => {
+      chatHistory = stripMedia(chatHistory);
+      saveAllData();
+      chatEl.innerHTML = '<div class="sys">你已添加对方为好友，现在可以开始聊天了</div>';
+      chatHistory.forEach(msg => addMessageDOM(msg.content, msg.role === 'me', msg.type, msg.time));
+      if (document.getElementById('dataSize')) menuData.onclick();
+      showToast(`已清理，腾出约 ${formatSize(saved)}`);
+    });
+  };
+}
 
 document.getElementById('clearHistoryBtn').onclick = () => {
   showConfirm('清空记录', '⚠️ 警告：确定清空所有聊天记录吗？此操作不可逆！', () => {
@@ -74,15 +138,16 @@ document.getElementById('copyExportBtn').onclick = () => {
 
 function performExport(type) {
   let data = {}, filename = '';
+  const historyForExport = exportWithMedia() ? chatHistory : stripMedia(chatHistory);
   if (type === 'all') {
-    data = { tags, contents, myEmojis, chatSettings, chatHistory, locLibrary, pokeLibrary, signatureLibrary };
-    filename = '全部数据.json';
+    data = { tags, contents, myEmojis, chatSettings, chatHistory: historyForExport, locLibrary, pokeLibrary, signatureLibrary };
+    filename = exportWithMedia() ? '全部数据.json' : '全部数据(无图).json';
   } else if (type === 'cards') {
     data = { tags, contents, locLibrary, pokeLibrary, signatureLibrary };
     filename = '字卡与表情库.json';
   } else if (type === 'chat') {
-    data = { chatHistory };
-    filename = '聊天记录.json';
+    data = { chatHistory: historyForExport };
+    filename = exportWithMedia() ? '聊天记录.json' : '聊天记录(无图).json';
   } else if (type === 'settings') {
     data = { chatSettings };
     filename = '聊天设置.json';

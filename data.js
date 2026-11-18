@@ -8,6 +8,16 @@ let payPassword = localStorage.getItem('pay_password') || null;
 let locLibrary = JSON.parse(localStorage.getItem('loc_library')) || [{ id: 'l1', val: '我在DR世界' }, { id: 'l2', val: '我在CR世界' }];
 let pokeLibrary = JSON.parse(localStorage.getItem('poke_library')) || [{id: 'p1', val: '捏了捏你的脸，并亲了你一口'}];
 let signatureLibrary = JSON.parse(localStorage.getItem('signature_library')) || [{id: 's1', val: '今天心情不错'}, {id: 's2', val: '想吃小蛋糕'}];
+// 每个互动动作可以配几句不同的回应，发送时随机挑一句
+const INTERACT_REPLIES = {
+  '摸摸头': ['嗯……再摸一会儿也行', '被你摸得都困了', '头只能你摸，别人不行', '乖，换我摸摸你'],
+  '戳戳脸': ['别戳啦，痒~', '你再戳，我可就亲回去了', '戳一下要给钱的', '脸都被你戳软了'],
+  '抱抱': ['（一把抱住你）', '抱紧点，别松手', '你身上好香', '再抱十秒'],
+  '贴贴': ['（凑过来贴贴）', '贴这么近，还让不让人学习了', '行吧，今天格外黏你', '（把下巴搁在你肩上）'],
+  '捏捏脸': ['哎呀脸都要捏红啦', '捏坏了你负责', '再捏我就咬你', '轻点，脸都被你捏变形了'],
+  '举高高': ['哇——飞起来啦！', '再来一次，我还想飞', '举你一点都不费劲', '转一圈？']
+};
+
 let interactLibrary = JSON.parse(localStorage.getItem('interact_library')) || [
   { id: 'i1', name: '摸摸头', icon: '🖐️' },
   { id: 'i2', name: '戳戳脸', icon: '👉' },
@@ -16,6 +26,11 @@ let interactLibrary = JSON.parse(localStorage.getItem('interact_library')) || [
   { id: 'i5', name: '捏捏脸', icon: '🤏' },
   { id: 'i6', name: '举高高', icon: '🙌' }
 ];
+// 老存档里没有 replies 的，按名字补上
+interactLibrary.forEach(it => {
+  if (!it) return;
+  if (!it.replies || !it.replies.length) it.replies = INTERACT_REPLIES[it.name] || [];
+});
 
 // 对方离线时的自动回复（回来后会先发一句）
 let offlineReplyLines = [
@@ -30,6 +45,46 @@ if (locLibrary.length > 0 && typeof locLibrary[0] === 'string') locLibrary = loc
 if (pokeLibrary.length > 0 && typeof pokeLibrary[0] === 'string') pokeLibrary = pokeLibrary.map((v, i) => ({ id: 'p_'+i, val: v }));
 if (signatureLibrary.length > 0 && typeof signatureLibrary[0] === 'string') signatureLibrary = signatureLibrary.map((v, i) => ({ id: 's_'+i, val: v }));
 
+// ===== 界面配色：只改变白天模式 =====
+const PALETTES = [
+  // 单色：一个主色走到底
+  { id: 'olive',     name: '橄榄绿',   group: 'plain', main: '#A4C639', deep: '#6B8E23', bg: '#f7f9f5', bubble: '#B8DE86' },
+  { id: 'sakura',    name: '樱花粉',   group: 'plain', main: '#F09CAD', deep: '#C2607A', bg: '#fdf7f9', bubble: '#F8CBD7' },
+  { id: 'peach',     name: '蜜桃粉',   group: 'plain', main: '#EFA283', deep: '#C46D50', bg: '#fdf8f5', bubble: '#F9D3C3' },
+  { id: 'mist',      name: '雾蓝',     group: 'plain', main: '#6B8FB5', deep: '#4A6A8A', bg: '#f6f9fc', bubble: '#C9DDF5' },
+  { id: 'taro',      name: '香芋紫',   group: 'plain', main: '#9B8AC4', deep: '#6F5E9E', bg: '#faf8fe', bubble: '#DCD3F2' },
+  { id: 'caramel',   name: '焦糖奶咖', group: 'plain', main: '#B08B6E', deep: '#967A64', bg: '#fbf7f2', bubble: '#E3D8C4' },
+  { id: 'lemon',     name: '柠檬黄',   group: 'plain', main: '#D9B23A', deep: '#A8862A', bg: '#fdfbf0', bubble: '#F3E3A8' },
+  { id: 'wechat',    name: '微信绿',   group: 'plain', main: '#07C160', deep: '#059A4C', bg: '#F3F3F3', bubble: '#95EC69' },
+  // 撞色：按钮一个色，气泡另一个色
+  { id: 'matcha',    name: '樱花抹茶', group: 'clash', main: '#E0798F', deep: '#B25A6E', bg: '#FBEEF2', bubble: '#CDE3B4' },
+  { id: 'mintpeach', name: '蜜桃薄荷', group: 'clash', main: '#E9906C', deep: '#C4703F', bg: '#FDF0E9', bubble: '#B9EBD8' },
+  { id: 'saltlemon', name: '海盐柠檬', group: 'clash', main: '#3F97B0', deep: '#2C7489', bg: '#ECF6FA', bubble: '#F3E3A8' },
+  { id: 'berry',     name: '莓果奶油', group: 'clash', main: '#A6335C', deep: '#750D37', bg: '#FAEEF3', bubble: '#E3D8C4' },
+  { id: 'creamint',  name: '奶油薄荷', group: 'clash', main: '#4FA98A', deep: '#2E8B6A', bg: '#F7EFDD', bubble: '#B9EBD8' },
+  { id: 'milkstraw', name: '牛奶草莓', group: 'clash', main: '#E0708C', deep: '#B25068', bg: '#FBE8EC', bubble: '#FFD9E0' },
+  { id: 'sunblue',   name: '落日橘蓝', group: 'clash', main: '#E07B39', deep: '#B55B22', bg: '#FDEFDF', bubble: '#BFD8F2' },
+  { id: 'matcocoa',  name: '抹茶可可', group: 'clash', main: '#7A9A4E', deep: '#5C7A38', bg: '#F3EDDC', bubble: '#E5D3BC' },
+  { id: 'seagrape',  name: '海盐葡萄', group: 'clash', main: '#5F8FA8', deep: '#436E86', bg: '#E9F3F8', bubble: '#DCCBF0' },
+  { id: 'sakugreen', name: '樱花墨绿', group: 'clash', main: '#D9738A', deep: '#AF5369', bg: '#F9EEEA', bubble: '#C9DFC2' },
+  { id: 'spring',    name: '春樱野草', group: 'clash', main: '#6E9A5A', deep: '#4C7A3E', bg: '#F7F2F0', bubble: '#CDE3B4', me: '#FAD7DF', dot: 'linear-gradient(135deg, #FAD7DF 50%, #CDE3B4 50%)' },
+  { id: 'peachmint', name: '桃气薄荷', group: 'clash', main: '#E0798F', deep: '#B25A6E', bg: '#FFF7F3', bubble: '#B9EBD8', me: '#FFD8C7', dot: 'linear-gradient(135deg, #FFD8C7 50%, #B9EBD8 50%)' },
+  // 科技：黑白灰银，低饱和、强对比
+  { id: 'graphite',  name: '石墨灰',   group: 'tech',  main: '#4A4F57', deep: '#2E3238', bg: '#F2F3F5', bubble: '#D9DEE4' },
+  { id: 'silver',    name: '银灰',     group: 'tech',  main: '#8A929C', deep: '#5F676F', bg: '#F7F8FA', bubble: '#E2E6EA' },
+  { id: 'mono',      name: '极简黑白', group: 'tech',  main: '#1F2328', deep: '#000000', bg: '#FAFAFA', bubble: '#E6E8EA' },
+  { id: 'techblue',  name: '科技蓝灰', group: 'tech',  main: '#5A6B7B', deep: '#37454F', bg: '#F1F5F8', bubble: '#DCE6EE' },
+  // 渐变：气泡本身是渐变
+  { id: 'sunset',    name: '晚霞渐变', group: 'grad',  main: '#E9715E', deep: '#C24F3E', bg: '#fff8f5', bubble: '#FFD3A8', dot: 'linear-gradient(135deg, #FFD9A8, #FFB0B8)' },
+  { id: 'bluepink',  name: '蓝粉渐变', group: 'grad',  main: '#7B93C4', deep: '#5B6F9E', bg: '#f8fafd', bubble: '#C9DDF5', dot: 'linear-gradient(135deg, #C9DDF5, #F7CBD7)' }
+];
+const PALETTE_GROUPS = [
+  { id: 'plain', label: '单色' },
+  { id: 'clash', label: '撞色' },
+  { id: 'grad',  label: '渐变' },
+  { id: 'tech',  label: '科技' }
+];
+
 if (!chatSettings.otherName) chatSettings.otherName = '陆昀霏';
 if (!chatSettings.myName) chatSettings.myName = '你';
 if (!chatSettings.signature) chatSettings.signature = '这个人很懒';
@@ -42,6 +97,10 @@ if (chatSettings.sigTimer === undefined) chatSettings.sigTimer = 5;
 if (chatSettings.autoReplyTime === undefined) chatSettings.autoReplyTime = 0; 
 if (chatSettings.autoReplyCount === undefined) chatSettings.autoReplyCount = 1;
 if (chatSettings.showTyping === undefined) chatSettings.showTyping = true;
+if (chatSettings.sound === undefined) chatSettings.sound = true;
+if (!chatSettings.palette) chatSettings.palette = 'olive';
+// 图标色调：off 原色 / soft 柔和降饱和 / tint 跟随配色
+if (typeof chatSettings.iconTint !== 'string') chatSettings.iconTint = chatSettings.iconTint === true ? 'tint' : 'off';
 if (!chatSettings.hourFormat) chatSettings.hourFormat = '24';
 
 let lastSigUpdate = Date.now();

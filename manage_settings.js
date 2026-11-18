@@ -42,21 +42,83 @@ if (setPatActionInput) setPatActionInput.addEventListener('input', updatePatPrev
 const setPatSuffixInput = document.getElementById('setMyPatSuffix');
 if (setPatSuffixInput) setPatSuffixInput.addEventListener('input', updatePatPreview);
 
-document.querySelectorAll('.theme-option').forEach(opt => {
-  opt.onclick = () => {
-    document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('active'));
-    opt.classList.add('active');
-    const themeName = opt.dataset.bubbleTheme;
-    document.documentElement.setAttribute('data-bubble-theme', themeName);
-    chatSettings.bubbleTheme = themeName;
-  };
-});
+// ===== 界面配色：点一下即时预览，保存后记住 =====
+let paletteFilter = 'all';
+
+function renderPaletteGrid() {
+  const box = document.getElementById('paletteGrid');
+  if (!box) return;
+  const list = (typeof PALETTES !== 'undefined') ? PALETTES : [];
+  let cur = chatSettings.palette || 'olive';
+  // 旧版本存下的配色可能已经删掉了，退回默认的橄榄绿
+  if (!list.some(p => p.id === cur)) { cur = 'olive'; chatSettings.palette = cur; }
+  let groups = (typeof PALETTE_GROUPS !== 'undefined') ? PALETTE_GROUPS : [{ id: 'all', label: '' }];
+  if (paletteFilter !== 'all') groups = groups.filter(g => g.id === paletteFilter);
+  box.innerHTML = '';
+  groups.forEach(g => {
+    const items = list.filter(p => (p.group || 'all') === g.id);
+    if (!items.length) return;
+    if (g.label) {
+      const h = document.createElement('div');
+      h.className = 'pal-group-title';
+      h.textContent = g.label;
+      box.appendChild(h);
+    }
+    items.forEach(p => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'palette-item' + (p.id === cur ? ' active' : '');
+      btn.innerHTML = `<span class="pal-dots"><i style="background:${p.main}"></i><i style="background:${p.deep}"></i><i style="background:${p.dot || p.bubble}"></i></span><span class="pal-name">${p.name}</span>`;
+      btn.onclick = () => {
+        chatSettings.palette = p.id;
+        if (typeof applyPalette === 'function') applyPalette(p.id);
+        box.querySelectorAll('.palette-item').forEach(o => o.classList.remove('active'));
+        btn.classList.add('active');
+        markSettingsDirty();
+      };
+      box.appendChild(btn);
+    });
+  });
+}
+const paletteFilterEl = document.getElementById('paletteFilter');
+if (paletteFilterEl) {
+  paletteFilterEl.querySelectorAll('button').forEach(btn => {
+    btn.onclick = () => {
+      paletteFilter = btn.dataset.pgroup || 'all';
+      paletteFilterEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+      renderPaletteGrid();
+    };
+  });
+}
+renderPaletteGrid();
 
 // ===== 修复5：头像/壁纸先暂存，点右上角保存才真正生效 =====
 let pendingSettings = null; // { otherAvatar, myAvatar, wallpaper } 未保存的暂存
 let settingsDirty = false;
 
 function markSettingsDirty() { settingsDirty = true; }
+
+// 配色区展开 / 收起
+const paletteScrollEl = document.getElementById('paletteScroll');
+const paletteExpandBtn = document.getElementById('paletteExpandBtn');
+if (paletteScrollEl && paletteExpandBtn) {
+  paletteExpandBtn.onclick = () => {
+    const expanded = paletteScrollEl.classList.toggle('expanded');
+    paletteExpandBtn.textContent = expanded ? '收起' : '展开';
+  };
+}
+
+// 文件选择：显示"已选择"之类的状态
+function setFileLabel(inputId, text) {
+  const el = document.getElementById(inputId + 'Name');
+  if (el) el.textContent = text;
+}
+function refreshFileLabels() {
+  setFileLabel('setOtherAvatar', chatSettings.otherAvatar ? '已有' : '未选择');
+  setFileLabel('setMyAvatar', chatSettings.myAvatar ? '已有' : '未选择');
+  setFileLabel('setWallpaper', chatSettings.wallpaper ? '已有' : '未选择');
+}
+refreshFileLabels();
 
 function bindAvatarUpload(inputId, settingKey) {
   const input = document.getElementById(inputId);
@@ -70,6 +132,7 @@ function bindAvatarUpload(inputId, settingKey) {
       reader.onload = (ev) => {
         if (!pendingSettings) pendingSettings = {};
         pendingSettings.wallpaper = ev.target.result;
+        setFileLabel('setWallpaper', '已选择');
         markSettingsDirty();
         showToast('壁纸已选择，记得点右上角保存');
       };
@@ -166,21 +229,26 @@ if (cropZoom) cropZoom.oninput = function() {
 
 document.getElementById('cancelCrop').onclick = () => document.getElementById('cropModal').classList.remove('show');
 document.getElementById('confirmCrop').onclick = () => {
-  const canvas = document.createElement('canvas'); canvas.width = 300; canvas.height = 300; const ctx = canvas.getContext('2d');
+  // 输出 400×400，头像放大时更清楚
+  const OUT = 400;
+  const canvas = document.createElement('canvas'); canvas.width = OUT; canvas.height = OUT; const ctx = canvas.getContext('2d');
   const sx = (CROP_PAD - cropState.x) / cropState.scale;
   const sy = (CROP_PAD - cropState.y) / cropState.scale;
   const sSize = CROP_WIN / cropState.scale;
-  ctx.drawImage(cropImgEl, sx, sy, sSize, sSize, 0, 0, 300, 300);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(cropImgEl, sx, sy, sSize, sSize, 0, 0, OUT, OUT);
   let base64;
   if (cropShape === 'circle') {
     ctx.globalCompositeOperation = 'destination-in';
-    ctx.beginPath(); ctx.arc(150, 150, 150, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(OUT / 2, OUT / 2, OUT / 2, 0, Math.PI * 2); ctx.fill();
     base64 = canvas.toDataURL('image/png');
   } else {
-    base64 = canvas.toDataURL('image/jpeg', 0.9);
+    base64 = canvas.toDataURL('image/jpeg', 0.92);
   }
   if (!pendingSettings) pendingSettings = {};
   pendingSettings[cropTargetKey] = base64;
+  const inputIdMap = { otherAvatar: 'setOtherAvatar', myAvatar: 'setMyAvatar' };
+  if (inputIdMap[cropTargetKey]) setFileLabel(inputIdMap[cropTargetKey], '已选择');
   markSettingsDirty();
   document.getElementById('cropModal').classList.remove('show');
   showToast('已裁剪，点右上角保存后生效');
@@ -208,6 +276,9 @@ if (saveSettingsBtn) {
 
     const typingBox = document.getElementById('setShowTyping');
     if (typingBox) chatSettings.showTyping = typingBox.checked;
+
+    const soundBox = document.getElementById('setSound');
+    if (soundBox) chatSettings.sound = soundBox.checked;
 
     // 暂存的图片正式写入
     if (pendingSettings) {
@@ -270,4 +341,24 @@ function updateTimeChipLabels() {
 }
 const typingBoxEl = document.getElementById('setShowTyping');
 if (typingBoxEl) typingBoxEl.addEventListener('change', markSettingsDirty);
+const soundBoxEl = document.getElementById('setSound');
+if (soundBoxEl) soundBoxEl.addEventListener('change', markSettingsDirty);
+// 图标色调：原色 / 柔和 / 跟随配色
+const iconTintSeg = document.getElementById('iconTintSeg');
+function renderIconTintSeg() {
+  if (!iconTintSeg) return;
+  const mode = chatSettings.iconTint || 'off';
+  iconTintSeg.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+}
+if (iconTintSeg) {
+  iconTintSeg.querySelectorAll('button').forEach(btn => {
+    btn.onclick = () => {
+      chatSettings.iconTint = btn.dataset.mode;
+      if (typeof applyIconTint === 'function') applyIconTint();
+      renderIconTintSeg();
+      markSettingsDirty();
+    };
+  });
+}
+renderIconTintSeg();
 document.querySelectorAll('.theme-option').forEach(opt => opt.addEventListener('click', markSettingsDirty));

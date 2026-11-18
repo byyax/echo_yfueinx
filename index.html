@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>echo_yfueinx</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💚</text></svg>">
+    <!-- 站点图标：浏览器标签用像素绿心，手机/电脑桌面用角色图 -->
+    <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#A4C639">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Echo">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&display=swap" rel="stylesheet">
@@ -22,6 +30,7 @@
               <div class="meta-row" id="statusPills"></div>
               <div class="meta-row sys-bar">
                 <span id="networkIcon" class="icon">📶 WiFi</span>
+                <span class="sys-divider"></span>
                 <span id="batteryIcon" class="icon">🔋 80%</span>
               </div>
             </div>
@@ -29,12 +38,14 @@
           <div class="nav-actions tight">
             <button id="themeToggleBtn" class="icon-btn" title="切换模式">🌙</button>
             <button id="pcToggleBtn" class="icon-btn" title="PC模式">🖥️</button>
-            <button id="openManagerBtn" class="icon-btn">⋮</button>
+            <span class="nav-dot"></span>
+            <button id="openManagerBtn" class="icon-btn" title="后台管理">⋮</button>
           </div>
         </div>
         
-        <!-- 签名 -->
+        <!-- 签名 / 播放歌词 -->
         <div class="signature-wrapper">
+          <span class="music-notes" aria-hidden="true"><i>♪</i><i>♫</i><i>♪</i></span>
           <div class="signature-bar" id="signatureBar">这个人很懒，什么都没留下</div>
         </div>
         
@@ -51,19 +62,20 @@
         <!-- 音乐播放控制条（输入框上方滑出） -->
         <div class="music-bar" id="musicBar">
           <div class="music-wave" id="musicWave"><span></span><span></span><span></span><span></span></div>
-          <div class="music-info">
+          <div class="music-info" id="musicInfo" title="查看歌单">
             <div class="music-title" id="musicTitle">未在播放</div>
             <div class="music-artist" id="musicArtist">点播放开始听歌</div>
           </div>
           <div class="music-controls">
             <button id="musicAddBtn" title="导入本地音乐">＋</button>
+            <button id="musicModeBtn" title="列表循环">🔁</button>
             <button id="musicPrevBtn" title="上一首">⏮</button>
             <button id="musicPlayBtn" class="play-main" title="播放/暂停">▶</button>
             <button id="musicNextBtn" title="下一首">⏭</button>
             <button id="musicCloseBtn" title="关闭">✕</button>
           </div>
         </div>
-        <input type="file" id="musicFileInput" accept="audio/*" multiple style="display:none;">
+        <input type="file" id="musicFileInput" accept="audio/*,.lrc" multiple style="display:none;">
 
         <div class="inputbar">
           <input id="msgInput" placeholder="输入你想说的..." />
@@ -77,6 +89,7 @@
         
         <div class="tool-panel" id="toolPanel">
           <div class="tool-grid">
+            <div class="tool-item" id="toolCamera"><div class="tool-icon">📷</div><span>拍照</span></div>
             <div class="tool-item" id="toolImg"><div class="tool-icon">🖼️</div><span>图片</span></div>
             <div class="tool-item" id="toolCall"><div class="tool-icon">📞</div><span>语音通话</span></div>
             <div class="tool-item" id="toolLoc"><div class="tool-icon">📍</div><span>他在哪</span></div>
@@ -85,9 +98,11 @@
             <div class="tool-item" id="toolTrans"><div class="tool-icon">💰</div><span>转账</span></div>
             <div class="tool-item" id="toolPat"><div class="tool-icon">💞</div><span>互动</span></div>
             <div class="tool-item" id="toolMusic"><div class="tool-icon">🎵</div><span>音乐</span></div>
+            <div class="tool-item" id="toolVoice" style="display:none;"><div class="tool-icon">🎙️</div><span>录音</span></div>
           </div>
         </div>
         <input type="file" id="imageInput" accept="image/*" style="display: none;">
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
       </div>
 
       <!-- 通话组件（重构：包含来电、拨打、通话中） -->
@@ -134,9 +149,23 @@
           <div class="manager-card" id="menuSettings"><div class="icon">⚙️</div><span>聊天设置</span></div>
           <div class="manager-card" id="menuHistory"><div class="icon">💬</div><span>聊天记录</span></div>
           <div class="manager-card" id="menuCards"><div class="icon">📇</div><span>自定义回复</span></div>
-          <div class="manager-card" id="menuData"><div class="icon">📊</div><span>数据管理</span></div>
+          <div class="manager-card" id="menuData"><div class="icon">🗄️</div><span>数据管理</span></div>
+          <div class="manager-card wide" id="menuMusic"><div class="icon">🎵</div><span>音乐管理</span></div>
         </div>
       </div>
+
+      <!-- 音乐管理 -->
+      <div class="page" id="pageMusic">
+        <div class="navbar">
+          <button class="back" id="backFromMusic">‹</button>
+          <div class="title">音乐管理</div>
+          <button class="text-btn primary" id="musicManageAdd">＋ 导入</button>
+        </div>
+        <div class="music-manage-tip">mp3 会存进浏览器，退出再进来还在。歌词选 .lrc，跟歌同名会自动对上。想显示双语：把译文存成「歌名.zh.lrc」和原版一起选，或者同一个时间戳写两行。</div>
+        <div class="music-manage-list" id="musicManageList"></div>
+        <input type="file" id="musicManageFile" accept="audio/*,.lrc" multiple hidden>
+      </div>
+      <input type="file" id="lrcFileInput" accept=".lrc,text/plain" hidden>
 
       <!-- 数据管理 -->
       <div class="page" id="pageData">
@@ -146,6 +175,7 @@
             <div class="setting-row"><label>占用空间</label><span id="dataSize">0 KB</span></div>
             <div class="setting-row"><label>聊天消息条数</label><span id="dataMsgCount">0 条</span></div>
             <div class="setting-row"><label>字卡总数</label><span id="dataCardCount">0 项</span></div>
+            <div class="setting-row"><label>图片/语音占用</label><span id="dataMediaSize">0 KB</span></div>
           </div>
           <div class="setting-group">
             <div class="setting-row" style="padding: 16px; align-items: center; justify-content: center; gap: 10px;">
@@ -182,6 +212,10 @@
                 <button class="btn-small-outline" data-action="import" data-type="settings">导入</button>
               </div>
             </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-row"><label>导出时带图片数据</label><label class='switch'><input type='checkbox' id='setExportMedia'><span class='knob'></span></label></div>
+            <div class="setting-row clickable" id="clearMediaBtn" style="color:#e08a00; border-bottom: none;"><label>🧹 只清理图片/语音</label><span>›</span></div>
           </div>
           <div class="setting-group">
             <div class="setting-row clickable" id="clearHistoryBtn" style="color:#fa5151; border-bottom: none;"><label>🗑️ 清空聊天记录</label><span>›</span></div>
@@ -279,6 +313,7 @@
           
           <div class='setting-group'>
             <div class='setting-row'><label>显示“正在输入”气泡</label><label class='switch'><input type='checkbox' id='setShowTyping'><span class='knob'></span></label></div>
+            <div class='setting-row'><label>消息与通话音效</label><label class='switch'><input type='checkbox' id='setSound'><span class='knob'></span></label></div>
           </div>
           <div class='setting-group'>
             <div class='setting-row-col'>
@@ -301,23 +336,56 @@
           
           <div class="setting-group">
             <div class="setting-row-col">
-              <label>气泡颜色主题</label>
-              <div class="theme-selector" id="themeSelector">
-                <div class="theme-option active" data-bubble-theme="default">
-                  <div class="color-preview"><span style="background:#ffffff; border:1px solid #ddd;"></span><span style="background:#9ACD32;"></span></div>
-                  <span>橄榄绿 / 白</span>
-                </div>
-                <div class="theme-option" data-bubble-theme="wechat">
-                  <div class="color-preview"><span style="background:#ffffff; border:1px solid #ddd;"></span><span style="background:#95ec69;"></span></div>
-                  <span>经典绿 / 白</span>
+              <div class="row-head">
+                <label>界面配色</label>
+                <button type="button" class="link-btn" id="paletteExpandBtn">展开</button>
+              </div>
+              <div class="tone-row">
+                <span class="tone-label">图标色调</span>
+                <div class="seg-mini" id="iconTintSeg">
+                  <button type="button" data-mode="off">原色</button>
+                  <button type="button" data-mode="soft">柔和</button>
+                  <button type="button" data-mode="tint">跟随</button>
                 </div>
               </div>
+              <div class="palette-filter" id="paletteFilter">
+                <button type="button" data-pgroup="all" class="active">全部</button>
+                <button type="button" data-pgroup="plain">单色</button>
+                <button type="button" data-pgroup="clash">撞色</button>
+                <button type="button" data-pgroup="grad">渐变</button>
+                <button type="button" data-pgroup="tech">科技</button>
+              </div>
+              <div class="palette-scroll" id="paletteScroll">
+                <div class="palette-grid" id="paletteGrid"></div>
+              </div>
+              <p class="palette-hint">只改变白天模式，黑夜模式不变。</p>
             </div>
           </div>
           <div class="setting-group">
-            <div class="setting-row"><label>对方头像</label><input type="file" id="setOtherAvatar" accept="image/*"></div>
-            <div class="setting-row"><label>我的头像</label><input type="file" id="setMyAvatar" accept="image/*"></div>
-            <div class="setting-row"><label>聊天壁纸</label><input type="file" id="setWallpaper" accept="image/*"></div>
+            <div class="setting-row">
+              <label>对方头像</label>
+              <div class="file-pick">
+                <input type="file" id="setOtherAvatar" accept="image/*">
+                <label class="file-btn" for="setOtherAvatar">选择图片</label>
+                <span class="file-name" id="setOtherAvatarName">未选择</span>
+              </div>
+            </div>
+            <div class="setting-row">
+              <label>我的头像</label>
+              <div class="file-pick">
+                <input type="file" id="setMyAvatar" accept="image/*">
+                <label class="file-btn" for="setMyAvatar">选择图片</label>
+                <span class="file-name" id="setMyAvatarName">未选择</span>
+              </div>
+            </div>
+            <div class="setting-row">
+              <label>聊天壁纸</label>
+              <div class="file-pick">
+                <input type="file" id="setWallpaper" accept="image/*">
+                <label class="file-btn" for="setWallpaper">选择图片</label>
+                <span class="file-name" id="setWallpaperName">未选择</span>
+              </div>
+            </div>
           </div>
           <div class="setting-group">
             <div class="setting-row-col">
@@ -353,7 +421,7 @@
           </div>
           <div id="tagManageList" style="flex:1; overflow-y:auto; padding: 15px;"></div>
           <div style="padding: 16px; border-top: 1px solid var(--border-color);">
-            <button class="btn-save" id="openCreateTagBtn" style="width:100%; height:44px; border-radius:12px; background:var(--primary); color:#fff; border:none; font-size:15px; cursor:pointer;">＋ 新建标签</button>
+            <button class="btn-save" id="openCreateTagBtn" style="width:100%; height:44px; border-radius:12px;">＋ 新建标签</button>
           </div>
         </div>
       </div>
@@ -391,38 +459,39 @@
       </div>
 
       <div class="modal" id="confirmModal">
-        <div class="panel" style="text-align:center;">
-          <h3 id="confirmTitle" style="margin-bottom:10px;">提示</h3>
-          <p id="confirmMsg" style="font-size:15px; color:#555; margin-bottom:20px; line-height:1.5;"></p>
-          <div class="btns">
+        <div class="panel dialog-panel">
+          <div class="dialog-icon danger">⚠️</div>
+          <h3 class="dialog-title" id="confirmTitle">提示</h3>
+          <p class="dialog-text" id="confirmMsg"></p>
+          <div class="dialog-actions">
             <button class="btn-cancel" id="cancelConfirm">取消</button>
-            <button class="btn-save" id="confirmOkBtn">确定</button>
+            <button class="btn-save danger" id="confirmOkBtn">确定</button>
           </div>
         </div>
       </div>
 
       <!-- 设置页未保存提醒 -->
       <div class="modal" id="unsavedModal">
-        <div class="panel" style="text-align:center;">
-          <div style="font-size: 52px; margin-bottom: 4px;">📝</div>
-          <h3 style="margin-bottom: 8px;">当前改动未保存</h3>
-          <p style="font-size:14px; color:#888; margin-bottom: 18px; line-height:1.6;">本页还有没保存的修改，<br>要保存后再离开吗？</p>
-          <div class="btns" style="flex-direction: column; gap: 10px;">
+        <div class="panel dialog-panel">
+          <div class="dialog-icon">📝</div>
+          <h3 class="dialog-title">当前改动未保存</h3>
+          <p class="dialog-text">这一页还有没保存的修改，<br>要先保存再离开吗？</p>
+          <div class="dialog-actions">
+            <button class="btn-cancel" id="unsavedDiscardBtn">不保存</button>
             <button class="btn-save" id="unsavedSaveBtn">保存并退出</button>
-            <button class="btn-cancel" id="unsavedDiscardBtn">不保存，直接退出</button>
-            <button class="btn-cancel" id="unsavedStayBtn" style="background: transparent; border: 1px solid var(--border-color);">留下再改改</button>
           </div>
+          <button class="btn-ghost" id="unsavedStayBtn">留下再改改</button>
         </div>
       </div>
 
       <div class="modal" id="deleteBubbleModal">
-        <div class="panel" style="text-align:center;">
-          <div style="font-size: 56px; margin-bottom: 4px;">🗑️</div>
-          <h3 style="margin-bottom: 8px;">删除这条消息？</h3>
-          <p style="font-size:14px; color:#888; margin-bottom: 20px; line-height:1.5;">删除后将无法恢复，确定要删除吗？</p>
-          <div class="btns">
+        <div class="panel dialog-panel">
+          <div class="dialog-icon danger">🗑️</div>
+          <h3 class="dialog-title">删除这条消息？</h3>
+          <p class="dialog-text">删除后将无法恢复，确定要删除吗？</p>
+          <div class="dialog-actions">
             <button class="btn-cancel" id="cancelDeleteBubble">再想想</button>
-            <button class="btn-save" id="confirmDeleteBubble" style="background:#fa5151; box-shadow:0 4px 12px rgba(250,81,81,0.3);">删除</button>
+            <button class="btn-save danger" id="confirmDeleteBubble">删除</button>
           </div>
         </div>
       </div>
@@ -430,7 +499,7 @@
       <div class="modal" id="exportDataModal">
         <div class="panel">
           <h3>导出数据</h3>
-          <p style="font-size:12px; color:#888; margin:0; text-align:center;">请全选下方文本复制，并保存到你安全的地方。</p>
+          <p class="dialog-note">请全选下方文本复制，并保存到你安全的地方。</p>
           <textarea id="exportDataText" style="height:200px; font-size:12px; font-family:monospace;" readonly></textarea>
           <div class="btns">
             <button class="btn-cancel" onclick="document.getElementById('exportDataModal').classList.remove('show')">关闭</button>
@@ -442,7 +511,7 @@
       <div class="modal" id="importDataModal">
         <div class="panel">
           <h3>导入数据</h3>
-          <p style="font-size:12px; color:#fa5151; margin:0; text-align:center;">⚠️ 警告：导入将覆盖当前所有数据，请确认已备份！</p>
+          <p class="dialog-note danger">⚠️ 警告：导入将覆盖当前所有数据，请确认已备份！</p>
           <textarea id="importDataText" style="height:200px; font-size:12px; font-family:monospace;" placeholder="请在此粘贴你备份的代码文本..."></textarea>
           <div class="btns">
             <button class="btn-cancel" onclick="document.getElementById('importDataModal').classList.remove('show')">取消</button>
@@ -485,7 +554,10 @@
       <!-- 礼物弹窗：首页双卡 + 右下返回气泡 + 底部长条关闭 -->
       <div class="modal" id="giftModal">
         <div class="panel gift-panel">
-          <div class="gift-head"><h3 id="giftModalTitle">挑选礼物</h3></div>
+          <div class="gift-head">
+            <button class="gift-back" id="giftBackFab" style="display:none;">‹</button>
+            <h3 id="giftModalTitle">挑选礼物</h3>
+          </div>
           <div class="gift-home" id="giftHome">
             <div class="gift-home-card" id="giftHomeShop"><div class="gh-icon">🛍️</div><div class="gh-name">礼物商城</div><div class="gh-hint">挑选一份精选礼物</div></div>
             <div class="gift-home-card" id="giftHomeCustom"><div class="gh-icon">✍️</div><div class="gh-name">自定义礼物</div><div class="gh-hint">送一份心意给对方</div></div>
@@ -499,14 +571,11 @@
             <div class="gc-box">
               <div class="gc-icon">🎀</div>
               <p class="gc-hint">写下你想送的东西<br>对方拆开时会看到 🎀</p>
-              <div class="gc-input-row">
-                <input type="text" id="customGiftInput" placeholder="想送什么？比如：一个亲亲">
-                <button class="btn-save" id="sendCustomGiftBtn">送出</button>
-              </div>
+              <input type="text" id="customGiftInput" placeholder="想送什么？比如：一个亲亲">
+              <button class="btn-save gc-send" id="sendCustomGiftBtn">送出</button>
             </div>
           </div>
-          <button class="gift-fab" id="giftBackFab" style="display:none;">‹ 返回</button>
-          <div class="gift-bottom-bar"><button class="btn-cancel gift-close-long" id="closeGiftModal">关闭</button></div>
+          <div class="gift-bottom-bar"><div class="btns"><button class="btn-cancel" id="closeGiftModal">关闭</button></div></div>
         </div>
       </div>
 
@@ -517,6 +586,29 @@
           <p style="font-size:13px; color:#888; margin:-6px 0 4px;">选一个互动发给对方</p>
           <div class="interact-grid" id="interactGrid"></div>
           <div class="btns"><button class="btn-cancel" id="closeInteractBtn">关闭</button></div>
+        </div>
+      </div>
+
+      <!-- 录音（不支持麦克风的浏览器会隐藏入口） -->
+      <div class="modal" id="voiceModal" onclick="if(event.target===this) cancelVoice()">
+        <div class="panel voice-panel">
+          <div class="voice-mic" id="voiceMic">🎙️</div>
+          <h3 id="voiceTimer">00:00</h3>
+          <div class="voice-live-wave" id="voiceLiveWave"><i></i><i></i><i></i><i></i><i></i></div>
+          <p class="voice-hint" id="voiceHint">正在录音，再点一下「发送」结束</p>
+          <div class="btns">
+            <button class="btn-cancel" id="voiceCancelBtn">取消</button>
+            <button class="btn-save" id="voiceSendBtn">发送</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 歌单：点播放器歌名打开 -->
+      <div class="modal" id="musicListModal">
+        <div class="panel music-panel">
+          <h3>歌单</h3>
+          <div class="music-list" id="musicList"></div>
+          <div class="btns"><button class="btn-cancel" id="closeMusicListBtn">关闭</button></div>
         </div>
       </div>
 
@@ -531,7 +623,7 @@
             <button type="button" class="btn-plain primary" id="cropShapeSquare">方形裁剪</button>
             <button type="button" class="btn-plain" id="cropShapeCircle">圆形裁剪</button>
           </div>
-          <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" style="width: 80%; margin: 15px 0;">
+          <input type="range" id="cropZoom" min="1" max="4" step="0.01" value="1" style="width: 80%; margin: 15px 0;">
           <div class="btns"><button class="btn-cancel" id="cancelCrop">取消</button><button class="btn-save" id="confirmCrop">确认裁剪</button></div>
         </div>
       </div>
@@ -566,6 +658,7 @@
     <div id="toast" class="toast"></div>
 
     <script src="data.js"></script>
+    <script src="chat_sound.js"></script>
     <script src="chat_core.js"></script>
     <script src="chat_stickers.js"></script>
     <script src="chat_tools.js"></script>
@@ -575,7 +668,12 @@
     <script src="manage_settings.js"></script>
     <script src="manage_history.js"></script>
     <script src="manage_data.js"></script>
+    <script src="music_lyrics.js"></script>
     <script src="chat_music.js"></script>
+    <script src="manage_music.js"></script>
+    <script src="chat_mood.js"></script>
     <script src="router.js"></script>
+    <script src="custom_icons.js"></script>
+    <script src="pwa.js"></script>
 </body>
 </html>
