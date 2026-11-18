@@ -57,21 +57,21 @@ const MUSIC_LIBRARY = [
     ]
   },
 
-  // —— 歌单（没有歌词，导入同名 mp3 / .lrc 后就能真播真唱）——
-  { kind: 'song', title: "글쎄 (I Don't Know)", artist: 'SEVENTEEN', src: 'music/SEVENTEEN - 글쎄.mp3' },
-  { kind: 'song', title: '雪化作泪滴 (Old Tape)', artist: 'Cheeze / Trazzy / 雾明', src: 'music/Cheeze,Trazzy,雾明 - 雪化作泪滴 (Old Tape).mp3' },
-  { kind: 'song', title: 'My Lady (Chinese Ver.)', artist: 'EXO' },
-  { kind: 'song', title: '달빛 (月光)', artist: 'GOT7', src: 'music/GOT7 - 달빛.mp3' },
-  { kind: 'song', title: 'Mr. "Broken Heart"（"心碎"先生）', artist: '松下優也', src: 'music/松下優也 - Mr. Broken Heart.mp3' },
-  { kind: 'song', title: '明知故犯', artist: 'Max李玄', src: 'music/Max李玄 - 明知故犯.mp3' },
+  // —— 歌单（src 指向 music/ 里的真实文件；lrc 为可选的外挂歌词）——
+  { kind: 'song', title: "글쎄 (I Don't Know)", artist: 'SEVENTEEN', src: 'music/SEVENTEEN - 글쎄.mp3', lrc: 'music/SEVENTEEN - 글쎄.lrc' },
+  { kind: 'song', title: '雪化作泪滴 (Old Tape)', artist: 'Cheeze / Trazzy / 雾明', src: 'music/Cheeze,Trazzy,雾明 - 雪化作泪滴 (Old Tape).mp3', lrc: 'music/Cheeze,Trazzy,雾明 - 雪化作泪滴 (Old Tape).lrc' },
+  { kind: 'song', title: 'My Lady (Chinese Ver.)', artist: 'EXO', src: 'music/EXO - My Lady (Chinese Ver.).mp3', lrc: 'music/EXO - My Lady (Chinese Ver.).lrc' },
+  { kind: 'song', title: '달빛 (月光)', artist: 'GOT7', src: 'music/GOT7 - 달빛.mp3', lrc: 'music/GOT7 - 달빛.lrc' },
+  { kind: 'song', title: 'Mr. "Broken Heart"（"心碎"先生）', artist: '松下優也', src: 'music/松下優也 - Mr. Broken Heart.mp3', lrc: 'music/松下優也 - Mr. Broken Heart.lrc' },
+  { kind: 'song', title: '明知故犯', artist: 'Max李玄', src: 'music/Max李玄 - 明知故犯.mp3', lrc: 'music/Max李玄 - 明知故犯.lrc' },
   { kind: 'song', title: '无意', artist: '加木 / Demxntia' },
-  { kind: 'song', title: '茉莉', artist: 'JBcob林泽贤 / 张泳浩' },
-  { kind: 'song', title: 'Boy In Luv', artist: 'BTS (防弹少年团)', src: 'music/BTS (防弹少年团) - Boy In Luv.mp3' },
-  { kind: 'song', title: 'I NEED U', artist: 'BTS (防弹少年团)', src: 'music/BTS (防弹少年团) - I NEED U.mp3' },
+  { kind: 'song', title: '茉莉', artist: 'JBcob林泽贤 / 张泳浩', src: 'music/JBcob林泽贤,张泳浩 - 茉莉.mp3', lrc: 'music/JBcob林泽贤,张泳浩 - 茉莉.lrc' },
+  { kind: 'song', title: 'Boy In Luv', artist: 'BTS (防弹少年团)', src: 'music/BTS (防弹少年团) - Boy In Luv.mp3', lrc: 'music/BTS (防弹少年团) - Boy In Luv.lrc' },
+  { kind: 'song', title: 'I NEED U', artist: 'BTS (防弹少年团)', src: 'music/BTS (防弹少年团) - I NEED U.mp3', lrc: 'music/BTS (防弹少年团) - I NEED U.lrc' },
   { kind: 'song', title: '都市问题', artist: 'Capper / LEGGO' },
   { kind: 'song', title: 'Bedroom Trip', artist: 'Luke Christopher' },
   { kind: 'song', title: 'Too Late', artist: 'After 7' },
-  { kind: 'song', title: 'My Love', artist: 'Dok2 / 朴宰范', src: 'music/Dok2 朴宰范 - My Love.mp3' },
+  { kind: 'song', title: 'My Love', artist: 'Dok2 / 朴宰范', src: 'music/Dok2,朴宰范 - My Love.mp3', lrc: 'music/Dok2,朴宰范 - My Love.lrc' },
   { kind: 'song', title: '121', artist: 'ICE杨长青 / 邹沛沛' }
 ];
 
