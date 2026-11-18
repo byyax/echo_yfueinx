@@ -68,6 +68,8 @@ const MUSIC_LIBRARY = [
   { kind: 'song', title: '茉莉', artist: 'JBcob林泽贤 / 张泳浩', src: 'music/JBcob林泽贤,张泳浩 - 茉莉.mp3', lrc: 'music/JBcob林泽贤,张泳浩 - 茉莉.lrc' },
   { kind: 'song', title: 'Boy In Luv', artist: 'BTS (防弹少年团)', src: 'music/BTS (防弹少年团) - Boy In Luv.mp3', lrc: 'music/BTS (防弹少年团) - Boy In Luv.lrc' },
   { kind: 'song', title: 'I NEED U', artist: 'BTS (防弹少年团)', src: 'music/BTS (防弹少年团) - I NEED U.mp3', lrc: 'music/BTS (防弹少年团) - I NEED U.lrc' },
+  { kind: 'song', title: 'ANSWER', artist: '극한데뷔 야생돌', src: 'music/극한데뷔 야생돌 - ANSWER.mp3', lrc: 'music/극한데뷔 야생돌 - ANSWER.lrc' },
+  { kind: 'song', title: "Don't Go Back Tonight", artist: 'TizzyT', src: "music/TizzyT - Don't Go Back Tonight.mp3", lrc: "music/TizzyT - Don't Go Back Tonight.lrc" },
   { kind: 'song', title: '都市问题', artist: 'Capper / LEGGO' },
   { kind: 'song', title: 'Bedroom Trip', artist: 'Luke Christopher' },
   { kind: 'song', title: 'Too Late', artist: 'After 7' },
@@ -133,6 +135,7 @@ function applyMusicOrder() {
 }
 
 const musicBar = document.getElementById('musicBar');
+const musicHandle = document.getElementById('musicHandle');
 const musicTitleEl = document.getElementById('musicTitle');
 const musicArtistEl = document.getElementById('musicArtist');
 const musicPlayBtn = document.getElementById('musicPlayBtn');
@@ -509,19 +512,48 @@ function scrollChatToBottomSoon() {
   setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 360);
 }
 
+function setMusicBarCollapsed(collapsed) {
+  if (!musicBar) return;
+  const on = !!collapsed;
+  musicBar.classList.toggle('collapsed', on);
+  if (musicHandle) {
+    musicHandle.title = on ? '展开播放器' : '收起播放器';
+    musicHandle.setAttribute('aria-label', on ? '展开播放器' : '收起播放器');
+    musicHandle.setAttribute('aria-expanded', String(!on));
+  }
+  scrollChatToBottomSoon();
+}
+function toggleMusicBarCollapsed() {
+  if (!musicBar) return;
+  setMusicBarCollapsed(!musicBar.classList.contains('collapsed'));
+}
+
 function openMusicBar() {
-  if (musicBarOpen) { updateMusicBarUI(); return; }
+  if (musicBarOpen) { setMusicBarCollapsed(false); updateMusicBarUI(); return; }
   musicBarOpen = true;
   if (musicBar) musicBar.classList.add('show');
+  setMusicBarCollapsed(false);
   updateMusicBarUI();
   scrollChatToBottomSoon();
 }
 function closeMusicBar() {
   musicBarOpen = false;
   musicPause();
-  if (musicBar) musicBar.classList.remove('show');
+  if (musicBar) musicBar.classList.remove('show', 'collapsed');
+  if (musicHandle) {
+    musicHandle.title = '收起播放器';
+    musicHandle.setAttribute('aria-label', '收起播放器');
+    musicHandle.setAttribute('aria-expanded', 'true');
+  }
   scrollChatToBottomSoon();
   hideMusicList();
+}
+
+if (musicHandle) {
+  musicHandle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleMusicBarCollapsed();
+  });
 }
 
 // 下一首可播放的歌：跳过歌单里没有音频文件的占位条目，仍然首尾相接

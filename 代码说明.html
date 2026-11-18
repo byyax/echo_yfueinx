@@ -327,6 +327,7 @@ if (!chatSettings.signature) chatSettings.signature = '我喜欢夏天和你淋�
 <li>20 秒还没加载完，会显示「加载超时」，避免一直转；</li>
 <li><code>preloadCurrentSong()</code> 在打开歌单时先预载当前歌曲，点播放会更快；</li>
 <li>工具面板点「音乐」只 <code>openMusicBar()</code>，保持暂停；点播放按钮才播上次那首，点播放器上的歌名 <code>openMusicList()</code>；</li>
+<li>播放条顶部的小拉条由 <code>#musicHandle</code> + <code>setMusicBarCollapsed()</code> / <code>toggleMusicBarCollapsed()</code> 控制：给 <code>.music-bar</code> 加/去 <code>.collapsed</code>，内部 <code>.music-bar-inner</code> 淡出并让高度收为 0；不会暂停歌曲，也不会清掉 <code>musicBarOpen</code>；</li>
 <li>我发出的「一起听」被接受时，<code>acceptMyMusicInvite()</code> 先把卡片改成「已接受」；如果邀请的歌正好在播，只打开播放器、不重播，否则才 <code>playSongByTitle()</code>；对方发来的邀请在 <code>openOtherCard()</code> 的 <code>musicinvite</code> 分支里做同样判断；</li>
 <li><code>shareSongToChat()</code> 发出推荐卡片后会调用 <code>scheduleMusicShareReply()</code>：三成从 <code>MUSIC_SHARE_REPLIES</code> 挑一句，七成用 <code>sendRandomTextCardReply()</code> 抽字卡；内置回复会小幅提升开心/亲密；</li>
 <li>音乐管理「批量管理」行里的「检测」用 <code>fetch</code> 逐个检查 <code>src</code>，结果显示在工具栏下方。</li>
@@ -365,14 +366,15 @@ location.reload();</code></pre>
 <p><strong>微信配色</strong>：我的绿色、对方白色、背景灰色，对应 <code>--bubble-me: #95EC69</code>、<code>--bubble-other: #FFFFFF</code>、<code>--bg-color: #EDEDED</code>。</p>
 <p><strong>黑夜模式</strong>：<code>applyPalette()</code> 在黑夜模式调用 <code>applyDarkPalette()</code>，从主色算出 <code>--primary</code>、<code>--primary-rgb</code>、<code>--primary-dark</code>、<code>--primary-light</code>，按钮和强调色跟随当前配色；气泡背景用 <code>--palette-main</code> + <code>color-mix()</code> 轻微着色。切回白天时清掉这些内联变量。</p>
 <p><strong>图标</strong>：黑夜模式按主色色相写入 <code>--icon-filter</code>，供普通图标使用。默认像素爱心不走这个变量：<code>readDayIconFilter()</code> 会临时移除 <code>data-theme</code>，读取该配色白天规则里的 <code>--icon-filter</code>，再写入 <code>--heart-avatar-filter</code>。因此 35 套配色在黑夜模式下的爱心都与白天同色，但普通图标仍保留适合黑夜的亮度。</p>
-<p><strong>启动页</strong>：<code>applyBootTint()</code> 把主色混成 <code>--boot-bg1/2/3</code>、<code>--boot-name</code>、<code>--boot-sub</code>、<code>--boot-accent</code>，启动页背景、文字、圆点、进度条和爱心滤镜都会跟随配色。</p>
+<p><strong>启动页</strong>：<code>applyBootTint()</code> 把主色混成 <code>--boot-bg1/2/3</code>、<code>--boot-name</code>、<code>--boot-sub</code>、<code>--boot-accent</code>、<code>--boot-rgb</code> 和 <code>--boot-heart-filter</code>，启动页背景、文字、圆点、进度条、流星、爱心和爱心光晕都会跟随配色。设置项 <code>chatSettings.bootTint</code> 为 <code>false</code> 时，统一改用固定的默认橄榄绿 <code>#A4C639</code>，连爱心滤镜和光晕也不读取当前配色。</p>
 <p><strong>检查</strong>：设置页出现新配色，点击后整页变色；同时检查「我的气泡」和「对方气泡」是否与目标应用一致。</p>
 <p><strong>注意</strong>：id 对不上、漏 <code>--primary-rgb</code>、只改数组没改 CSS、我的/对方气泡写反。</p>
 <h3>6.12 启动画面</h3>
 <p><strong>原理</strong>：<code>index.html</code> 的 <code>#bootScreen</code> + 一段脚本；<code>router.js</code> 末尾 <code>window.__appReady = true</code> 是“画完了”的信号。</p>
 <p><strong>改时长</strong>：<code>MIN_SHOW</code>（最短）、<code>MAX_WAIT</code>（兜底）。</p>
 <p><strong>改动画</strong>：<code>#bootLogo</code> 的 <code>background-position</code> + <code>steps(8)</code>；精灵表 <code>icons/heart-spin.png</code> 768×96。</p>
-<p><strong>改颜色</strong>：<code>router.js</code> 的 <code>applyBootTint()</code> 会把当前主色混成启动页背景、文字、圆点、进度条和爱心滤镜的 CSS 变量。</p>
+<p><strong>改颜色</strong>：<code>router.js</code> 的 <code>applyBootTint()</code> 会把当前主色混成启动页背景、文字、圆点、进度条、爱心滤镜和光晕的 CSS 变量；<code>chatSettings.bootTint</code> 为 <code>false</code> 时固定使用橄榄绿。</p>
+<p><strong>像素流星</strong>：<code>index.html</code> 的 <code>#bootMeteors</code> 里有 16 个 <code>&lt;i&gt;</code>，用 4px 方块头和四层 <code>box-shadow</code> 像素拖尾；颜色取 <code>--boot-accent</code>，位置、延迟和时长由 <code>#bootMeteors i:nth-child(n)</code> 控制。</p>
 <p><strong>情绪首次出现</strong>：启动页完全退出后才会派发 <code>app-revealed</code>；如需调整首枚情绪气泡的延迟或触发条件，改 <code>chat_mood.js</code> 底部的 <code>startInitialMood()</code> 和 <code>waitForMoodBoot</code> 兜底。</p>
 <p><strong>注意</strong>：某个 js 报错会导致 <code>__appReady</code> 不置位，15 秒后才放行；看 Console 第一条红字。若启动页被移除但没有派发事件，<code>chat_mood.js</code> 会在检测到 <code>display:none</code> 或 15 秒兜底后自行启动。</p>
 <p>完整的三块结构、精灵图和放行条件见第九节。</p>
@@ -860,6 +862,7 @@ applyPalette('aurora');</code></pre>
 <li><b>修复输入中情绪气泡位置</b>：自己发言后 <code>sendMessage()</code> 调用 <code>refreshMood(false)</code>，最后一条真实消息为「我」时立即收起普通情绪。</li>
 <li><b>首屏情绪动画延后</b>：启动页 <code>display:none</code> 后派发 <code>app-revealed</code>；<code>moodBootReady</code> 在此之前拦截 <code>refreshMood()</code>。</li>
 <li><b>黑夜爱心头像配色</b>：<code>readDayIconFilter()</code> 临时切回白天读取 <code>--icon-filter</code>，写入 <code>--heart-avatar-filter</code>；普通图标继续使用黑夜滤镜。</li>
+<li><b>开场动画染色开关</b>：<code>chatSettings.bootTint</code> 默认 true；关闭后 <code>applyBootTint()</code> 固定使用默认橄榄绿 <code>#A4C639</code>，爱心滤镜和光晕也一起固定。</li>
 <li><b>黑夜按钮与启动页</b>：<code>applyDarkPalette()</code> 派生黑夜主色，<code>applyBootTint()</code> 染色启动页。</li>
 <li><b>恢复默认外观</b>：设置页的「恢复默认头像 / 壁纸」清空 <code>pendingSettings</code>，保存后立即更新。</li>
 <li><b>情绪气泡开关</b>：<code>chatSettings.moodEnabled</code> 默认 true；关闭后 <code>refreshMood()</code> 隐藏气泡。</li>

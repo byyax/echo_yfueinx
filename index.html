@@ -33,7 +33,7 @@
       #bootScreen.boot-hide { opacity: 0; transform: scale(1.03); pointer-events: none; }
       #bootHeart {
         animation: bootBounce 1.8s ease-in-out infinite;
-        filter: drop-shadow(0 10px 16px rgba(var(--primary-rgb, 94, 138, 34), 0.3));
+        filter: drop-shadow(0 10px 16px rgba(var(--boot-rgb, 94, 138, 34), 0.3));
       }
       /* 8 帧旋转：背景图是一张 8 连拍的精灵表，用 steps 逐帧切换 */
       #bootLogo {
@@ -42,9 +42,47 @@
         background-size: 768px 96px;
         background-repeat: no-repeat;
         image-rendering: pixelated;
-        filter: var(--icon-filter, none);
+        filter: var(--boot-heart-filter, grayscale(1) sepia(1) saturate(2.8) hue-rotate(39deg) brightness(0.72));
         animation: bootSpin 1.6s steps(8) infinite;
       }
+      /* 像素斜流星：方块头 + 两格像素拖尾，只在启动页背景里出现 */
+      #bootMeteors {
+        position: absolute; inset: 0; z-index: 0; overflow: hidden;
+        pointer-events: none;
+      }
+      #bootMeteors i {
+        position: absolute; display: block; width: 4px; height: 4px;
+        background: var(--boot-accent, #8FBF3A);
+        box-shadow: 7px -7px 0 color-mix(in srgb, var(--boot-accent, #8FBF3A) 82%, transparent),
+                    14px -14px 0 color-mix(in srgb, var(--boot-accent, #8FBF3A) 58%, transparent),
+                    21px -21px 0 color-mix(in srgb, var(--boot-accent, #8FBF3A) 34%, transparent),
+                    28px -28px 0 color-mix(in srgb, var(--boot-accent, #8FBF3A) 14%, transparent);
+        opacity: 0;
+        animation: bootMeteor 3.6s linear infinite;
+      }
+      #bootScreen > :not(#bootMeteors) { position: relative; z-index: 1; }
+      @keyframes bootMeteor {
+        0% { opacity: 0; transform: translate3d(0, 0, 0); }
+        5% { opacity: 1; }
+        72% { opacity: .75; }
+        100% { opacity: 0; transform: translate3d(-260px, 260px, 0); }
+      }
+      #bootMeteors i:nth-child(1) { top: 4%; left: 70%; animation-delay: .05s; animation-duration: 3.2s; }
+      #bootMeteors i:nth-child(2) { top: 14%; left: 88%; animation-delay: .22s; animation-duration: 3.8s; }
+      #bootMeteors i:nth-child(3) { top: 26%; left: 96%; animation-delay: .48s; animation-duration: 3.4s; }
+      #bootMeteors i:nth-child(4) { top: 38%; left: 62%; animation-delay: .12s; animation-duration: 4.1s; }
+      #bootMeteors i:nth-child(5) { top: 50%; left: 78%; animation-delay: .68s; animation-duration: 3.6s; }
+      #bootMeteors i:nth-child(6) { top: 8%; left: 34%; animation-delay: .35s; animation-duration: 3.5s; }
+      #bootMeteors i:nth-child(7) { top: 20%; left: 20%; animation-delay: .82s; animation-duration: 4.2s; }
+      #bootMeteors i:nth-child(8) { top: 32%; left: 8%; animation-delay: .15s; animation-duration: 3.7s; }
+      #bootMeteors i:nth-child(9) { top: 44%; left: 30%; animation-delay: .58s; animation-duration: 4.0s; }
+      #bootMeteors i:nth-child(10) { top: 58%; left: 44%; animation-delay: .28s; animation-duration: 3.9s; }
+      #bootMeteors i:nth-child(11) { top: 64%; left: 12%; animation-delay: .9s; animation-duration: 4.4s; }
+      #bootMeteors i:nth-child(12) { top: 2%; left: 52%; animation-delay: .72s; animation-duration: 3.3s; }
+      #bootMeteors i:nth-child(13) { top: 16%; left: 55%; animation-delay: 1.05s; animation-duration: 3.6s; }
+      #bootMeteors i:nth-child(14) { top: 28%; left: 42%; animation-delay: .4s; animation-duration: 4.3s; }
+      #bootMeteors i:nth-child(15) { top: 54%; left: 92%; animation-delay: .6s; animation-duration: 3.5s; }
+      #bootMeteors i:nth-child(16) { top: 70%; left: 66%; animation-delay: 1.15s; animation-duration: 4.0s; }
       @keyframes bootSpin {
         from { background-position: 0 0; }
         to { background-position: -768px 0; }
@@ -84,6 +122,7 @@
 </head>
 <body>
     <div id="bootScreen" aria-hidden="true">
+      <div id="bootMeteors" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
       <div id="bootHeart"><div id="bootLogo" aria-hidden="true"></div></div>
       <div id="bootName">ECHO</div>
       <div id="bootSub">yfueinx</div>
@@ -131,20 +170,23 @@
           <button id="cancelQuoteBtn">✕</button>
         </div>
 
-        <!-- 音乐播放控制条（输入框上方滑出） -->
+        <!-- 音乐播放控制条（输入框上方滑出；顶部小拉条可收起/展开） -->
         <div class="music-bar" id="musicBar">
-          <div class="music-wave" id="musicWave"><span></span><span></span><span></span><span></span></div>
-          <div class="music-info" id="musicInfo" title="查看歌单">
-            <div class="music-title" id="musicTitle">未在播放</div>
-            <div class="music-artist" id="musicArtist">点播放开始听歌</div>
-          </div>
-          <div class="music-controls">
-            <button id="musicAddBtn" title="导入本地音乐">＋</button>
-            <button id="musicModeBtn" title="列表循环">🔁</button>
-            <button id="musicPrevBtn" title="上一首">⏮</button>
-            <button id="musicPlayBtn" class="play-main" title="播放/暂停">▶</button>
-            <button id="musicNextBtn" title="下一首">⏭</button>
-            <button id="musicCloseBtn" title="关闭">✕</button>
+          <button class="music-handle" id="musicHandle" type="button" title="收起播放器" aria-label="收起播放器" aria-expanded="true"></button>
+          <div class="music-bar-inner">
+            <div class="music-wave" id="musicWave"><span></span><span></span><span></span><span></span></div>
+            <div class="music-info" id="musicInfo" title="查看歌单">
+              <div class="music-title" id="musicTitle">未在播放</div>
+              <div class="music-artist" id="musicArtist">点播放开始听歌</div>
+            </div>
+            <div class="music-controls">
+              <button id="musicAddBtn" title="导入本地音乐">＋</button>
+              <button id="musicModeBtn" title="列表循环">🔁</button>
+              <button id="musicPrevBtn" title="上一首">⏮</button>
+              <button id="musicPlayBtn" class="play-main" title="播放/暂停">▶</button>
+              <button id="musicNextBtn" title="下一首">⏭</button>
+              <button id="musicCloseBtn" title="关闭">✕</button>
+            </div>
           </div>
         </div>
         <input type="file" id="musicFileInput" accept="audio/*,.lrc" multiple style="display:none;">
@@ -348,7 +390,7 @@
               <h3>第二页</h3>
               <ul>
                 <li><b>选择：</b>创建一张选择卡。默认两个选项，可以继续添加；设置「从中选几个」后发送。对方会先显示「思考中」，再回复「我选……」。</li>
-                <li><b>音乐：</b>打开播放器，不会自动播放。点击播放按钮播放上一次听的歌曲，点击播放器上的歌名进入歌单。</li>
+                <li><b>音乐：</b>打开播放器，不会自动播放。点击播放按钮播放上一次听的歌曲，点击播放器上的歌名进入歌单。播放条顶部中间的小拉条可以收起/展开播放器，收起后歌曲继续播放，不占聊天空间。</li>
                 <li><b>录音：</b>仅在浏览器支持麦克风时显示。按住录音、松开发送；首次使用需要允许麦克风权限。</li>
               </ul>
             </section>
@@ -393,6 +435,7 @@
                 <li><b>显示「正在输入」：</b>关闭后，对方回复前不再显示输入提示。</li>
                 <li><b>消息音效：</b>控制发送和接收消息时的提示音。</li>
                 <li><b>情绪气泡：</b>控制他最后一条消息下方是否显示心情气泡，默认开启。</li>
+                <li><b>开场动画染色：</b>控制启动页是否跟随当前界面配色。开启时随配色变化；关闭时固定使用默认绿色。</li>
                 <li><b>图标色调：</b>可选择原色、柔和或跟随配色。</li>
               </ul>
               <p>修改完成后请点击右上角保存。部分外观设置需要保存后才会应用到所有页面。</p>
@@ -686,6 +729,7 @@
             <div class='setting-row'><label>显示“正在输入”气泡</label><label class='switch'><input type='checkbox' id='setShowTyping'><span class='knob'></span></label></div>
             <div class='setting-row'><label>消息与通话音效</label><label class='switch'><input type='checkbox' id='setSound'><span class='knob'></span></label></div>
             <div class='setting-row'><label>情绪气泡</label><label class='switch'><input type='checkbox' id='setMoodEnabled'><span class='knob'></span></label></div>
+            <div class='setting-row'><label>开场动画染色</label><label class='switch'><input type='checkbox' id='setBootTint'><span class='knob'></span></label></div>
           </div>
           <div class='setting-group'>
             <div class='setting-row-col'>

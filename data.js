@@ -132,6 +132,8 @@ if (chatSettings.autoReplyTime === undefined) chatSettings.autoReplyTime = 0;
 if (chatSettings.autoReplyCount === undefined) chatSettings.autoReplyCount = 1;
 if (chatSettings.moodEnabled === undefined) chatSettings.moodEnabled = true;
 if (chatSettings.showTyping === undefined) chatSettings.showTyping = true;
+// 开场动画是否跟随当前配色；关闭时固定使用默认绿色
+if (chatSettings.bootTint === undefined) chatSettings.bootTint = true;
 
 // 半夜判定：00:00–05:00。只用于熬夜情绪和夜间离线概率，不改变白天作息。
 function isLateNightHour() {

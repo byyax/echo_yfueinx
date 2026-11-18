@@ -73,21 +73,35 @@ function clearDarkPalette() {
   const s = document.documentElement.style;
   ['--primary', '--primary-rgb', '--primary-dark', '--primary-light', '--icon-filter', '--heart-avatar-filter'].forEach(k => s.removeProperty(k));
 }
+const BOOT_DEFAULT_MAIN = '#A4C639';
+const BOOT_DEFAULT_ICON_FILTER = 'grayscale(1) sepia(1) saturate(2.8) hue-rotate(39deg) brightness(0.72)';
+
 function applyBootTint(main) {
   const root = document.documentElement;
-  root.style.setProperty('--boot-bg1', mixHex(main, '#ffffff', 0.92));
-  root.style.setProperty('--boot-bg2', mixHex(main, '#ffffff', 0.86));
-  root.style.setProperty('--boot-bg3', mixHex(main, '#ffffff', 0.80));
-  root.style.setProperty('--boot-name', mixHex(main, '#1f2a12', 0.55));
-  root.style.setProperty('--boot-sub', mixHex(main, '#6b7280', 0.45));
-  root.style.setProperty('--boot-accent', main);
-  root.style.setProperty('--boot-accent-light', mixHex(main, '#ffffff', 0.40));
-  root.style.setProperty('--boot-accent-soft', mixHex(main, '#ffffff', 0.75));
-  root.style.setProperty('--boot-dark1', mixHex(main, '#141414', 0.82));
-  root.style.setProperty('--boot-dark2', mixHex(main, '#1c1c1c', 0.90));
+  // 关闭「开场动画染色」后固定沿用默认橄榄绿，连启动页爱心和光晕也不跟配色走。
+  const tinted = !(typeof chatSettings !== 'undefined' && chatSettings.bootTint === false);
+  const tint = tinted ? main : BOOT_DEFAULT_MAIN;
+  const rgb = hexToRgb(tint);
+  root.style.setProperty('--boot-rgb', `${rgb.r},${rgb.g},${rgb.b}`);
+  root.style.setProperty('--boot-bg1', mixHex(tint, '#ffffff', 0.92));
+  root.style.setProperty('--boot-bg2', mixHex(tint, '#ffffff', 0.86));
+  root.style.setProperty('--boot-bg3', mixHex(tint, '#ffffff', 0.80));
+  root.style.setProperty('--boot-name', mixHex(tint, '#1f2a12', 0.55));
+  root.style.setProperty('--boot-sub', mixHex(tint, '#6b7280', 0.45));
+  root.style.setProperty('--boot-accent', tint);
+  root.style.setProperty('--boot-accent-light', mixHex(tint, '#ffffff', 0.40));
+  root.style.setProperty('--boot-accent-soft', mixHex(tint, '#ffffff', 0.75));
+  root.style.setProperty('--boot-dark1', mixHex(tint, '#141414', 0.82));
+  root.style.setProperty('--boot-dark2', mixHex(tint, '#1c1c1c', 0.90));
   root.style.setProperty('--boot-dark3', '#141414');
-  root.style.setProperty('--boot-dark-name', mixHex(main, '#ffffff', 0.55));
-  root.style.setProperty('--boot-dark-sub', mixHex(main, '#ffffff', 0.28));
+  root.style.setProperty('--boot-dark-name', mixHex(tint, '#ffffff', 0.55));
+  root.style.setProperty('--boot-dark-sub', mixHex(tint, '#ffffff', 0.28));
+  const iconFilter = tinted ? getComputedStyle(root).getPropertyValue('--icon-filter').trim() : '';
+  const fallbackHue = Math.round((hexToHue(main) - 35 + 360) % 360);
+  const fallbackFilter = tinted
+    ? `grayscale(1) sepia(1) saturate(2.8) hue-rotate(${fallbackHue}deg) brightness(0.95)`
+    : BOOT_DEFAULT_ICON_FILTER;
+  root.style.setProperty('--boot-heart-filter', iconFilter || fallbackFilter);
 }
 
 // 界面配色：白天完整应用；黑夜模式用主色派生按钮色，并给气泡轻微着色
@@ -232,6 +246,8 @@ const menuSettings = document.getElementById('menuSettings'); if(menuSettings) m
   if (soundBox) soundBox.checked = chatSettings.sound !== false;
   const moodBox = document.getElementById('setMoodEnabled');
   if (moodBox) moodBox.checked = chatSettings.moodEnabled !== false;
+  const bootTintBox = document.getElementById('setBootTint');
+  if (bootTintBox) bootTintBox.checked = chatSettings.bootTint !== false;
   if (typeof renderIconTintSeg === 'function') renderIconTintSeg();
   if (typeof refreshFileLabels === 'function') refreshFileLabels();
 

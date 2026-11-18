@@ -695,14 +695,44 @@ input[type=range]::-webkit-slider-thumb { height: 20px; width: 20px; border-radi
 
 /* ===== 音乐播放控制条 ===== */
 .music-bar {
-  height: 0; overflow: hidden; opacity: 0;
-  display: flex; align-items: center; gap: 10px;
+  height: 0; opacity: 0; position: relative;
+  display: block; overflow: visible;
   background: linear-gradient(135deg, var(--card-bg) 0%, var(--primary-light) 100%);
   border-top: 1px solid transparent;
   padding: 0 14px; flex-shrink: 0; z-index: 12;
-  transition: height 0.32s cubic-bezier(0.25,0.8,0.25,1), opacity 0.25s ease, padding 0.32s;
+  transition: height 0.32s cubic-bezier(0.25,0.8,0.25,1), opacity 0.25s ease, padding 0.32s, border-color 0.25s, box-shadow 0.25s;
 }
 .music-bar.show { height: 56px; opacity: 1; padding: 8px 14px; border-top-color: var(--border-color); box-shadow: 0 -4px 16px rgba(0,0,0,0.06); }
+.music-bar.collapsed { height: 0; padding-top: 0; padding-bottom: 0; border-top-color: transparent; box-shadow: none; }
+.music-bar-inner {
+  display: flex; align-items: center; gap: 10px;
+  height: 100%; min-height: 0; overflow: hidden;
+  opacity: 1; transform: translateY(0);
+  transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.25,0.8,0.25,1);
+}
+.music-bar.collapsed .music-bar-inner { opacity: 0; transform: translateY(8px); pointer-events: none; }
+.music-handle {
+  position: absolute; left: 50%; top: -11px; z-index: 20;
+  width: 38px; height: 15px; padding: 0;
+  transform: translateX(-50%);
+  border: 1px solid var(--border-color); border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(180deg, var(--card-bg), var(--primary-light));
+  color: var(--primary-dark); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 -3px 8px rgba(0,0,0,0.05);
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+.music-handle::before {
+  content: ''; width: 0; height: 0;
+  border-left: 5px solid transparent; border-right: 5px solid transparent;
+  border-bottom: 6px solid currentColor;
+  transition: transform 0.25s cubic-bezier(0.25,0.8,0.25,1);
+}
+.music-handle:hover { background: var(--primary-light); transform: translateX(-50%) translateY(-1px); }
+.music-handle:active { transform: translateX(-50%) scale(0.94); }
+.music-bar.collapsed .music-handle::before { transform: rotate(180deg); }
+.music-bar:not(.show) .music-handle { opacity: 0; pointer-events: none; }
 .music-wave { display: flex; align-items: flex-end; gap: 3px; height: 26px; flex-shrink: 0; }
 .music-wave span { width: 4px; height: 6px; border-radius: 2px; background: linear-gradient(180deg, var(--primary), var(--primary-dark)); opacity: 0.35; }
 .music-bar.playing .music-wave span { opacity: 1; animation: waveJump 0.9s ease-in-out infinite; }

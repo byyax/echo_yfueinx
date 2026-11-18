@@ -324,6 +324,9 @@ if (saveSettingsBtn) {
     const moodBox = document.getElementById('setMoodEnabled');
     if (moodBox) chatSettings.moodEnabled = moodBox.checked;
 
+    const bootTintBox = document.getElementById('setBootTint');
+    if (bootTintBox) chatSettings.bootTint = bootTintBox.checked;
+
     // 暂存的图片正式写入
     if (pendingSettings) {
       if (pendingSettings.otherAvatar !== undefined) chatSettings.otherAvatar = pendingSettings.otherAvatar;
@@ -336,6 +339,7 @@ if (saveSettingsBtn) {
     }
 
     saveAllData();
+    if (typeof applyPalette === 'function') applyPalette(chatSettings.palette || 'olive');
     applyChatSettings();
     if (typeof refreshMood === 'function') refreshMood(true);
     settingsDirty = false;
@@ -393,6 +397,8 @@ const soundBoxEl = document.getElementById('setSound');
 if (soundBoxEl) soundBoxEl.addEventListener('change', markSettingsDirty);
 const moodBoxEl = document.getElementById('setMoodEnabled');
 if (moodBoxEl) moodBoxEl.addEventListener('change', markSettingsDirty);
+const bootTintBoxEl = document.getElementById('setBootTint');
+if (bootTintBoxEl) bootTintBoxEl.addEventListener('change', markSettingsDirty);
 // 图标色调：原色 / 柔和 / 跟随配色
 const iconTintSeg = document.getElementById('iconTintSeg');
 function renderIconTintSeg() {
