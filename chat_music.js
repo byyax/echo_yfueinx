@@ -106,7 +106,7 @@ if (PLAY_MODES.indexOf(playMode) < 0) playMode = 'list';
 
 function applyPlayModeUI() {
   if (!musicModeBtn) return;
-  musicModeBtn.textContent = PLAY_MODE_ICON[playMode];
+  setIconText(musicModeBtn, PLAY_MODE_ICON[playMode]);
   musicModeBtn.title = PLAY_MODE_LABEL[playMode];
 }
 function cyclePlayMode() {
@@ -141,7 +141,7 @@ function updateMusicBarUI() {
   if (!song) {
     if (musicTitleEl) musicTitleEl.textContent = '还没有歌';
     if (musicArtistEl) musicArtistEl.textContent = '点 ＋ 导入本地 mp3';
-    if (musicPlayBtn) musicPlayBtn.textContent = '▶';
+    if (musicPlayBtn) setIconText(musicPlayBtn, '▶');
     if (musicBar) musicBar.classList.remove('playing');
     return;
   }
@@ -150,7 +150,7 @@ function updateMusicBarUI() {
     const tag = song.trackId ? '本地导入' : (song.src ? '本地文件' : (song.kind === 'book' ? '听书' : '歌单'));
     musicArtistEl.textContent = `${song.artist} · ${tag}${lyricBadge(song)} · ${musicIndex + 1}/${MUSIC_PLAYLIST.length}`;
   }
-  if (musicPlayBtn) musicPlayBtn.textContent = musicPlaying ? '⏸' : '▶';
+  if (musicPlayBtn) setIconText(musicPlayBtn, musicPlaying ? '⏸' : '▶');
   if (musicBar) musicBar.classList.toggle('playing', musicPlaying);
 }
 

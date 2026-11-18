@@ -134,6 +134,16 @@ function saveAllData() {
   localStorage.setItem('interact_library', JSON.stringify(interactLibrary));
 }
 
+// 往按钮里放图标字符时，包一层 span，好让"图标色调"滤镜作用到它
+function setIconText(el, glyph) {
+  if (!el) return;
+  el.innerHTML = '';
+  const s = document.createElement('span');
+  s.className = 'icon-glyph';
+  s.textContent = glyph;
+  el.appendChild(s);
+}
+
 function showToast(msg) { const t = document.getElementById('toast'); if (!t) return; t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
 
 let confirmCallback = null;

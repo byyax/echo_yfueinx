@@ -7,7 +7,7 @@ const themeToggleBtn = document.getElementById('themeToggleBtn');
 const currentTheme = localStorage.getItem('theme') || 'light';
 if (currentTheme === 'dark') {
   document.documentElement.setAttribute('data-theme', 'dark');
-  if (themeToggleBtn) themeToggleBtn.textContent = '☀️';
+  if (themeToggleBtn) setIconText(themeToggleBtn, '☀️');
 }
 // 界面配色：只改变白天模式
 function applyPalette(id) {
@@ -28,7 +28,11 @@ applyIconTint();
 
 // 把工具 / 后台卡片里的 emoji 包一层，方便整体着色或换成自己画的图
 (function wrapIconGlyphs() {
-  document.querySelectorAll('.tool-icon, .manager-card .icon').forEach(el => {
+  const targets = document.querySelectorAll(
+    '.tool-icon, .manager-card .icon, .nav-actions .icon-btn, .music-controls button, .inputbar .icon-btn'
+  );
+  targets.forEach(el => {
+    if (el.id === 'openManagerBtn') return; // 这个按钮是纯文字的三点，不用染色
     if (el.firstElementChild) return;
     const txt = (el.textContent || '').trim();
     if (!txt) return;
@@ -46,11 +50,11 @@ if (themeToggleBtn) {
     if (isDark) {
       document.documentElement.removeAttribute('data-theme');
       localStorage.setItem('theme', 'light');
-      themeToggleBtn.textContent = '🌙';
+      setIconText(themeToggleBtn, '🌙');
     } else {
       document.documentElement.setAttribute('data-theme', 'dark');
       localStorage.setItem('theme', 'dark');
-      themeToggleBtn.textContent = '☀️';
+      setIconText(themeToggleBtn, '☀️');
     }
   };
 }

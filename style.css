@@ -838,8 +838,22 @@ input[type=range]::-webkit-slider-thumb { height: 20px; width: 20px; border-radi
 .bubble:not(.img-bubble):not(.special-card) { background-image: linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0) 62%); }
 [data-theme="dark"] .bubble:not(.img-bubble):not(.special-card) { background-image: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.06)); }
 
-/* ===== 顶栏右上角：三个按钮之间留出呼吸 ===== */
-.nav-actions.tight { gap: 5px; margin-right: -4px; }
+/* ===== 顶栏右上角：按钮加大、间距拉开，手机上好点 ===== */
+.nav-actions.tight { gap: 6px; margin-right: -6px; }
+.nav-actions.tight .icon-btn {
+  font-size: 16px; padding: 6px; min-width: 34px; min-height: 34px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.nav-actions.tight #openManagerBtn {
+  font-size: 24px; line-height: 1; letter-spacing: 1px; font-weight: 600;
+}
+@media (max-width: 420px) {
+  .nav-actions.tight { gap: 8px; margin-right: -8px; }
+  .nav-actions.tight .icon-btn {
+    font-size: 15px; padding: 7px; min-width: 36px; min-height: 36px;
+  }
+  .nav-actions.tight #openManagerBtn { font-size: 23px; }
+}
 .nav-dot { width: 1px; height: 15px; background: var(--border-color); border-radius: 1px; flex-shrink: 0; margin: 0 3px; }
 
 /* ===== 界面配色：只改变白天模式 ===== */
@@ -1279,13 +1293,19 @@ html[data-palette="bluepink"]:not([data-theme="dark"]) {
 .tool-icon .custom-icon-img { width: 30px; height: 30px; }
 .manager-card .icon .custom-icon-img { width: 40px; height: 40px; }
 html.icon-tint .icon-glyph,
-html.icon-tint .custom-icon-img { filter: var(--icon-filter, none); }
+html.icon-tint .custom-icon-img,
+html.icon-tint .nav-meta .icon { filter: var(--icon-filter, none); }
 
 /* 柔和模式：不换色，只把过于鲜艳的 emoji 压下来 */
 html.icon-soft .icon-glyph,
-html.icon-soft .custom-icon-img {
+html.icon-soft .custom-icon-img,
+html.icon-soft .nav-meta .icon {
   filter: saturate(0.58) contrast(0.96) brightness(1.02);
 }
+
+/* 播放键是白字盖在彩色按钮上，染色反而看不清，排除掉 */
+html.icon-tint .music-controls button.play-main .icon-glyph,
+html.icon-soft .music-controls button.play-main .icon-glyph { filter: none; }
 
 /* 配色区：标题行 + 展开/收起 + 限高滚动 */
 .row-head { display: flex; align-items: center; justify-content: space-between; }
