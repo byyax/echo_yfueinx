@@ -1,13 +1,13 @@
 {
   "name": "Echo Yfueinx",
   "short_name": "Echo",
-  "description": "梦角聊天字卡站",
+  "description": "进入你的世界",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f7f9f5",
-  "theme_color": "#A4C639",
+  "theme_color": "#F2F5EA",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },

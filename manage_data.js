@@ -136,20 +136,57 @@ document.getElementById('copyExportBtn').onclick = () => {
   } catch (err) { showToast('请手动长按文本框全选复制'); }
 };
 
+// ===== 导出/导入辅助 =====
+// 自己导入过的歌词都放在 localStorage 的 echo_lyric_歌名 里，一起打包
+function collectCustomLyrics() {
+  const out = {};
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf('echo_lyric_') === 0) out[k.slice('echo_lyric_'.length)] = localStorage.getItem(k);
+    }
+  } catch (e) {}
+  return out;
+}
+function currentThemeName() {
+  try { return localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'; } catch (e) { return 'light'; }
+}
+function applyImportedTheme(name) {
+  const dark = name === 'dark';
+  if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+  else document.documentElement.removeAttribute('data-theme');
+  try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch (e) {}
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn && typeof setIconText === 'function') setIconText(btn, dark ? '☀️' : '🌙');
+}
+// 导入完成后，把界面相关的设置重新套用一遍
+function refreshAfterImport() {
+  if (typeof applyPalette === 'function') applyPalette(chatSettings.palette || 'olive');
+  if (typeof applyIconTint === 'function') applyIconTint();
+  if (typeof applyChatSettings === 'function') applyChatSettings();
+  if (typeof MUSIC_PLAYLIST !== 'undefined') {
+    MUSIC_PLAYLIST.forEach(s => { s._lyr = null; s._lyrRaw = null; });
+  }
+}
+
 function performExport(type) {
   let data = {}, filename = '';
   const historyForExport = exportWithMedia() ? chatHistory : stripMedia(chatHistory);
   if (type === 'all') {
-    data = { tags, contents, myEmojis, chatSettings, chatHistory: historyForExport, locLibrary, pokeLibrary, signatureLibrary };
+    data = {
+      tags, contents, myEmojis, chatSettings, chatHistory: historyForExport,
+      locLibrary, pokeLibrary, signatureLibrary, interactLibrary,
+      theme: currentThemeName(), lyrics: collectCustomLyrics()
+    };
     filename = exportWithMedia() ? '全部数据.json' : '全部数据(无图).json';
   } else if (type === 'cards') {
-    data = { tags, contents, locLibrary, pokeLibrary, signatureLibrary };
+    data = { tags, contents, locLibrary, pokeLibrary, signatureLibrary, interactLibrary };
     filename = '字卡与表情库.json';
   } else if (type === 'chat') {
     data = { chatHistory: historyForExport };
     filename = exportWithMedia() ? '聊天记录.json' : '聊天记录(无图).json';
   } else if (type === 'settings') {
-    data = { chatSettings };
+    data = { chatSettings, theme: currentThemeName() };
     filename = '聊天设置.json';
   }
 
@@ -186,6 +223,8 @@ function processImportedData(data) {
   if (data.contents) parsedItems.push('字卡');
   if (data.chatSettings) parsedItems.push('设置');
   if (data.chatHistory) parsedItems.push('聊天记录');
+  if (data.theme) parsedItems.push('主题');
+  if (data.lyrics && Object.keys(data.lyrics).length) parsedItems.push('歌词');
   
   if (parsedItems.length === 0) return showToast('❌ 解析失败：这不是有效的数据格式');
 
@@ -194,15 +233,24 @@ function processImportedData(data) {
   if (currentImportType === 'all') {
     if (data.tags) tags = data.tags; if (data.contents) contents = data.contents; if (data.myEmojis) myEmojis = data.myEmojis;
     if (data.chatSettings) chatSettings = Object.assign(chatSettings, data.chatSettings);
-    if (data.chatHistory) chatHistory = data.chatHistory; if (data.locLibrary) locLibrary = data.locLibrary; 
+    if (data.chatHistory) chatHistory = data.chatHistory; if (data.locLibrary) locLibrary = data.locLibrary;
     if (data.pokeLibrary) pokeLibrary = data.pokeLibrary; if (data.signatureLibrary) signatureLibrary = data.signatureLibrary;
+    if (data.interactLibrary) interactLibrary = data.interactLibrary;
+    if (data.theme) applyImportedTheme(data.theme);
+    if (data.lyrics) {
+      Object.keys(data.lyrics).forEach(t => {
+        try { localStorage.setItem('echo_lyric_' + t, data.lyrics[t]); } catch (e) {}
+      });
+    }
   } else if (currentImportType === 'cards') {
-    if (data.tags) tags = data.tags; if (data.contents) contents = data.contents; if (data.locLibrary) locLibrary = data.locLibrary; 
+    if (data.tags) tags = data.tags; if (data.contents) contents = data.contents; if (data.locLibrary) locLibrary = data.locLibrary;
     if (data.pokeLibrary) pokeLibrary = data.pokeLibrary; if (data.signatureLibrary) signatureLibrary = data.signatureLibrary;
+    if (data.interactLibrary) interactLibrary = data.interactLibrary;
   } else if (currentImportType === 'chat') {
     if (data.chatHistory) chatHistory = data.chatHistory;
   } else if (currentImportType === 'settings') {
     if (data.chatSettings) chatSettings = Object.assign(chatSettings, data.chatSettings);
+    if (data.theme) applyImportedTheme(data.theme);
   }
   
   saveAllData(); 
@@ -212,7 +260,7 @@ function processImportedData(data) {
     if (modal) modal.classList.remove('show');
     showToast('✅ 导入成功！正在刷新...');
     setTimeout(() => {
-      if (typeof applyChatSettings === 'function') applyChatSettings();
+      refreshAfterImport();
       if (chatEl && typeof chatHistory !== 'undefined') {
         chatEl.innerHTML = '<div class="sys">你已添加对方为好友，现在可以开始聊天了</div>';
         chatHistory.forEach(msg => addMessageDOM(msg.content, msg.role === 'me', msg.type, msg.time));
