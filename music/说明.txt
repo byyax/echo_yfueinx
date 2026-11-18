@@ -1,0 +1,21 @@
+这个文件夹里放的是可以"真播"的歌：mp3 + 同名 .lrc 歌词。
+
+已经接进曲库的：
+  BTS (防弹少年团) - Boy In Luv
+  BTS (防弹少年团) - I NEED U
+  Dok2 朴宰范 - My Love
+  GOT7 - 달빛
+  SEVENTEEN - 글쎄
+  Kahvia江淮 - 글쎄 (或许吧)
+
+歌词已经打包进 music_lyrics.js（浏览器用 file:// 打开时不能直接读本地 .lrc，
+所以是在生成时写进去的）。这里的 .lrc 留着备份，想换词可以用曲库里的「词」重新导入。
+
+再加新歌：
+1) 把 mp3 和同名 .lrc 放进这个文件夹
+2) 在 chat_music.js 顶部的 MUSIC_LIBRARY 加一条：
+   { kind: 'song', title: '歌名', artist: '歌手', src: 'music/文件名.mp3' }
+3) 歌词要么用「词」导入，要么告诉我，我像上面这样打包进来
+
+也可以完全不碰这里：播放器控制条点 ＋ 直接选 mp3（和 .lrc），
+文件会存进浏览器 IndexedDB，退出网站再进来还在。
