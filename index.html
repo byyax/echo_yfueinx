@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>echo_yfueinx</title>
     <meta name="description" content="进入你的世界">
-    <!-- 站点图标：浏览器标签用像素绿心，手机/电脑桌面用角色图 -->
-    <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
+    <!-- 站点图标：手机/电脑桌面用角色图，浏览器标签用像素绿心 -->
+    <!-- PNG 放在最前面：部分安卓桌面 / QQ 浏览器不认 SVG，只认 PNG，顺序不对就会变成字母图标 -->
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="shortcut icon" href="icons/icon-192.png">
+    <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#F2F5EA">
@@ -730,22 +732,54 @@
     <script src="custom_icons.js"></script>
     <script src="pwa.js"></script>
     <script>
-      // 启动画面：全部脚本跑完、页面加载完成后淡出
+      // 启动画面：等页面加载完 + 界面真正渲染完（router.js 末尾的 __appReady）再淡出
       (function () {
         var splash = document.getElementById('bootScreen');
         if (!splash) return;
         var hidden = false;
-        function hide() {
-          if (hidden) return;
-          hidden = true;
+        // 从"打开页面"开始计时（不是从脚本跑完开始），慢手机不会再多等一段
+        var now = function () { return (window.performance && performance.now) ? performance.now() : Date.now(); };
+        var shownAt = now();
+        var MIN_SHOW = 1500;   // 至少停留 1.5 秒，别一闪而过
+        var MAX_WAIT = 12000;  // 兜底：最多等 12 秒，卡住了也先放人进去
+        var loadDone = document.readyState === 'complete';
+        var appReady = window.__appReady === true;
+        // 字体（Noto Serif SC）晚到会让文字重新排版，也一起等，但最多多等 3 秒
+        var fontsDone = !(document.fonts && document.fonts.ready);
+        if (!fontsDone) {
+          document.fonts.ready.then(function () { fontsDone = true; tryHide(); });
+          setTimeout(function () { fontsDone = true; tryHide(); }, 3000);
+        }
+
+        var revealed = false;
+        function reveal() {
+          if (revealed) return;
+          revealed = true;
           splash.classList.add('boot-hide');
           setTimeout(function () { splash.style.display = 'none'; }, 500);
         }
-        function afterLoad() { setTimeout(hide, 900); }
-        if (document.readyState === 'complete') afterLoad();
-        else window.addEventListener('load', afterLoad);
-        // 兜底：万一某个资源卡住，也别一直转圈
-        setTimeout(hide, 9000);
+        function hide() {
+          if (hidden) return;
+          hidden = true;
+          var done = false;
+          function go() { if (done) return; done = true; reveal(); }
+          // 连等两帧，确保这一帧已经真正画到屏幕上，再开始淡出
+          requestAnimationFrame(function () { requestAnimationFrame(go); });
+          // 后台标签页里 rAF 会被暂停，加个计时器兜底
+          setTimeout(go, 450);
+        }
+        function tryHide() {
+          if (!loadDone || !appReady || !fontsDone) return;
+          var rest = MIN_SHOW - (now() - shownAt);
+          setTimeout(hide, rest > 0 ? rest : 0);
+        }
+        if (loadDone) tryHide();
+        else window.addEventListener('load', function () { loadDone = true; tryHide(); });
+        // 信号可能在本文脚本之前就发出，所以先直接读一次标志
+        if (appReady) tryHide();
+        window.addEventListener('app-ready', function () { appReady = true; tryHide(); });
+
+        setTimeout(hide, MAX_WAIT);
       })();
     </script>
 </body>

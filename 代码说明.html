@@ -47,20 +47,15 @@
 <div class="wrap">
 <nav class="toc" id="toc"><strong>目录</strong></nav>
 <h1>Echo Yfueinx · 代码说明</h1>
-<p>这份文档是给你自己改着玩用的。按"文件 → 数据 → 新增功能步骤 → 排错"的顺序看就行，</p>
-<p>不需要从头读到尾。</p>
+<p>这份文档是给你自己改着玩用的。按"文件 → 数据 → 新增功能步骤 → 排错"的顺序看就行，不需要从头读到尾。</p>
 <hr>
 <h2>一、整体结构</h2>
 <p>没有框架、没有打包工具，就是普通网页：</p>
-<pre><code>
-index.html     页面骨架（所有页面、弹窗、启动画面都写在这里）
+<pre><code>index.html     页面骨架（所有页面、弹窗、启动画面都写在这里）
 style.css      全部样式
-*.js           按功能拆开，用普通的 &lt;script&gt; 依次加载
-</code></pre>
-<p><strong>所有 js 共享同一个全局作用域</strong>——一个文件里定义的 <code>function xxx()</code>，别的文件可以直接调用。</p>
-<p>所以加载顺序很重要，<code>index.html</code> 底部的顺序是：</p>
-<pre><code>
-data.js              ← 先有数据和默认设置
+*.js           按功能拆开，用普通的 &lt;script&gt; 依次加载</code></pre>
+<p><strong>所有 js 共享同一个全局作用域</strong>——一个文件里定义的 <code>function xxx()</code>，别的文件可以直接调用。所以加载顺序很重要，<code>index.html</code> 底部的顺序是：</p>
+<pre><code>data.js              ← 先有数据和默认设置
 chat_sound.js        ← 音效（谁都能调用）
 chat_core.js         ← 消息核心（sendMessage 在这里）
 chat_stickers.js
@@ -77,294 +72,180 @@ manage_music.js
 chat_mood.js
 router.js            ← 页面切换、初始化渲染，放最后
 custom_icons.js      ← 替换自定义图标
-pwa.js               ← 注册 Service Worker
-</code></pre>
+pwa.js               ← 注册 Service Worker</code></pre>
 <p>如果你新加一个 js，放在 <code>router.js</code> <strong>之前</strong>、并且确保它依赖的函数已经加载。</p>
 <hr>
 <h2>二、每个文件负责什么</h2>
-<table>
-<thead><tr>
-<tr><th>文件</th><th>负责</th></tr>
-</thead>
-<tr><td><code>data.js</code></td><td>全局数据、默认设置、配色表 <code>PALETTES</code>、互动词库 <code>INTERACT_REPLIES</code>、<code>saveAllData()</code>、<code>showToast()</code>、<code>showConfirm()</code>、<code>compressImage()</code></td></tr>
-<tr><td><code>chat_core.js</code></td><td>消息核心：<code>addMessageDOM()</code> 负责画每一条气泡，<code>sendMessage()</code> 负责发消息，还有引用、拍一拍、随机回复、正在输入</td></tr>
-<tr><td><code>chat_stickers.js</code></td><td>表情面板（Emoji / 我的表情 / 他的表情）</td></tr>
-<tr><td><code>chat_tools.js</code></td><td>加号面板里的工具：图片、拍照、位置、互动、录音；互动回复的随机挑选</td></tr>
-<tr><td><code>chat_call.js</code></td><td>语音通话：来电/拨打/接通/挂断、铃声、小窗拖拽、通话记录、通话影响心情</td></tr>
-<tr><td><code>chat_money.js</code></td><td>红包、转账、支付密码键盘、礼物商城、自定义礼物</td></tr>
-<tr><td><code>manage_cards.js</code></td><td>字卡库：增删改、标签、批量、查重</td></tr>
-<tr><td><code>manage_settings.js</code></td><td>聊天设置：昵称、时长滑块、配色选择、图标色调、头像裁剪、未保存提醒</td></tr>
-<tr><td><code>manage_history.js</code></td><td>聊天记录页 + 字卡统计</td></tr>
-<tr><td><code>manage_data.js</code></td><td>数据管理：占用统计、导出导入、只清理图片/语音</td></tr>
-<tr><td><code>chat_music.js</code></td><td>音乐：播放器、歌单、歌词同步、播放模式、导入本地 mp3、分享/一起听</td></tr>
-<tr><td><code>music_lyrics.js</code></td><td>内置歌词（由 music/ 里的 .lrc 生成，不用运行时读取文件）</td></tr>
-<tr><td><code>manage_music.js</code></td><td>后台的音乐管理页</td></tr>
-<tr><td><code>chat_mood.js</code></td><td>情绪池：概率、关键词、通话事件、心情气泡</td></tr>
-<tr><td><code>router.js</code></td><td>页面切换、配色应用、顶栏状态、回车确认、启动时渲染聊天记录</td></tr>
-<tr><td><code>custom_icons.js</code></td><td>把 emoji 图标换成你自己画的图片</td></tr>
-<tr><td><code>pwa.js</code> / <code>sw.js</code></td><td>让浏览器允许"安装到桌面"</td></tr>
-<tr><td><code>chat_sound.js</code></td><td>音效播放</td></tr>
-</tbody></table>
+<table><thead><tr><th>文件</th><th>负责</th></tr></thead><tbody><tr><td><code>data.js</code></td><td>全局数据、默认设置、配色表 <code>PALETTES</code>、互动词库 <code>INTERACT_REPLIES</code>、<code>saveAllData()</code>、<code>showToast()</code>、<code>showConfirm()</code>、<code>compressImage()</code></td></tr><tr><td><code>chat_core.js</code></td><td>消息核心：<code>addMessageDOM()</code> 负责画每一条气泡，<code>sendMessage()</code> 负责发消息，还有引用、拍一拍、随机回复、正在输入</td></tr><tr><td><code>chat_stickers.js</code></td><td>表情面板（Emoji / 我的表情 / 他的表情）</td></tr><tr><td><code>chat_tools.js</code></td><td>加号面板里的工具：图片、拍照、位置、互动、录音；互动回复的随机挑选</td></tr><tr><td><code>chat_call.js</code></td><td>语音通话：来电/拨打/接通/挂断、铃声、小窗拖拽、通话记录、通话影响心情</td></tr><tr><td><code>chat_money.js</code></td><td>红包、转账、支付密码键盘、礼物商城、自定义礼物</td></tr><tr><td><code>manage_cards.js</code></td><td>字卡库：增删改、标签、批量、查重</td></tr><tr><td><code>manage_settings.js</code></td><td>聊天设置：昵称、时长滑块、配色选择、图标色调、头像裁剪、未保存提醒</td></tr><tr><td><code>manage_history.js</code></td><td>聊天记录页 + 字卡统计</td></tr><tr><td><code>manage_data.js</code></td><td>数据管理：占用统计、导出导入、只清理图片/语音</td></tr><tr><td><code>chat_music.js</code></td><td>音乐：播放器、歌单、歌词同步、播放模式、导入本地 mp3、分享/一起听</td></tr><tr><td><code>music_lyrics.js</code></td><td>内置歌词（由 music/ 里的 .lrc 生成，不用运行时读取文件）</td></tr><tr><td><code>manage_music.js</code></td><td>后台的音乐管理页</td></tr><tr><td><code>chat_mood.js</code></td><td>情绪池：概率、关键词、通话事件、心情气泡</td></tr><tr><td><code>router.js</code></td><td>页面切换、配色应用、顶栏状态、回车确认、启动时渲染聊天记录、发出"渲染完成"信号</td></tr><tr><td><code>custom_icons.js</code></td><td>把 emoji 图标换成你自己画的图片</td></tr><tr><td><code>pwa.js</code> / <code>sw.js</code></td><td>让浏览器允许"安装到桌面"</td></tr><tr><td><code>chat_sound.js</code></td><td>音效播放</td></tr></tbody></table>
 <hr>
 <h2>三、数据存在哪</h2>
 <p>全部在浏览器的 <code>localStorage</code> 里（键名可以直接在 F12 → Application → Local Storage 里看）：</p>
-<table>
-<thead><tr>
-<tr><th>键</th><th>内容</th></tr>
-</thead>
-<tr><td><code>chat_settings</code></td><td>所有设置（昵称、延迟、配色、开关…）</td></tr>
-<tr><td><code>chat_history</code></td><td>聊天记录数组</td></tr>
-<tr><td><code>chat_contents</code> / <code>chat_tags</code></td><td>字卡、标签</td></tr>
-<tr><td><code>my_emojis</code></td><td>我的表情</td></tr>
-<tr><td><code>loc_library</code> / <code>poke_library</code> / <code>signature_library</code> / <code>interact_library</code></td><td>位置、拍一拍、签名、互动</td></tr>
-<tr><td><code>pay_password</code></td><td>支付密码</td></tr>
-<tr><td><code>echo_lyric_&lt;歌名&gt;</code></td><td>自己导入的歌词（优先于内置）</td></tr>
-<tr><td><code>echo_play_mode</code> / <code>echo_last_song</code></td><td>播放模式、上次听的歌</td></tr>
-<tr><td><code>export_media</code></td><td>导出时是否带图片</td></tr>
-</tbody></table>
+<table><thead><tr><th>键</th><th>内容</th></tr></thead><tbody><tr><td><code>chat_settings</code></td><td>所有设置（昵称、延迟、配色、开关…）</td></tr><tr><td><code>chat_history</code></td><td>聊天记录数组</td></tr><tr><td><code>chat_contents</code> / <code>chat_tags</code></td><td>字卡、标签</td></tr><tr><td><code>my_emojis</code></td><td>我的表情</td></tr><tr><td><code>loc_library</code> / <code>poke_library</code> / <code>signature_library</code> / <code>interact_library</code></td><td>位置、拍一拍、签名、互动</td></tr><tr><td><code>pay_password</code></td><td>支付密码</td></tr><tr><td><code>echo_lyric_&lt;歌名&gt;</code></td><td>自己导入的歌词（优先于内置）</td></tr><tr><td><code>echo_play_mode</code> / <code>echo_last_song</code></td><td>播放模式、上次听的歌</td></tr><tr><td><code>export_media</code></td><td>导出时是否带图片</td></tr></tbody></table>
 <p>另外本地导入的 mp3 存在 <strong>IndexedDB</strong>（数据库名 <code>echo_music</code>），不在 localStorage 里。</p>
 <h3>一条聊天记录长这样</h3>
-<pre><code>
-{
+<pre><code>{
   role: 'me' | 'other' | 'system',
   type: 'text' | 'image' | 'audio' | ...,
   content: { val: '正文', ... },
   time: 1699999999999
-}
-</code></pre>
+}</code></pre>
 <p><code>content</code> 里可能出现的字段：</p>
 <ul>
-<li><code>val</code>：文字 / 图片 base64 / 语音 base64 / 位置文字
-</li>
-<li><code>name</code> <code>artist</code>：礼物名、歌名、歌手
-</li>
-<li><code>amount</code> <code>note</code>：红包金额、备注
-</li>
-<li><code>icon</code>：礼物或互动的图标
-</li>
-<li><code>isOpened</code>：红包/礼物是否已拆
-</li>
-<li><code>quote</code>：引用 <code>{sender, text, time}</code>
-</li>
-<li><code>dur</code>：语音时长（秒）
-</li>
+<li><code>val</code>：文字 / 图片 base64 / 语音 base64 / 位置文字</li>
+<li><code>name</code> <code>artist</code>：礼物名、歌名、歌手</li>
+<li><code>amount</code> <code>note</code>：红包金额、备注</li>
+<li><code>icon</code>：礼物或互动的图标</li>
+<li><code>isOpened</code>：红包/礼物是否已拆</li>
+<li><code>quote</code>：引用 <code>{sender, text, time}</code></li>
+<li><code>dur</code>：语音时长（秒）</li>
 </ul>
 <h3>消息类型速查</h3>
-<p><code>text</code> 文字 · <code>image</code> 图片 · <code>audio</code> 语音 · <code>gift</code> 礼物 · <code>redpacket</code> 红包 ·</p>
-<p><code>transfer</code> 转账 · <code>interact</code> 互动 · <code>location</code> 位置 · <code>musicshare</code> 推荐歌曲 ·</p>
-<p><code>musicinvite</code> 一起听 · <code>sys</code> 居中系统提示 · <code>pat</code> 拍一拍</p>
-<blockquote>颜色的约定：<strong>礼物卡片跟主题色走</strong>（<code>card-icon.gift</code>），<strong>红包固定红色</strong>（<code>card-icon.red</code>），</blockquote>
-<blockquote>已拆开的礼物/红包用压暗的主色（<code>card-icon.grey</code>）。推荐歌曲和互动卡片用粉紫渐变。</blockquote>
+<p><code>text</code> 文字 · <code>image</code> 图片 · <code>audio</code> 语音 · <code>gift</code> 礼物 · <code>redpacket</code> 红包 · <code>transfer</code> 转账 · <code>interact</code> 互动 · <code>location</code> 位置 · <code>musicshare</code> 推荐歌曲 · <code>musicinvite</code> 一起听 · <code>sys</code> 居中系统提示 · <code>pat</code> 拍一拍</p>
+<blockquote>颜色的约定：<strong>礼物卡片跟主题色走</strong>（<code>card-icon.gift</code>），<strong>红包固定红色</strong>（<code>card-icon.red</code>），已拆开的礼物/红包用压暗的主色（<code>card-icon.grey</code>）。推荐歌曲和互动卡片用粉紫渐变。</blockquote>
 <hr>
 <h2>四、这次新写入的 js，逐行解释</h2>
 <h3>1. <code>pwa.js</code></h3>
-<pre><code>
-if ('serviceWorker' in navigator &amp;&amp; location.protocol.indexOf('http') === 0) {
-</code></pre>
-<p>先判断两件事：浏览器支持 Service Worker 吗？页面是用 http/https 打开的吗？</p>
-<p>（本地双击 html 是 <code>file://</code>，浏览器不允许注册，所以直接跳过，不会报错。）</p>
-<pre><code>
-  window.addEventListener('load', () =&gt; {
+<pre><code>if ('serviceWorker' in navigator &amp;&amp; location.protocol.indexOf('http') === 0) {</code></pre>
+<p>先判断两件事：浏览器支持 Service Worker 吗？页面是用 http/https 打开的吗？（本地双击 html 是 <code>file://</code>，浏览器不允许注册，所以直接跳过，不会报错。）</p>
+<pre><code>  window.addEventListener('load', () =&gt; {
     navigator.serviceWorker.register('sw.js').catch(() =&gt; {});
-  });
-</code></pre>
-<p>页面加载完之后注册 <code>sw.js</code>。<code>.catch(() =&gt; {})</code> 是"失败了也别弹错误"，</p>
-<p>因为注册失败不影响网站本身，只是不能安装到桌面。</p>
+  });</code></pre>
+<p>页面加载完之后注册 <code>sw.js</code>。<code>.catch(() =&gt; {})</code> 是"失败了也别弹错误"，因为注册失败不影响网站本身，只是不能安装到桌面。</p>
 <p><strong>它的作用</strong>：Chrome / Edge 只有在站点有 Service Worker 时，才会在地址栏显示"安装"按钮。</p>
 <h3>2. <code>sw.js</code></h3>
-<pre><code>
-self.addEventListener('install', () =&gt; self.skipWaiting());
-</code></pre>
+<pre><code>self.addEventListener('install', () =&gt; self.skipWaiting());</code></pre>
 <p><code>skipWaiting()</code> = 新版本立刻生效，不等旧页面关掉。</p>
-<pre><code>
-self.addEventListener('activate', (event) =&gt; event.waitUntil(self.clients.claim()));
-</code></pre>
+<pre><code>self.addEventListener('activate', (event) =&gt; event.waitUntil(self.clients.claim()));</code></pre>
 <p><code>clients.claim()</code> = 立刻接管已经打开的页面。这两句是为了更新后不用手动刷新两次。</p>
-<pre><code>
-self.addEventListener('fetch', () =&gt; {});
-</code></pre>
-<p>空的 fetch 监听。<strong>必须有这一行</strong>——Chrome 判断"能不能安装"时要求有 fetch 处理。</p>
-<p>空着意味着完全走网络，不缓存任何东西，所以你更新代码后刷新就是最新的。</p>
+<pre><code>self.addEventListener('fetch', () =&gt; {});</code></pre>
+<p>空的 fetch 监听。<strong>必须有这一行</strong>——Chrome 判断"能不能安装"时要求有 fetch 处理。空着意味着完全走网络，不缓存任何东西，所以你更新代码后刷新就是最新的。</p>
 <h3>3. <code>custom_icons.js</code></h3>
-<pre><code>
-const CUSTOM_ICONS = {
+<pre><code>const CUSTOM_ICONS = {
   // 'toolGift': 'icons/gift.png',
-};
-</code></pre>
+};</code></pre>
 <p>一张对照表：左边是元素 id，右边是图片路径。默认是空的（继续用 emoji）。</p>
-<pre><code>
-const ids = Object.keys(CUSTOM_ICONS);
-if (!ids.length) return;
-</code></pre>
+<pre><code>const ids = Object.keys(CUSTOM_ICONS);
+if (!ids.length) return;</code></pre>
 <p>没配置就什么都不做，直接退出。</p>
-<pre><code>
-const host = document.getElementById(id);
-const target = host.querySelector('.tool-icon, .icon');
-</code></pre>
+<pre><code>const host = document.getElementById(id);
+const target = host.querySelector('.tool-icon, .icon');</code></pre>
 <p>按 id 找到那个工具格子或后台卡片，再找到里面装图标的那一层。</p>
-<pre><code>
-const img = document.createElement('img');
+<pre><code>const img = document.createElement('img');
 img.src = CUSTOM_ICONS[id];
 img.className = 'custom-icon-img';
 target.textContent = '';
-target.appendChild(img);
-</code></pre>
-<p>把原来的 emoji 清掉，换成你的图片。图片的尺寸在 <code>style.css</code> 里：</p>
-<p>工具栏 30×30、后台卡片 40×40。类名 <code>custom-icon-img</code> 也会继承"图标色调"的滤镜。</p>
+target.appendChild(img);</code></pre>
+<p>把原来的 emoji 清掉，换成你的图片。图片的尺寸在 <code>style.css</code> 里：工具栏 30×30、后台卡片 40×40。类名 <code>custom-icon-img</code> 也会继承"图标色调"的滤镜。</p>
 <h3>4. <code>chat_sound.js</code></h3>
-<pre><code>
-const SFX_FILES = {
+<pre><code>const SFX_FILES = {
   send:        { src: 'sound/send.mp3',         volume: 0.45 },
   callRequest: { src: 'sound/call-request.mp3', volume: 0.45, loop: true },
   callTone:    { src: 'sound/call-tone.mp3',    volume: 0.5 }
-};
-</code></pre>
+};</code></pre>
 <p>音效清单：文件路径、音量、是否循环。<strong>想调音量就改这里的数字</strong>（0~1）。</p>
-<pre><code>
-function playSfx(name) { ... }
-</code></pre>
-<p>按名字播放：第一次用到才创建 <code>&lt;audio&gt;</code>，之后重复使用；每次把进度拨回 0 再播。</p>
-<p><code>chatSettings.sound === false</code> 时直接不响（设置里的"消息与通话音效"开关）。</p>
-<pre><code>
-function playReceiveChime() { ... }
-</code></pre>
-<p>收到红包/礼物/转账时的"叮咚"，没有用文件，是用 WebAudio 现场合成的两个正弦音</p>
-<p>（880Hz → 1174Hz），0.55 秒衰减。想换音高就改数组里的 <code>f</code>。</p>
-<pre><code>
-document.addEventListener('pointerdown', unlockAudio, { once: true });
-</code></pre>
+<pre><code>function playSfx(name) { ... }</code></pre>
+<p>按名字播放：第一次用到才创建 <code>&lt;audio&gt;</code>，之后重复使用；每次把进度拨回 0 再播。 <code>chatSettings.sound === false</code> 时直接不响（设置里的"消息与通话音效"开关）。</p>
+<pre><code>function playReceiveChime() { ... }</code></pre>
+<p>收到红包/礼物/转账时的"叮咚"，没有用文件，是用 WebAudio 现场合成的两个正弦音（880Hz → 1174Hz），0.55 秒衰减。想换音高就改数组里的 <code>f</code>。</p>
+<pre><code>document.addEventListener('pointerdown', unlockAudio, { once: true });</code></pre>
 <p>手机上浏览器要求"用户先点一下"才允许出声，这一步在第一次点击时把音频解锁。</p>
 <h3>5. <code>music_lyrics.js</code></h3>
-<pre><code>
-const BUILTIN_LYRICS = {
+<pre><code>const BUILTIN_LYRICS = {
   "歌名": "[00:00.31]第一句\n[00:02.74]第二句..."
-};
-</code></pre>
-<p>就是把 <code>music/</code> 里的 <code>.lrc</code> 原样打包成字符串，按歌名索引。</p>
-<p><code>chat_music.js</code> 的 <code>lyricsFor()</code> 读歌词的顺序是：</p>
-<ol>
-<li>歌曲对象自带的 <code>lines</code>（听书那几首）
-</li>
-<li>你通过「词」导入的歌词（存在 localStorage）
-</li>
-<li><code>BUILTIN_LYRICS</code>（这个文件）
-</li>
-<li>都没有 → 只滚歌名
-</li>
+};</code></pre>
+<p>就是把 <code>music/</code> 里的 <code>.lrc</code> 原样打包成字符串，按歌名索引。 <code>chat_music.js</code> 的 <code>lyricsFor()</code> 读歌词的顺序是：</p>
+<ol start="1">
+<li>歌曲对象自带的 <code>lines</code>（听书那几首）</li>
+<li>你通过「词」导入的歌词（存在 localStorage）</li>
+<li><code>BUILTIN_LYRICS</code>（这个文件）</li>
+<li>都没有 → 只滚歌名</li>
 </ol>
 <p>所以你自己导入的歌词永远优先。想批量改内置歌词，重新生成这个文件即可（或直接在歌里点「词」重新导入）。</p>
 <hr>
 <h2>五、常见修改：去哪儿动手</h2>
 <h3>加一个顶栏状态</h3>
 <p><code>router.js</code> → <code>STATUS_MAIN</code> 或 <code>STATUS_SUB</code> 里加一行：</p>
-<pre><code>
-{ id: 'x', label: '在遛狗', color: 'st-green', weight: 3, icon: '🐕' }
-</code></pre>
+<pre><code>{ id: 'x', label: '在遛狗', color: 'st-green', weight: 3, icon: '🐕' }</code></pre>
 <p><code>weight</code> 是相对概率，越大越常出现。</p>
 <h3>加一个互动动作</h3>
-<ol>
-<li><code>data.js</code> 的 <code>interactLibrary</code> 加一项 <code>{ id, name, icon }</code>
-</li>
-<li>同文件 <code>INTERACT_REPLIES</code> 加同名的一组回复（4 句左右）
-</li>
+<ol start="1">
+<li><code>data.js</code> 的 <code>interactLibrary</code> 加一项 <code>{ id, name, icon }</code></li>
+<li>同文件 <code>INTERACT_REPLIES</code> 加同名的一组回复（4 句左右）</li>
 </ol>
 <h3>加一套配色（3 步）</h3>
-<ol>
-<li><code>data.js</code> → <code>PALETTES</code> 加一行：
-<pre><code>
-   { id: 'mypink', name: '我的粉', group: 'plain', main: '#E58FA5', deep: '#B85F76', bg: '#FDF7F9', bubble: '#F8CBD7' }
-</code></pre>
-</li>
-<li><code>style.css</code> → 照抄一段 <code>html[data-palette="mypink"]:not([data-theme="dark"]) { ... }</code>
-<br>（<code>--primary</code> <code>--primary-rgb</code> <code>--primary-dark</code> <code>--primary-light</code> <code>--bg-color</code> <code>--bubble-me</code> <code>--bubble-other</code> <code>--shadow-*</code> 都要有）
-</li>
-<li>同段里加 <code>--icon-filter</code>（图标色调"跟随"用的滤镜），照抄最近的配色改 <code>hue-rotate</code> 的角度即可
-</li>
+<ol start="1">
+<li><code>data.js</code> → <code>PALETTES</code> 加一行：</li>
+</ol>
+<pre><code>   { id: 'mypink', name: '我的粉', group: 'plain', main: '#E58FA5', deep: '#B85F76', bg: '#FDF7F9', bubble: '#F8CBD7' }</code></pre>
+<ol start="2">
+<li><code>style.css</code> → 照抄一段 <code>html[data-palette="mypink"]:not([data-theme="dark"]) { ... }</code> （<code>--primary</code> <code>--primary-rgb</code> <code>--primary-dark</code> <code>--primary-light</code> <code>--bg-color</code> <code>--bubble-me</code> <code>--bubble-other</code> <code>--shadow-*</code> 都要有）</li>
+<li>同段里加 <code>--icon-filter</code>（图标色调"跟随"用的滤镜），照抄最近的配色改 <code>hue-rotate</code> 的角度即可</li>
 </ol>
 <blockquote>想让"我的气泡"也上色：在那个配色块里把 <code>--bubble-me</code> 改成颜色就行（参考 <code>spring</code>、<code>peachmint</code>）。</blockquote>
 <h3>加礼物</h3>
-<p><code>chat_money.js</code> → <code>GIFT_ITEMS</code> 加一行 <code>{ name, price, icon, type }</code>。</p>
-<p><code>type</code> 要存在于 <code>GIFT_TYPES</code> 里；价位档位会自动按 <code>price</code> 归类。</p>
+<p><code>chat_money.js</code> → <code>GIFT_ITEMS</code> 加一行 <code>{ name, price, icon, type }</code>。 <code>type</code> 要存在于 <code>GIFT_TYPES</code> 里；价位档位会自动按 <code>price</code> 归类。</p>
 <h3>加一首内置歌</h3>
-<ol>
-<li>把 mp3 放进 <code>music/</code>
-</li>
-<li><code>chat_music.js</code> → <code>MUSIC_LIBRARY</code> 加：
-<pre><code>
-   { kind: 'song', title: '歌名', artist: '歌手', src: 'music/文件名.mp3' }
-</code></pre>
-</li>
-<li>歌词：点歌单里的「词」导入 <code>.lrc</code>，或者发给我打包进 <code>music_lyrics.js</code>
-</li>
+<ol start="1">
+<li>把 mp3 放进 <code>music/</code></li>
+<li><code>chat_music.js</code> → <code>MUSIC_LIBRARY</code> 加：</li>
+</ol>
+<pre><code>   { kind: 'song', title: '歌名', artist: '歌手', src: 'music/文件名.mp3' }</code></pre>
+<ol start="3">
+<li>歌词：点歌单里的「词」导入 <code>.lrc</code>，或者发给我打包进 <code>music_lyrics.js</code></li>
 </ol>
 <h3>改情绪的概率</h3>
-<p><code>chat_mood.js</code> → <code>moodWeights()</code> 里的几个 <code>return { normal, waiting, anxious }</code>，</p>
-<p>三个数字是相对权重。想让他更容易急，就把 <code>anxious</code> 调大。</p>
+<p><code>chat_mood.js</code> → <code>moodWeights()</code> 里的几个 <code>return { normal, waiting, anxious }</code>，三个数字是相对权重。想让他更容易急，就把 <code>anxious</code> 调大。</p>
 <h3>改回复延迟 / 条数</h3>
-<p>设置页的滑块直接对应 <code>chatSettings.replyDelay</code>、<code>replyCount</code> 等；</p>
-<p>真正取延迟的是 <code>chat_core.js</code> 的 <code>getRandomDelay()</code>。</p>
+<p>设置页的滑块直接对应 <code>chatSettings.replyDelay</code>、<code>replyCount</code> 等；真正取延迟的是 <code>chat_core.js</code> 的 <code>getRandomDelay()</code>。</p>
 <h3>改头像裁剪输出尺寸</h3>
 <p><code>manage_settings.js</code> → <code>confirmCrop()</code> 里的 <code>const OUT = 400;</code>，改数字就行（会同比放大裁剪画布）。</p>
 <h3>改主题字体</h3>
 <p><code>style.css</code> 最上面的 <code>body { font-family: ... }</code>。现在是思源宋体（Noto Serif SC）。</p>
 <h3>启动画面（加载动画）</h3>
 <p>进站时盖住"卡几秒"的全屏动画，全部写在 <code>index.html</code> 里，分三块：</p>
-<ol>
-<li><code>&lt;head&gt;</code> 末尾的一段内联 <code>&lt;style&gt;</code> —— 背景渐变、图标漂浮/旋转（<code>@keyframes bootFloat</code>）、三个跳动的小点（<code>bootDot</code>）
-</li>
-<li><code>&lt;body&gt;</code> 开头的 <code>#bootScreen</code> 结构：旋转爱心 + <code>ECHO</code> + <code>yfueinx</code> + 三个点
-</li>
-<li><code>&lt;/body&gt;</code> 前的一段内联脚本 —— 页面 <code>load</code> 完成后等 0.9 秒淡出；另有 9 秒兜底
-</li>
+<ol start="1">
+<li><code>&lt;head&gt;</code> 末尾的一段内联 <code>&lt;style&gt;</code> —— 背景渐变、爱心上下弹跳（<code>@keyframes bootBounce</code>）、三个跳动的小点（<code>bootDot</code>）</li>
+<li><code>&lt;body&gt;</code> 开头的 <code>#bootScreen</code> 结构：旋转爱心 + <code>ECHO</code> + <code>yfueinx</code> + 三个点</li>
+<li><code>&lt;/body&gt;</code> 前的一段内联脚本 —— 等下面四件事都满足才淡出：</li>
 </ol>
-<p>爱心不是图片旋转，而是<strong>精灵动画</strong>：<code>icons/heart-spin.png</code> 是一张 8 连拍的精灵表</p>
-<p>（768×96，每帧 96×96，正面→侧面→背面→侧面的 8 个角度），<code>#bootLogo</code> 用</p>
-<p><code>background-position</code> + <code>steps(8)</code> 逐帧切换；外面的 <code>#bootHeart</code> 负责上下弹跳。</p>
+<ul>
+<li>页面 <code>load</code> 完成（图片等资源加载完）</li>
+<li><code>window.__appReady === true</code> —— 由 <code>router.js</code> <strong>最后一行</strong>置位，代表聊天记录、配色、状态栏都画完了</li>
+<li>字体加载完（<code>document.fonts.ready</code>，最多多等 3 秒，防止字体晚到导致文字跳一下）</li>
+<li>启动画面至少显示 <strong>1.5 秒</strong>（从打开页面开始算，慢手机不会再多等）</li>
+</ul>
+<p>随后再连等两帧（<code>requestAnimationFrame</code>），确保这一帧已经真正画到屏幕上，才开始 0.45 秒的淡出。另有 <strong>12 秒兜底</strong>：万一某个脚本报错、信号一直不来，也不会永远卡在启动画面。</p>
+<p>爱心不是图片旋转，而是<strong>精灵动画</strong>：<code>icons/heart-spin.png</code> 是一张 8 连拍的精灵表（768×96，每帧 96×96，正面→侧面→背面→侧面的 8 个角度），<code>#bootLogo</code> 用 <code>background-position</code> + <code>steps(8)</code> 逐帧切换；外面的 <code>#bootHeart</code> 负责上下弹跳。</p>
 <p>想改的话：</p>
 <ul>
-<li>换图标：替换 <code>icons/heart-spin.png</code>，尺寸保持 768×96、每帧 96×96 横排；
-<br>只想换静态图标就改 <code>#bootLogo</code> 的 <code>background-image</code>
-</li>
-<li>转速：<code>animation: bootSpin 1.6s steps(8) infinite</code> 里的 <code>1.6s</code>
-</li>
-<li>改文案：<code>#bootName</code> / <code>#bootSub</code>
-</li>
-<li>改停留时间：脚本里的 <code>setTimeout(hide, 900)</code>，数字是毫秒
-</li>
-<li>改动画幅度：<code>@keyframes bootFloat</code> 里的 <code>translateY</code> 和 <code>rotate</code>
-</li>
-<li>想加进度条：在 <code>#bootScreen</code> 里加一个元素，由脚本按需更新宽度
-</li>
+<li>换图标：替换 <code>icons/heart-spin.png</code>，尺寸保持 768×96、每帧 96×96 横排；只想换静态图标就改 <code>#bootLogo</code> 的 <code>background-image</code></li>
+<li>转速：<code>animation: bootSpin 1.6s steps(8) infinite</code> 里的 <code>1.6s</code></li>
+<li>改文案：<code>#bootName</code> / <code>#bootSub</code></li>
+<li>改最短停留时间：脚本里的 <code>var MIN_SHOW = 1500;</code>（毫秒）</li>
+<li>改兜底时间：<code>var MAX_WAIT = 12000;</code>（毫秒）</li>
+<li>加新的初始化步骤：在 <code>router.js</code> 末尾 <code>window.__appReady = true;</code> 之前完成，这样启动画面会等你做完再走；不要提前置位</li>
+<li>改上下弹跳幅度：<code>@keyframes bootBounce</code> 里的 <code>translateY</code></li>
+<li>想加进度条：在 <code>#bootScreen</code> 里加一个元素，由脚本按需更新宽度</li>
 </ul>
 <blockquote>它只是"掩盖"加载，不会让启动变快。真正减少卡顿要做聊天记录分批渲染。</blockquote>
 <hr>
 <h2>六、排错</h2>
-<p><strong>改了没生效？</strong></p>
-<p>先 <code>Ctrl + F5</code> 强制刷新。GitHub Pages 有缓存，等 1~2 分钟。</p>
-<p><strong>没声音？</strong></p>
-<p>页面要先点一下（浏览器策略）。设置里确认"消息与通话音效"是开的。</p>
-<p><strong>录音按钮不出现？</strong></p>
-<p>麦克风只在 https 或 localhost 下可用，<code>file://</code> 打开会被浏览器拒绝。GitHub Pages 是 https，正常。</p>
-<p><strong>导入的音乐丢了？</strong></p>
-<p>mp3 存在 IndexedDB。如果浏览器禁用了存储（无痕模式），会只剩本次有效。</p>
-<p><strong>桌面图标是字母？</strong></p>
-<p><code>manifest.webmanifest</code>、<code>icons/</code>、<code>sw.js</code>、<code>pwa.js</code> 都要上传，并且用 https 访问。</p>
-<p><strong>改崩了想恢复？</strong></p>
-<p>F12 → Application → Local Storage → 清掉对应键；或者数据管理里"清空所有数据"。</p>
-<p>代码建议在 GitHub 上提交一次再改，随时能回滚。</p>
+<p><strong>改了没生效？</strong> 先 <code>Ctrl + F5</code> 强制刷新。GitHub Pages 有缓存，等 1~2 分钟。</p>
+<p><strong>没声音？</strong> 页面要先点一下（浏览器策略）。设置里确认"消息与通话音效"是开的。</p>
+<p><strong>录音按钮不出现？</strong> 麦克风只在 https 或 localhost 下可用，<code>file://</code> 打开会被浏览器拒绝。GitHub Pages 是 https，正常。</p>
+<p><strong>导入的音乐丢了？</strong> mp3 存在 IndexedDB。如果浏览器禁用了存储（无痕模式），会只剩本次有效。</p>
+<p><strong>桌面图标是字母？</strong> <code>manifest.webmanifest</code>、<code>icons/</code>、<code>sw.js</code>、<code>pwa.js</code> 都要上传，并且用 https 访问。</p>
+<p><strong>改崩了想恢复？</strong> F12 → Application → Local Storage → 清掉对应键；或者数据管理里"清空所有数据"。代码建议在 GitHub 上提交一次再改，随时能回滚。</p>
 <hr>
 <h2>七、调试小抄</h2>
-<pre><code>
-// 控制台里可以直接调：
+<pre><code>// 控制台里可以直接调：
 sendMessage('测试', 'text', false);      // 让他发一条文字
 sendMessage({ name:'茉莉', artist:'测试' }, 'musicshare', false); // 发推荐卡片
 playSongByTitle('茉莉');                  // 直接播放某首歌
 refreshMood(true);                        // 立刻重刷心情
 playSfx('send');                          // 试听音效
-localStorage.getItem('chat_settings');    // 看当前设置
-</code></pre>
-<p>常用全局函数：<code>showToast(msg)</code>、<code>showConfirm(title, msg, cb)</code>、<code>switchPage('pageManager')</code>、</p>
-<p><code>applyPalette('spring')</code>、<code>applyIconTint()</code>。</p>
+localStorage.getItem('chat_settings');    // 看当前设置</code></pre>
+<p>常用全局函数：<code>showToast(msg)</code>、<code>showConfirm(title, msg, cb)</code>、<code>switchPage('pageManager')</code>、 <code>applyPalette('spring')</code>、<code>applyIconTint()</code>。</p>
 </div>
 <script>
   var toc = document.getElementById('toc');

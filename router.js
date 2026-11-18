@@ -285,3 +285,9 @@ document.addEventListener('keydown', (e) => {
     return;
   }
 });
+
+// ===== 渲染完成信号：启动画面等到这里才淡出 =====
+// 聊天记录、配色、状态栏都画完之后再置位。
+// 以后如果加了更慢的初始化（比如批量加载图片），把这一行挪到它后面即可。
+window.__appReady = true;
+try { window.dispatchEvent(new Event('app-ready')); } catch (e) {}
