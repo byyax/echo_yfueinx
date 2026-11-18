@@ -357,7 +357,7 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
 
         icon = gEmoji;
         title = content.isOpened ? gName : '礼物';
-        colorClass = content.isOpened ? 'grey' : 'red';
+        colorClass = content.isOpened ? 'grey' : 'gift'; // 礼物跟配色走，红包才保留红色
         subTitle = '礼物';
       }
       if (type === 'musicshare') {

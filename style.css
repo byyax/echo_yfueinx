@@ -142,6 +142,8 @@ button:active, .icon-btn:active, .text-btn:active { transform: scale(0.92) !impo
 .bubble.special-card .card-top { padding: 12px; display: flex; align-items: center; gap: 10px; }
 .bubble.special-card .card-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; transition: all 0.3s; }
 .bubble.special-card .card-icon.red { background: #fa5151; }
+/* 礼物卡片跟随主题色，不再一律红色 */
+.bubble.special-card .card-icon.gift { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
 .bubble.special-card .card-icon.trans { background: #fa9d3b; }
 .bubble.special-card .card-icon.loc { background: #10aeff; }
 .bubble.special-card .card-icon.grey { background: var(--primary); opacity: .55; } /* 已领取/已拆开：跟主色走，压暗一点 */
@@ -1285,6 +1287,20 @@ html[data-palette="bluepink"]:not([data-theme="dark"]) {
   background: var(--primary-light);
   border-color: rgba(255,255,255,0.16);
   color: var(--primary-dark);
+}
+
+/* ===== 通话大屏：保证底部按钮不被裁掉（手机上尤其明显） ===== */
+.call-large-view { padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
+.call-card { max-height: 100%; }
+.call-card .call-body { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+.call-card .call-footer { flex-shrink: 0; margin-top: auto; padding: 10px 16px 16px; }
+.call-card .incoming-actions { flex-shrink: 0; padding: 0 16px 16px; }
+@media (max-height: 740px) {
+  .avatar-glow { width: 96px; height: 96px; }
+  .call-avatar-big { width: 96px; height: 96px; }
+  .call-card .call-body { gap: 10px; padding: 4px 16px 10px; }
+  .call-body h2 { font-size: 21px; }
+  .ctrl-icon { width: 58px; height: 58px; font-size: 23px; }
 }
 
 /* ===== 图标：可跟随配色着色 / 可换成自己画的图 ===== */

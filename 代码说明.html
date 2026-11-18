@@ -45,14 +45,15 @@
 </head>
 <body>
 <div class="wrap">
-<nav class="toc" id="toc"><strong>目录</strong></nav><h1>Echo Yfueinx · 代码说明</h1>
+<nav class="toc" id="toc"><strong>目录</strong></nav>
+<h1>Echo Yfueinx · 代码说明</h1>
 <p>这份文档是给你自己改着玩用的。按"文件 → 数据 → 新增功能步骤 → 排错"的顺序看就行，</p>
 <p>不需要从头读到尾。</p>
 <hr>
 <h2>一、整体结构</h2>
 <p>没有框架、没有打包工具，就是普通网页：</p>
 <pre><code>
-index.html     页面骨架（所有页面、弹窗都写在这里）
+index.html     页面骨架（所有页面、弹窗、启动画面都写在这里）
 style.css      全部样式
 *.js           按功能拆开，用普通的 &lt;script&gt; 依次加载
 </code></pre>
@@ -152,6 +153,8 @@ pwa.js               ← 注册 Service Worker
 <p><code>text</code> 文字 · <code>image</code> 图片 · <code>audio</code> 语音 · <code>gift</code> 礼物 · <code>redpacket</code> 红包 ·</p>
 <p><code>transfer</code> 转账 · <code>interact</code> 互动 · <code>location</code> 位置 · <code>musicshare</code> 推荐歌曲 ·</p>
 <p><code>musicinvite</code> 一起听 · <code>sys</code> 居中系统提示 · <code>pat</code> 拍一拍</p>
+<blockquote>颜色的约定：<strong>礼物卡片跟主题色走</strong>（<code>card-icon.gift</code>），<strong>红包固定红色</strong>（<code>card-icon.red</code>），</blockquote>
+<blockquote>已拆开的礼物/红包用压暗的主色（<code>card-icon.grey</code>）。推荐歌曲和互动卡片用粉紫渐变。</blockquote>
 <hr>
 <h2>四、这次新写入的 js，逐行解释</h2>
 <h3>1. <code>pwa.js</code></h3>
@@ -304,6 +307,36 @@ const BUILTIN_LYRICS = {
 <p><code>manage_settings.js</code> → <code>confirmCrop()</code> 里的 <code>const OUT = 400;</code>，改数字就行（会同比放大裁剪画布）。</p>
 <h3>改主题字体</h3>
 <p><code>style.css</code> 最上面的 <code>body { font-family: ... }</code>。现在是思源宋体（Noto Serif SC）。</p>
+<h3>启动画面（加载动画）</h3>
+<p>进站时盖住"卡几秒"的全屏动画，全部写在 <code>index.html</code> 里，分三块：</p>
+<ol>
+<li><code>&lt;head&gt;</code> 末尾的一段内联 <code>&lt;style&gt;</code> —— 背景渐变、图标漂浮/旋转（<code>@keyframes bootFloat</code>）、三个跳动的小点（<code>bootDot</code>）
+</li>
+<li><code>&lt;body&gt;</code> 开头的 <code>#bootScreen</code> 结构：旋转爱心 + <code>ECHO</code> + <code>yfueinx</code> + 三个点
+</li>
+<li><code>&lt;/body&gt;</code> 前的一段内联脚本 —— 页面 <code>load</code> 完成后等 0.9 秒淡出；另有 9 秒兜底
+</li>
+</ol>
+<p>爱心不是图片旋转，而是<strong>精灵动画</strong>：<code>icons/heart-spin.png</code> 是一张 8 连拍的精灵表</p>
+<p>（768×96，每帧 96×96，正面→侧面→背面→侧面的 8 个角度），<code>#bootLogo</code> 用</p>
+<p><code>background-position</code> + <code>steps(8)</code> 逐帧切换；外面的 <code>#bootHeart</code> 负责上下弹跳。</p>
+<p>想改的话：</p>
+<ul>
+<li>换图标：替换 <code>icons/heart-spin.png</code>，尺寸保持 768×96、每帧 96×96 横排；
+<br>只想换静态图标就改 <code>#bootLogo</code> 的 <code>background-image</code>
+</li>
+<li>转速：<code>animation: bootSpin 1.6s steps(8) infinite</code> 里的 <code>1.6s</code>
+</li>
+<li>改文案：<code>#bootName</code> / <code>#bootSub</code>
+</li>
+<li>改停留时间：脚本里的 <code>setTimeout(hide, 900)</code>，数字是毫秒
+</li>
+<li>改动画幅度：<code>@keyframes bootFloat</code> 里的 <code>translateY</code> 和 <code>rotate</code>
+</li>
+<li>想加进度条：在 <code>#bootScreen</code> 里加一个元素，由脚本按需更新宽度
+</li>
+</ul>
+<blockquote>它只是"掩盖"加载，不会让启动变快。真正减少卡顿要做聊天记录分批渲染。</blockquote>
 <hr>
 <h2>六、排错</h2>
 <p><strong>改了没生效？</strong></p>

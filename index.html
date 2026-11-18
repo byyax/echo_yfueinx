@@ -17,8 +17,61 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <!-- 启动画面：内联样式，保证脚本还没跑起来时就能先画出来 -->
+    <style>
+      #bootScreen {
+        position: fixed; inset: 0; z-index: 99999;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 20px; background: radial-gradient(130% 95% at 50% 0%, #f9fcf2 0%, #f2f7e6 48%, #edf2dd 100%);
+        transition: opacity .45s ease, transform .45s ease;
+      }
+      #bootScreen.boot-hide { opacity: 0; transform: scale(1.03); pointer-events: none; }
+      #bootHeart {
+        animation: bootBounce 1.8s ease-in-out infinite;
+        filter: drop-shadow(0 10px 16px rgba(94, 138, 34, 0.3));
+      }
+      /* 8 帧旋转：背景图是一张 8 连拍的精灵表，用 steps 逐帧切换 */
+      #bootLogo {
+        width: 96px; height: 96px;
+        background-image: url('icons/heart-spin.png');
+        background-size: 768px 96px;
+        background-repeat: no-repeat;
+        image-rendering: pixelated;
+        animation: bootSpin 1.6s steps(8) infinite;
+      }
+      @keyframes bootSpin {
+        from { background-position: 0 0; }
+        to { background-position: -768px 0; }
+      }
+      @keyframes bootBounce {
+        0%, 100% { transform: translateY(0); }
+        45% { transform: translateY(-16px); }
+        70% { transform: translateY(0); }
+      }
+      #bootName { font-size: 27px; font-weight: 600; letter-spacing: 11px; color: #4f6b2a; text-indent: 11px; }
+      #bootSub { font-size: 12px; letter-spacing: 4px; color: #8fa06a; margin-top: -16px; }
+      #bootDots { display: flex; gap: 8px; margin-top: 4px; }
+      #bootDots i { width: 7px; height: 7px; border-radius: 50%; background: #8FBF3A; opacity: .3; animation: bootDot 1.1s ease-in-out infinite; }
+      #bootDots i:nth-child(2) { animation-delay: .15s; }
+      #bootDots i:nth-child(3) { animation-delay: .3s; }
+      @keyframes bootDot {
+        0%, 100% { opacity: .3; transform: translateY(0); }
+        40% { opacity: 1; transform: translateY(-5px); }
+      }
+      @media (prefers-color-scheme: dark) {
+        #bootScreen { background: radial-gradient(130% 95% at 50% 0%, #2a3320 0%, #1c2216 55%, #141414 100%); }
+        #bootName { color: #cfe6a3; }
+        #bootSub { color: #7f8f63; }
+      }
+    </style>
 </head>
 <body>
+    <div id="bootScreen" aria-hidden="true">
+      <div id="bootHeart"><div id="bootLogo" aria-hidden="true"></div></div>
+      <div id="bootName">ECHO</div>
+      <div id="bootSub">yfueinx</div>
+      <div id="bootDots"><i></i><i></i><i></i></div>
+    </div>
     <div class="app" id="appContainer">
       <!-- 聊天页 -->
       <div class="page active" id="pageChat">
@@ -675,5 +728,24 @@
     <script src="router.js"></script>
     <script src="custom_icons.js"></script>
     <script src="pwa.js"></script>
+    <script>
+      // 启动画面：全部脚本跑完、页面加载完成后淡出
+      (function () {
+        var splash = document.getElementById('bootScreen');
+        if (!splash) return;
+        var hidden = false;
+        function hide() {
+          if (hidden) return;
+          hidden = true;
+          splash.classList.add('boot-hide');
+          setTimeout(function () { splash.style.display = 'none'; }, 500);
+        }
+        function afterLoad() { setTimeout(hide, 900); }
+        if (document.readyState === 'complete') afterLoad();
+        else window.addEventListener('load', afterLoad);
+        // 兜底：万一某个资源卡住，也别一直转圈
+        setTimeout(hide, 9000);
+      })();
+    </script>
 </body>
 </html>
