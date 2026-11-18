@@ -10,6 +10,7 @@ function applyChatSettings() {
   if (pageEl) pageEl.style.backgroundImage = chatSettings.wallpaper ? `url(${chatSettings.wallpaper})` : 'none';
   if (chatEl) chatEl.style.backgroundImage = 'none';
   const sigEl = document.getElementById('signatureBar'); if(sigEl) sigEl.textContent = chatSettings.signature;
+  refreshTimeLabels();
 }
 
 function getTimeStr(time) {
@@ -26,6 +27,18 @@ function getTimeStr(time) {
   }
   const hh = h.toString().padStart(2, '0');
   return useSec ? `${hh}:${m}:${s}` : `${hh}:${m}`;
+}
+
+// 改了时间格式后，把已经画出来的时间就地重刷，不用重新进页面
+function refreshTimeLabels() {
+  if (!chatEl) return;
+  chatEl.querySelectorAll('.bubble').forEach(b => {
+    const t = Number(b.dataset.msgTime || 0);
+    if (!t) return;
+    if (!b.parentElement) return;
+    const label = b.parentElement.querySelector('.bubble-time');
+    if (label) label.textContent = getTimeStr(t);
+  });
 }
 
 // ===== 气泡菜单相关 =====
@@ -103,7 +116,8 @@ function autoReceiveMyCard(time) {
   if (!msg || !msg.content || msg.content.isOpened) return;
   msg.content.isOpened = true;
   saveAllData();
-  if (typeof refreshMood === 'function') refreshMood();
+  if (typeof moodAfterOpen === 'function') moodAfterOpen(msg.type);
+  else if (typeof refreshMood === 'function') refreshMood();
 
   const bubble = document.querySelector(`.bubble[data-msg-time="${time}"]`);
   if (!bubble) return;
@@ -213,7 +227,8 @@ function finishOpenCard(time, type) {
   document.getElementById('giftOpenModal').classList.remove('show');
   const msg = chatHistory.find(m => m.time === time && m.role === 'other');
   if (msg) { msg.content.isOpened = true; saveAllData(); }
-  if (typeof refreshMood === 'function') refreshMood();
+  if (typeof moodAfterOpen === 'function') moodAfterOpen(type);
+  else if (typeof refreshMood === 'function') refreshMood();
   
   const bubble = document.querySelector(`.bubble[data-msg-time="${time}"]`);
   if (bubble) {
@@ -268,8 +283,8 @@ function playVoice(el, src) {
 function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
   try {
     if(!chatEl) return;
-    // 系统提示（通话记录、拍一拍这类）：居中的灰色小字，不做成气泡
-    if (type === 'sys') {
+    // 系统提示（拍一拍、旧版拍一拍数据）：居中的灰色小字，不做成气泡
+    if (type === 'sys' || type === 'pat') {
       const sys = document.createElement('div');
       sys.className = 'sys';
       sys.textContent = (content && content.val != null) ? content.val : '';
@@ -322,9 +337,6 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
       bodyDiv.className = 'voice-body';
       bodyDiv.innerHTML = `<span class="voice-play">▶</span><span class="voice-wave">${'<i></i>'.repeat(5)}</span><span class="voice-dur">${dur}″</span>`;
       bodyDiv.onclick = (e) => { e.stopPropagation(); playVoice(bodyDiv, content.val); };
-    } else if (type === 'pat') {
-      bubble.style.background = 'transparent'; bubble.style.boxShadow = 'none'; bubble.style.fontSize = '12px'; bubble.style.color = '#888';
-      bodyDiv.textContent = content.val;
     } else if (type === 'location' || type === 'redpacket' || type === 'transfer' || type === 'gift' || type === 'interact' || type === 'musicshare' || type === 'musicinvite') {
       bubble.classList.add('special-card');
       if (content.isOpened) bubble.classList.add('opened');
@@ -468,7 +480,6 @@ function sendMessage(val, type = 'text', isMe = true, customQuote = null) {
   chatHistory.push({ role: isMe ? 'me' : 'other', type, content, time });
   saveAllData();
   lastInteractionTime = Date.now();
-  if (typeof refreshMood === 'function') refreshMood();
 
   // 音效：收发消息一声轻响；他发来红包/礼物/转账换成两声铃
   if (isMe) {
@@ -479,8 +490,8 @@ function sendMessage(val, type = 'text', isMe = true, customQuote = null) {
     if (typeof playSfx === 'function') playSfx('send');
   }
 
-  // 两边的语气都可能影响他的心情；只是"可能"，每次都重新掷概率
-  if (type === 'text' && typeof analyzeMoodFromText === 'function') analyzeMoodFromText(content.val, isMe);
+  // 心情：普通消息按概率轻刷，关键词/特殊互动按各自概率触发
+  if (typeof moodAfterMessage === 'function') moodAfterMessage(isMe, type, content);
 
   if (isMe && (type === 'redpacket' || type === 'transfer' || type === 'gift' || type === 'interact')) {
     const delay = 2000 + Math.random() * 3000;
@@ -561,14 +572,14 @@ function hideTypingIndicator() {
 }
 
 function randomReply() {
-  // 新增 10% 概率触发拍一拍
-  if (Math.random() < 0.1) {
+  // 偶尔拍一拍（约每 17 条回复一次）
+  if (Math.random() < 0.06) {
     triggerPat(false);
     return;
   }
 
-  // 他偶尔会分享一首歌，或者邀请你一起听
-  if (Math.random() < 0.07 && typeof pickRandomSong === 'function') {
+  // 偶尔分享一首歌，或者邀请你一起听（约每 20 条一次）
+  if (Math.random() < 0.05 && typeof pickRandomSong === 'function') {
     const song = pickRandomSong();
     if (song) {
       if (Math.random() < 0.5) {
@@ -590,21 +601,25 @@ function randomReply() {
 
   const r = Math.random();
   if (r < 0.05) {
-    const types = ['gift', 'redpacket', 'transfer'];
-    const t = types[Math.floor(Math.random() * types.length)];
-    
-    // 对方随机送礼：直接读商城礼物库
+    // 送礼 55% / 红包 30% / 转账 15%：礼物最常见，转账最少
+    const tr = Math.random();
+    const t = tr < 0.55 ? 'gift' : (tr < 0.85 ? 'redpacket' : 'transfer');
+
+    // 对方随机送礼：按价位加权，便宜的多、贵的少
     if (t === 'gift') {
-      const all = (typeof GIFT_ITEMS !== 'undefined') ? GIFT_ITEMS : [];
-      if (all.length > 0) {
-        const g = all[Math.floor(Math.random() * all.length)];
+      const g = (typeof pickRandomGift === 'function') ? pickRandomGift() : null;
+      if (g) {
         sendMessage({ name: g.name, icon: g.icon, price: g.price, val: `送了你${g.name}` }, 'gift', false);
       } else {
         sendMessage({ name: '神秘礼物', val: '送了你神秘礼物' }, 'gift', false);
       }
     }
-    else if (t === 'redpacket') sendMessage({ amount: '52.00', note: '给你个小红包' }, 'redpacket', false);
-    else if (t === 'transfer') sendMessage({ amount: '520.00', note: '拿去花' }, 'transfer', false);
+    else if (t === 'redpacket') {
+      sendMessage(typeof randomMoneyPayload === 'function' ? randomMoneyPayload('redpacket') : { amount: '52.00', note: '给你个小红包' }, 'redpacket', false);
+    }
+    else if (t === 'transfer') {
+      sendMessage(typeof randomMoneyPayload === 'function' ? randomMoneyPayload('transfer') : { amount: '520.00', note: '拿去花' }, 'transfer', false);
+    }
     return;
   }
 
@@ -612,7 +627,7 @@ function randomReply() {
   const imageCards = contents.filter(item => item.type === 'image');
   
   let quote = null;
-  if (Math.random() < 0.3) {
+  if (Math.random() < 0.2) {
     const recentMyMsgs = chatHistory.slice(-20).filter(m => m.role === 'me' && m.type === 'text');
     if (recentMyMsgs.length > 0) {
       const target = recentMyMsgs[Math.floor(Math.random() * recentMyMsgs.length)];
@@ -620,10 +635,13 @@ function randomReply() {
     }
   }
 
-  if (imageCards.length > 0 && Math.random() < 0.2) { sendMessage(imageCards[Math.floor(Math.random() * imageCards.length)].val, 'image', false, quote); return; }
+  if (imageCards.length > 0 && Math.random() < 0.12) { sendMessage(imageCards[Math.floor(Math.random() * imageCards.length)].val, 'image', false, quote); return; }
   if (textCards.length === 0) { sendMessage('（字卡库是空的）', 'text', false, quote); return; }
   
-  let replyText = textCards[Math.floor(Math.random() * textCards.length)].val;
+  const pickedCard = textCards[Math.floor(Math.random() * textCards.length)];
+  // 他抽到带"吃醋/嫉妒"或"亲密"标签的字卡时，接下来一段时间的心情会往那边偏
+  if (typeof boostMoodFromCard === 'function') boostMoodFromCard(pickedCard);
+  let replyText = pickedCard.val;
   
   const emojis = contents.filter(item => item.type === 'emoji');
   if (emojis.length > 0 && Math.random() < 0.3) {
@@ -670,8 +688,8 @@ setInterval(() => {
 
 setInterval(() => {
   if (signatureLibrary.length > 0) {
-    // 50% 概率触发签名更新
-    if (Math.random() < 0.5) {
+    // 35% 概率触发签名更新
+    if (Math.random() < 0.35) {
       chatSettings.signature = signatureLibrary[Math.floor(Math.random() * signatureLibrary.length)].val;
       saveAllData(); applyChatSettings();
     }

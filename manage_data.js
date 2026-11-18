@@ -65,7 +65,7 @@ if (clearMediaBtn) {
       chatHistory = stripMedia(chatHistory);
       saveAllData();
       chatEl.innerHTML = '<div class="sys">你已添加对方为好友，现在可以开始聊天了</div>';
-      chatHistory.forEach(msg => addMessageDOM(msg.content, msg.role === 'me', msg.type, msg.time));
+      chatHistory.forEach(msg => addMessageDOM(msg.content, msg.role === 'me', msg.role === 'system' ? 'sys' : msg.type, msg.time));
       if (document.getElementById('dataSize')) menuData.onclick();
       showToast(`已清理，腾出约 ${formatSize(saved)}`);
     });
@@ -263,7 +263,7 @@ function processImportedData(data) {
       refreshAfterImport();
       if (chatEl && typeof chatHistory !== 'undefined') {
         chatEl.innerHTML = '<div class="sys">你已添加对方为好友，现在可以开始聊天了</div>';
-        chatHistory.forEach(msg => addMessageDOM(msg.content, msg.role === 'me', msg.type, msg.time));
+        chatHistory.forEach(msg => addMessageDOM(msg.content, msg.role === 'me', msg.role === 'system' ? 'sys' : msg.type, msg.time));
       }
       switchPage('pageManager');
     }, 500);

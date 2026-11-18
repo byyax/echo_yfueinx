@@ -169,9 +169,9 @@ function triggerIncomingCall() {
   }, 30000);
 }
 
-// 随机来电：每 5 分钟有 5% 概率触发，可在设置里关闭
+// 随机来电：每 5 分钟掷一次 4% 概率（平均 2 小时左右一次）
 setInterval(() => {
-  if (Math.random() < 0.05) triggerIncomingCall();
+  if (Math.random() < 0.04) triggerIncomingCall();
 }, 5 * 60 * 1000);
 
 // 接听按钮

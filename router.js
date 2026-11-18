@@ -1,4 +1,6 @@
 function switchPage(pageId) {
+  // 离开聊天页时，别让录音在后台继续跑
+  if (pageId !== 'pageChat' && typeof cancelVoice === 'function') cancelVoice();
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const el = document.getElementById(pageId); if(el) el.classList.add('active');
 }
@@ -162,7 +164,7 @@ function initStatusBar() {
 
 if(chatEl) {
   chatEl.innerHTML = '<div class="sys">你已添加对方为好友，现在可以开始聊天了</div>';
-  chatHistory.forEach(msg => addMessageDOM(msg.content, msg.role === 'me', msg.type, msg.time));
+  chatHistory.forEach(msg => addMessageDOM(msg.content, msg.role === 'me', msg.role === 'system' ? 'sys' : msg.type, msg.time));
 }
 // ===== 仿微信状态引擎 =====
 const STATUS_MAIN = [

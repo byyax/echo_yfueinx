@@ -96,6 +96,25 @@ function tierOfGift(price) {
   return 'luxury';
 }
 
+// 他主动送礼：便宜档最常见，越贵越少（55% / 30% / 12% / 3%）
+function pickRandomGift() {
+  if (typeof GIFT_ITEMS === 'undefined' || !GIFT_ITEMS.length) return null;
+  const order = [
+    { id: 'cheap', w: 55 },
+    { id: 'mid', w: 30 },
+    { id: 'formal', w: 12 },
+    { id: 'luxury', w: 3 }
+  ];
+  let r = Math.random() * 100;
+  let chosen = order[0].id;
+  for (const t of order) {
+    if ((r -= t.w) <= 0) { chosen = t.id; break; }
+  }
+  const pool = GIFT_ITEMS.filter(g => tierOfGift(g.price) === chosen);
+  if (!pool.length) return GIFT_ITEMS[Math.floor(Math.random() * GIFT_ITEMS.length)];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 const giftList = document.getElementById('giftList');
 const giftHomeEl = document.getElementById('giftHome');
 const giftShopArea = document.getElementById('giftShopArea');
@@ -269,3 +288,50 @@ window.pressKey = (k) => {
   }
 };
 document.getElementById('cancelPay').onclick = () => document.getElementById('passModal').classList.remove('show');
+
+// ===== 他主动发来的红包 / 转账 =====
+// 大多数是区间内的普通金额；小概率抽到"彩蛋数字"，金额越大权重越低（类似刮彩票）。
+const MONEY_SPECIALS = [
+  { v: 6,     w: 8 },
+  { v: 52,    w: 16 },
+  { v: 66,    w: 10 },
+  { v: 88,    w: 10 },
+  { v: 520,   w: 12 },
+  { v: 521,   w: 7 },
+  { v: 666,   w: 5 },
+  { v: 710,   w: 3 },     // 小桃的生日 07-10
+  { v: 888,   w: 4 },
+  { v: 1112,  w: 2.5 },   // 陆昀霏的生日 11-12
+  { v: 1314,  w: 2 },
+  { v: 5200,  w: 1.6 },
+  { v: 8888,  w: 0.9 },
+  { v: 13140, w: 0.4 },
+  { v: 52000, w: 0.2 }
+];
+const MONEY_NOTES = {
+  redpacket: ['给你个小红包', '拿去买奶茶', '一点心意，收好', '嘿嘿，不许退回来'],
+  transfer: ['拿去花', '别省着，买点喜欢的', '最近辛苦了', '想买什么就买', '收着，别问']
+};
+
+function randomMoneyAmount(kind) {
+  if (Math.random() < 0.78) {
+    const n = kind === 'transfer'
+      ? 100 + Math.floor(Math.random() * 1901)   // 100 ~ 2000
+      : 8 + Math.floor(Math.random() * 193);     // 8 ~ 200
+    return n.toFixed(2);
+  }
+  const total = MONEY_SPECIALS.reduce((s, x) => s + x.w, 0);
+  let r = Math.random() * total;
+  for (const it of MONEY_SPECIALS) {
+    if ((r -= it.w) <= 0) return it.v.toFixed(2);
+  }
+  return MONEY_SPECIALS[0].v.toFixed(2);
+}
+
+function randomMoneyPayload(kind) {
+  const notes = MONEY_NOTES[kind] || MONEY_NOTES.redpacket;
+  return {
+    amount: randomMoneyAmount(kind),
+    note: notes[Math.floor(Math.random() * notes.length)]
+  };
+}

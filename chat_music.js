@@ -59,11 +59,11 @@ const MUSIC_LIBRARY = [
 
   // —— 歌单（没有歌词，导入同名 mp3 / .lrc 后就能真播真唱）——
   { kind: 'song', title: "글쎄 (I Don't Know)", artist: 'SEVENTEEN', src: 'music/SEVENTEEN - 글쎄.mp3' },
-  { kind: 'song', title: '雪化作泪滴 (Old Tape)', artist: 'Cheeze / Trazzy / 雾明' },
+  { kind: 'song', title: '雪化作泪滴 (Old Tape)', artist: 'Cheeze / Trazzy / 雾明', src: 'music/Cheeze,Trazzy,雾明 - 雪化作泪滴 (Old Tape).mp3' },
   { kind: 'song', title: 'My Lady (Chinese Ver.)', artist: 'EXO' },
   { kind: 'song', title: '달빛 (月光)', artist: 'GOT7', src: 'music/GOT7 - 달빛.mp3' },
-  { kind: 'song', title: 'Mr. "Broken Heart"（"心碎"先生）', artist: '松下優也' },
-  { kind: 'song', title: '明知故犯', artist: 'Max李玄' },
+  { kind: 'song', title: 'Mr. "Broken Heart"（"心碎"先生）', artist: '松下優也', src: 'music/松下優也 - Mr. Broken Heart.mp3' },
+  { kind: 'song', title: '明知故犯', artist: 'Max李玄', src: 'music/Max李玄 - 明知故犯.mp3' },
   { kind: 'song', title: '无意', artist: '加木 / Demxntia' },
   { kind: 'song', title: '茉莉', artist: 'JBcob林泽贤 / 张泳浩' },
   { kind: 'song', title: 'Boy In Luv', artist: 'BTS (防弹少年团)', src: 'music/BTS (防弹少年团) - Boy In Luv.mp3' },
@@ -139,8 +139,8 @@ function lyricBadge(song) {
 function updateMusicBarUI() {
   const song = currentSong();
   if (!song) {
-    if (musicTitleEl) musicTitleEl.textContent = '还没有歌';
-    if (musicArtistEl) musicArtistEl.textContent = '点 ＋ 导入本地 mp3';
+    if (musicTitleEl) musicTitleEl.textContent = '暂无歌曲';
+    if (musicArtistEl) musicArtistEl.textContent = '请点击 ＋ 导入本地音频';
     if (musicPlayBtn) setIconText(musicPlayBtn, '▶');
     if (musicBar) musicBar.classList.remove('playing');
     return;
@@ -665,12 +665,12 @@ function renderMusicList() {
   if (!box) return;
   box.innerHTML = '';
   if (!MUSIC_PLAYLIST.length) {
-    box.innerHTML = '<div class="music-empty">还没有歌，点控制条上的 ＋ 导入本地 mp3</div>';
+    box.innerHTML = '<div class="music-empty">暂无歌曲。请点击控制条上的 ＋ 导入本地音频。</div>';
     return;
   }
   const tip = document.createElement('div');
   tip.className = 'music-tip';
-  tip.textContent = '点歌名直接播放 ·「一起」邀请他听 ·「推荐」发到聊天';
+  tip.textContent = '点击歌名播放 ·「一起」邀请对方收听 ·「推荐」发送至聊天';
   box.appendChild(tip);
 
   MUSIC_PLAYLIST.forEach((s, i) => {

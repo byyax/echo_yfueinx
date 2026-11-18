@@ -87,12 +87,18 @@ if (closeInteractBtn) closeInteractBtn.onclick = () => document.getElementById('
 // ===== 录音：支持麦克风才显示入口（file:// 下大多数浏览器会拒绝）=====
 const toolVoiceEl = document.getElementById('toolVoice');
 const voiceCanRecord = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
-let voiceRecorder = null, voiceStream = null, voiceChunks = [], voiceStartAt = 0, voiceTimerId = null, voiceDiscard = false;
+let voiceRecorder = null, voiceStream = null, voiceChunks = [], voiceStartAt = 0, voiceTimerId = null;
+let voicePhase = 'idle';   // idle / starting（等权限）/ recording / processing（停止后打包）
+let voiceDiscard = false;
+let voiceSession = 0;      // 每次开始 +1；取消后，挂起的权限回调看到号码不对就作废
 
 if (toolVoiceEl && voiceCanRecord) toolVoiceEl.style.display = 'flex';
 
 function stopVoiceStream() {
-  if (voiceStream) { voiceStream.getTracks().forEach(t => t.stop()); voiceStream = null; }
+  if (voiceStream) {
+    voiceStream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+    voiceStream = null;
+  }
 }
 function stopVoiceTimer() {
   if (voiceTimerId) { clearInterval(voiceTimerId); voiceTimerId = null; }
@@ -105,8 +111,53 @@ function closeVoiceModal() {
   if (m) m.classList.remove('show');
 }
 
+function handleVoiceStop(session) {
+  stopVoiceStream();
+  stopVoiceTimer();
+  voiceRecorder = null;
+  voicePhase = 'processing';
+  const dur = Math.round((Date.now() - voiceStartAt) / 1000);
+
+  // 取消过、已经换了新录音、或者根本没录到东西：安静收场
+  if (voiceDiscard || session !== voiceSession || !voiceChunks.length) {
+    voicePhase = 'idle';
+    closeVoiceModal();
+    return;
+  }
+
+  const blob = new Blob(voiceChunks, { type: (voiceChunks[0] && voiceChunks[0].type) || 'audio/webm' });
+  if (blob.size > 1.6 * 1024 * 1024) {
+    voicePhase = 'idle';
+    closeVoiceModal();
+    showToast('这段太长了，存不下');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    if (voiceDiscard || session !== voiceSession) { voicePhase = 'idle'; closeVoiceModal(); return; }
+    voicePhase = 'idle';
+    closeVoiceModal();
+    // 先让弹窗收起、界面喘一口气，再写进聊天记录
+    setTimeout(() => {
+      sendMessage({ val: reader.result, dur: Math.max(1, dur) }, 'audio', true);
+      setTimeout(randomReply, getRandomDelay());
+    }, 60);
+  };
+  reader.onerror = () => {
+    voicePhase = 'idle';
+    closeVoiceModal();
+    showToast('语音保存失败，再试一次');
+  };
+  reader.readAsDataURL(blob);
+}
+
 async function startVoice() {
-  if (!voiceCanRecord) return;
+  if (!voiceCanRecord || voicePhase !== 'idle') return;
+  voicePhase = 'starting';
+  voiceDiscard = false;
+  voiceChunks = [];
+  const session = ++voiceSession;
+
   const modal = document.getElementById('voiceModal');
   if (modal) modal.classList.add('show');
   const hintEl = document.getElementById('voiceHint');
@@ -114,66 +165,93 @@ async function startVoice() {
   if (hintEl) hintEl.textContent = '正在打开麦克风…';
   if (timerEl) timerEl.textContent = '00:00';
 
+  let stream = null;
   try {
-    voiceStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   } catch (err) {
-    closeVoiceModal();
-    showToast('麦克风打不开（权限或 https 限制）');
+    if (session === voiceSession) {
+      voicePhase = 'idle';
+      closeVoiceModal();
+      showToast('麦克风打不开（权限或 https 限制）');
+    }
     return;
   }
-  voiceChunks = [];
-  voiceDiscard = false;
+
+  // 等权限的这段时间里，用户可能已经点了取消/发送，或者切走了页面
+  if (voiceDiscard || session !== voiceSession || voicePhase !== 'starting') {
+    stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+    return;
+  }
+
+  voiceStream = stream;
+  let rec = null;
   try {
-    voiceRecorder = new MediaRecorder(voiceStream);
+    rec = new MediaRecorder(stream, { audioBitsPerSecond: 24000 }); // 压低码率，60 秒也不会太大
   } catch (e) {
+    try { rec = new MediaRecorder(stream); } catch (e2) { rec = null; }
+  }
+  if (!rec) {
     stopVoiceStream();
+    voicePhase = 'idle';
     closeVoiceModal();
     showToast('这个浏览器不支持录音');
     return;
   }
 
-  voiceRecorder.ondataavailable = (e) => { if (e.data && e.data.size) voiceChunks.push(e.data); };
-  voiceRecorder.onstop = () => {
-    stopVoiceStream();
-    stopVoiceTimer();
-    const dur = Math.round((Date.now() - voiceStartAt) / 1000);
-    if (voiceDiscard || !voiceChunks.length) { closeVoiceModal(); return; }
-    const blob = new Blob(voiceChunks, { type: (voiceChunks[0] && voiceChunks[0].type) || 'audio/webm' });
-    if (blob.size > 1.6 * 1024 * 1024) { closeVoiceModal(); showToast('这段太长了，存不下'); return; }
-    const reader = new FileReader();
-    reader.onload = () => {
-      closeVoiceModal();
-      sendMessage({ val: reader.result, dur: Math.max(1, dur) }, 'audio', true);
-      setTimeout(randomReply, getRandomDelay());
-    };
-    reader.readAsDataURL(blob);
-  };
+  voiceRecorder = rec;
+  voicePhase = 'recording';
+  rec.ondataavailable = (e) => { if (e.data && e.data.size) voiceChunks.push(e.data); };
+  rec.onstop = () => handleVoiceStop(session);
 
   voiceStartAt = Date.now();
-  voiceRecorder.start();
+  rec.start();
   if (hintEl) hintEl.textContent = '正在录音，点「发送」结束';
   voiceTimerId = setInterval(() => {
     const s = Math.round((Date.now() - voiceStartAt) / 1000);
     if (timerEl) timerEl.textContent = voiceClock(s);
-    if (s >= 60 && voiceRecorder && voiceRecorder.state === 'recording') {
-      if (hintEl) hintEl.textContent = '最长 60 秒，已自动停止';
-      voiceRecorder.stop();
+    if (s >= 60 && rec.state === 'recording') {
+      if (hintEl) hintEl.textContent = '最长 60 秒，已自动发送';
+      voicePhase = 'processing';
+      rec.stop();
     }
   }, 250);
 }
 
 function cancelVoice() {
+  voiceSession++;        // 让所有挂起的权限/停止回调作废
   voiceDiscard = true;
-  if (voiceRecorder && voiceRecorder.state !== 'inactive') voiceRecorder.stop();
-  else { stopVoiceStream(); stopVoiceTimer(); closeVoiceModal(); }
+  stopVoiceTimer();
+  if (voiceRecorder && voiceRecorder.state === 'recording') {
+    voicePhase = 'processing';
+    try { voiceRecorder.stop(); } catch (e) {
+      voiceRecorder = null; stopVoiceStream(); voicePhase = 'idle'; closeVoiceModal();
+    }
+  } else if (voicePhase === 'processing') {
+    // 已经停了：标记丢弃，等 handleVoiceStop / FileReader 收尾；先把弹窗关掉
+    closeVoiceModal();
+  } else {
+    stopVoiceStream();
+    voicePhase = 'idle';
+    closeVoiceModal();
+  }
 }
 
 if (toolVoiceEl) toolVoiceEl.onclick = () => { closePanels(); startVoice(); };
 const voiceSendBtn = document.getElementById('voiceSendBtn');
 if (voiceSendBtn) voiceSendBtn.onclick = () => {
-  if (voiceRecorder && voiceRecorder.state === 'recording') voiceRecorder.stop();
-  else closeVoiceModal();
+  if (voicePhase === 'recording' && voiceRecorder && voiceRecorder.state === 'recording') {
+    voicePhase = 'processing';
+    voiceRecorder.stop();
+  } else if (voicePhase === 'starting') {
+    cancelVoice();   // 还在等权限：直接取消，别再偷偷录
+  }
 };
 const voiceCancelBtn = document.getElementById('voiceCancelBtn');
 if (voiceCancelBtn) voiceCancelBtn.onclick = cancelVoice;
+
+// 离开页面 / 切到别的 App 时一定松手，不留下后台录音
+window.addEventListener('pagehide', cancelVoice);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && (voicePhase === 'starting' || voicePhase === 'recording')) cancelVoice();
+});
 window.cancelVoice = cancelVoice;
