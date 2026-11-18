@@ -99,7 +99,7 @@ if (!chatSettings.myPatAction) chatSettings.myPatAction = '拍了拍';
 if (chatSettings.myPatSuffix === undefined) chatSettings.myPatSuffix = '的后背';
 if (chatSettings.replyDelay === undefined) chatSettings.replyDelay = 0.5;
 if (chatSettings.replyCount === undefined) chatSettings.replyCount = 1;
-if (chatSettings.sigTimer === undefined) chatSettings.sigTimer = 5;
+if (chatSettings.sigTimer === undefined || chatSettings.sigTimer < 15) chatSettings.sigTimer = 15;
 if (chatSettings.autoReplyTime === undefined) chatSettings.autoReplyTime = 0; 
 if (chatSettings.autoReplyCount === undefined) chatSettings.autoReplyCount = 1;
 if (chatSettings.showTyping === undefined) chatSettings.showTyping = true;

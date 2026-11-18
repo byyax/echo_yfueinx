@@ -78,6 +78,60 @@ const MUSIC_LIBRARY = [
 // 运行时歌单：内置在前，本地导入追加在后
 const MUSIC_PLAYLIST = MUSIC_LIBRARY.map(s => Object.assign({}, s));
 
+// ===== 曲库排序 / 隐藏（后台批量管理用） =====
+const MUSIC_ORDER_KEY = 'echo_music_order';
+const MUSIC_HIDDEN_KEY = 'echo_music_hidden';
+
+function musicKey(s) {
+  if (!s) return '';
+  // 内置曲目即使挂了本地 mp3，也用固定 key，排序不会因为“导入/移除音频”而变化
+  const isBuiltin = (typeof MUSIC_LIBRARY !== 'undefined') &&
+    MUSIC_LIBRARY.some(x => x.title === s.title && (x.artist || '') === (s.artist || ''));
+  if (isBuiltin) return 'b:' + (s.title || '') + '|' + (s.artist || '');
+  return s.trackId ? 't:' + s.trackId : 'b:' + (s.title || '') + '|' + (s.artist || '');
+}
+function readMusicKeyList(key) {
+  try {
+    const v = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(v) ? v : [];
+  } catch (e) { return []; }
+}
+function writeMusicKeyList(key, arr) {
+  try { localStorage.setItem(key, JSON.stringify(arr)); } catch (e) {}
+}
+function readHiddenMusic() { return readMusicKeyList(MUSIC_HIDDEN_KEY); }
+function writeHiddenMusic(arr) { writeMusicKeyList(MUSIC_HIDDEN_KEY, arr); }
+
+// 启动时先把被隐藏的内置曲目去掉
+(function applyHiddenMusicAtBoot() {
+  const hidden = new Set(readHiddenMusic());
+  if (!hidden.size) return;
+  for (let i = MUSIC_PLAYLIST.length - 1; i >= 0; i--) {
+    if (!MUSIC_PLAYLIST[i].trackId && hidden.has(musicKey(MUSIC_PLAYLIST[i]))) {
+      MUSIC_PLAYLIST.splice(i, 1);
+    }
+  }
+})();
+
+function saveMusicOrder() {
+  writeMusicKeyList(MUSIC_ORDER_KEY, MUSIC_PLAYLIST.map(musicKey));
+}
+function applyMusicOrder() {
+  const order = readMusicKeyList(MUSIC_ORDER_KEY);
+  if (!order.length) return;
+  const pos = new Map(order.map((k, i) => [k, i]));
+  const playing = MUSIC_PLAYLIST[musicIndex];
+  MUSIC_PLAYLIST.sort((a, b) => {
+    const ia = pos.has(musicKey(a)) ? pos.get(musicKey(a)) : Infinity;
+    const ib = pos.has(musicKey(b)) ? pos.get(musicKey(b)) : Infinity;
+    return ia - ib;
+  });
+  if (playing) {
+    const idx = MUSIC_PLAYLIST.indexOf(playing);
+    if (idx >= 0) musicIndex = idx;
+  }
+}
+
 const musicBar = document.getElementById('musicBar');
 const musicTitleEl = document.getElementById('musicTitle');
 const musicArtistEl = document.getElementById('musicArtist');
@@ -95,6 +149,26 @@ let musicIndex = 0;
 let musicPlaying = false;
 let musicBarOpen = false;
 let savedSignatureText = '';
+let musicLoading = false;
+let musicError = '';
+let audioErrorAt = 0;
+let musicLoadTimer = null;
+
+function clearMusicLoadTimer() {
+  if (musicLoadTimer) { clearTimeout(musicLoadTimer); musicLoadTimer = null; }
+}
+function startMusicLoadTimer() {
+  clearMusicLoadTimer();
+  musicLoadTimer = setTimeout(() => {
+    if (!musicLoading || !musicPlaying) return;
+    musicLoading = false;
+    musicError = '加载超时';
+    musicPlaying = false;
+    try { musicAudio.pause(); } catch (e) {}
+    updateMusicBarUI();
+    showToast('这首歌加载超时，检查网络或文件是否已上传');
+  }, 20000);
+}
 
 // 播放模式：list 列表循环 / one 单曲循环 / shuffle 随机
 const PLAY_MODES = ['list', 'one', 'shuffle'];
@@ -124,7 +198,7 @@ let lyricIdx = -1;
 let lyricTitle = '';
 
 const musicAudio = new Audio();
-musicAudio.preload = 'metadata';
+musicAudio.preload = 'auto';
 
 function currentSong() { return MUSIC_PLAYLIST[musicIndex] || null; }
 function isLocalSong(song) { return !!(song && song.src); }
@@ -148,9 +222,10 @@ function updateMusicBarUI() {
   if (musicTitleEl) musicTitleEl.textContent = song.title;
   if (musicArtistEl) {
     const tag = song.trackId ? '本地导入' : (song.src ? '本地文件' : (song.kind === 'book' ? '听书' : '歌单'));
-    musicArtistEl.textContent = `${song.artist} · ${tag}${lyricBadge(song)} · ${musicIndex + 1}/${MUSIC_PLAYLIST.length}`;
+    const status = musicLoading ? ' · 加载中…' : (musicError ? ' · ' + musicError : '');
+    musicArtistEl.textContent = `${song.artist} · ${tag}${lyricBadge(song)} · ${musicIndex + 1}/${MUSIC_PLAYLIST.length}${status}`;
   }
-  if (musicPlayBtn) setIconText(musicPlayBtn, musicPlaying ? '⏸' : '▶');
+  if (musicPlayBtn) setIconText(musicPlayBtn, musicLoading ? '⏳' : (musicPlaying ? '⏸' : '▶'));
   if (musicBar) musicBar.classList.toggle('playing', musicPlaying);
 }
 
@@ -268,7 +343,7 @@ function stopLyricSession() {
   if (signatureBarEl) {
     signatureBarEl.classList.remove('lyric-scroll', 'lyric-bubble', 'two-line');
     signatureBarEl.style.removeProperty('--line-dur');
-    signatureBarEl.textContent = savedSignatureText || chatSettings.signature || '这个人很懒，什么都没留下';
+    signatureBarEl.textContent = chatSettings.signature || savedSignatureText || '这个人很懒，什么都没留下';
   }
   if (signatureWrapperEl) signatureWrapperEl.classList.remove('music-mode');
   lyricLines = [];
@@ -301,11 +376,26 @@ function loadAudioForCurrent() {
   const song = currentSong();
   if (!song) return;
   if (isLocalSong(song)) {
-    if (musicAudio.getAttribute('src') !== song.src) musicAudio.src = song.src;
+    if (musicAudio.getAttribute('src') !== song.src) {
+      musicError = '';
+      musicAudio.src = song.src;
+      try { musicAudio.load(); } catch (e) {}
+    }
   } else {
+    musicLoading = false;
+    musicError = '';
     musicAudio.removeAttribute('src');
     try { musicAudio.load(); } catch (e) {}
     musicAudio.pause();
+  }
+}
+
+// 打开歌单时先把当前这首的音频拉起来，点播放会更快
+function preloadCurrentSong() {
+  const song = currentSong();
+  if (!song || !isLocalSong(song)) return;
+  if (musicAudio.getAttribute('src') !== song.src) {
+    try { musicAudio.src = song.src; musicAudio.load(); } catch (e) {}
   }
 }
 
@@ -320,8 +410,31 @@ function musicPlay() {
   if (!song) return showToast('歌单是空的，先导入一首吧');
   musicPlaying = true;
   simTime = 0;
-  loadAudioForCurrent();
-  if (isLocalSong(song)) musicAudio.play().catch(() => {});
+  musicError = '';
+  if (isLocalSong(song)) {
+    if (musicAudio.getAttribute('src') !== song.src || musicAudio.readyState < 3) {
+      musicLoading = true;
+      startMusicLoadTimer();
+    }
+    loadAudioForCurrent();
+    const p = musicAudio.play();
+    if (p && p.catch) p.catch((err) => {
+      if (!musicPlaying) return;
+      clearMusicLoadTimer();
+      musicLoading = false;
+      musicError = '播放失败';
+      musicPlaying = false;
+      updateMusicBarUI();
+      console.warn('[music] play rejected', err && err.name, song.title, song.src);
+      if (Date.now() - audioErrorAt > 4000) {
+        audioErrorAt = Date.now();
+        showToast(`${song.title}：播放失败，检查文件是否存在`);
+      }
+    });
+  } else {
+    musicLoading = false;
+    loadAudioForCurrent();
+  }
   startLyricSession();
   startClock();
   updateMusicBarUI();
@@ -330,6 +443,8 @@ function musicPlay() {
 
 function musicPause() {
   musicPlaying = false;
+  musicLoading = false;
+  clearMusicLoadTimer();
   musicAudio.pause();
   stopClock();
   stopLyricSession();
@@ -340,10 +455,28 @@ function musicGoto(delta) {
   if (!MUSIC_PLAYLIST.length) return;
   musicIndex = (musicIndex + delta + MUSIC_PLAYLIST.length) % MUSIC_PLAYLIST.length;
   simTime = 0;
+  musicError = '';
   if (musicPlaying) {
+    if (isLocalSong(currentSong()) && (musicAudio.getAttribute('src') !== currentSong().src || musicAudio.readyState < 3)) {
+      musicLoading = true;
+      startMusicLoadTimer();
+    }
     loadAudioForCurrent();
-    if (isLocalSong(currentSong())) musicAudio.play().catch(() => {});
+    if (isLocalSong(currentSong())) {
+      const p = musicAudio.play();
+      if (p && p.catch) p.catch(() => {
+        if (!musicPlaying) return;
+        clearMusicLoadTimer();
+        musicLoading = false;
+        musicError = '播放失败';
+        musicPlaying = false;
+        updateMusicBarUI();
+      });
+    }
     startLyricSession();
+  } else {
+    musicLoading = false;
+    loadAudioForCurrent();
   }
   updateMusicBarUI();
   rememberSong();
@@ -401,15 +534,52 @@ function autoAdvance() {
 }
 
 musicAudio.addEventListener('ended', autoAdvance);
-let audioErrorAt = 0;
+musicAudio.addEventListener('loadstart', () => {
+  if (musicPlaying && isLocalSong(currentSong())) {
+    musicLoading = true;
+    startMusicLoadTimer();
+    updateMusicBarUI();
+  }
+});
+musicAudio.addEventListener('waiting', () => {
+  if (musicPlaying) {
+    musicLoading = true;
+    startMusicLoadTimer();
+    updateMusicBarUI();
+  }
+});
+musicAudio.addEventListener('canplay', () => {
+  clearMusicLoadTimer();
+  if (musicLoading) {
+    musicLoading = false;
+    updateMusicBarUI();
+  }
+});
+musicAudio.addEventListener('playing', () => {
+  clearMusicLoadTimer();
+  musicLoading = false;
+  musicError = '';
+  musicPlaying = true;
+  updateMusicBarUI();
+});
 musicAudio.addEventListener('error', () => {
+  clearMusicLoadTimer();
   const song = currentSong();
   if (!song || !isLocalSong(song)) return;
+  if (musicAudio.getAttribute('src') !== song.src) return;
+  const code = musicAudio.error ? musicAudio.error.code : 0;
+  const reason = code === 4 ? '文件找不到或格式不支持'
+    : code === 3 ? '解码失败'
+    : code === 2 ? '网络错误'
+    : '播放失败';
+  musicLoading = false;
+  musicError = reason;
   musicPlaying = false;
   updateMusicBarUI();
+  console.warn('[music] error', code, song.title, song.src);
   if (Date.now() - audioErrorAt > 4000) {
     audioErrorAt = Date.now();
-    showToast('这首歌读不出来了，换一首试试');
+    showToast(`${song.title}：${reason}`);
   }
 });
 
@@ -435,13 +605,48 @@ function shareSongToChat(i) {
   hideMusicList();
   showToast('已分享到聊天');
 }
+// 我发出的「一起听」被接受：更新卡片并开始播放
+function acceptMyMusicInvite(title) {
+  let msg = null;
+  for (let i = chatHistory.length - 1; i >= 0; i--) {
+    const m = chatHistory[i];
+    if (m && m.role === 'me' && m.type === 'musicinvite' && m.content && !m.content.isOpened) {
+      msg = m; break;
+    }
+  }
+  if (!msg) return;
+  msg.content.isOpened = true;
+  saveAllData();
+
+  const bubble = document.querySelector(`.bubble[data-msg-time="${msg.time}"]`);
+  if (bubble) {
+    bubble.classList.add('opened');
+    const icon = bubble.querySelector('.card-icon');
+    const bottom = bubble.querySelector('.card-bottom');
+    if (icon) { icon.textContent = '🎧'; icon.className = 'card-icon grey'; }
+    if (bottom) bottom.textContent = '已接受';
+  }
+  if (typeof moodAfterOpen === 'function') moodAfterOpen('musicinvite');
+
+  let t = title || (msg.content && msg.content.name) || '';
+  if (!t && typeof pickRandomSong === 'function') {
+    const r = pickRandomSong();
+    t = r && r.title;
+  }
+  if (t) playSongByTitle(t);
+}
+
 function inviteTogether(i) {
   const s = MUSIC_PLAYLIST[i];
   if (!s) return;
   sendMessage({ name: s.title, artist: s.artist }, 'musicinvite', true);
   hideMusicList();
   showToast('邀请已发出');
-  setTimeout(() => sendMessage('好呀，一起听。', 'text', false), 1600 + Math.random() * 1400);
+  const wait = 1600 + Math.random() * 1400;
+  setTimeout(() => {
+    sendMessage('好呀，一起听。', 'text', false);
+    acceptMyMusicInvite(s.title);
+  }, wait);
 }
 
 // ===== 本地 mp3：IndexedDB 持久化 =====
@@ -574,6 +779,13 @@ async function importMusicFiles(files, opts) {
       if (s) { s.artist = '本地导入 · 本次有效'; delete s.trackId; }
     }
   }
+  const firstSong = firstIndex >= 0 ? MUSIC_PLAYLIST[firstIndex] : null;
+  applyMusicOrder();
+  saveMusicOrder();
+  if (firstSong) {
+    const fi = MUSIC_PLAYLIST.indexOf(firstSong);
+    if (fi >= 0) firstIndex = fi;
+  }
   showToast(saved === audios.length ? `已导入 ${saved} 首，存进本地了` : `已导入 ${audios.length} 首，${audios.length - saved} 首只在本机本次有效`);
   if (firstIndex >= 0) musicIndex = firstIndex;
   if (options.autoPlay !== false) { openMusicBar(); musicPlay(); }
@@ -586,22 +798,25 @@ async function importMusicFiles(files, opts) {
 // 启动时把上次导入的歌接回歌单
 (async function restoreLocalSongs() {
   let list = [];
-  try { list = await dbGetAll(); } catch (e) { return; }
-  if (!list.length) return;
-  list.sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
-  list.forEach(r => {
-    if (!r || !r.blob) return;
-    const url = URL.createObjectURL(r.blob);
-    const rTitle = r.title || '';
-    let same = MUSIC_PLAYLIST.findIndex(s => s.title === rTitle && !s.src);
-    if (same < 0) same = MUSIC_PLAYLIST.findIndex(s => !s.src && rTitle && (rTitle.endsWith(s.title) || rTitle.includes(s.title)));
-    if (same >= 0) {
-      MUSIC_PLAYLIST[same].src = url;
-      MUSIC_PLAYLIST[same].trackId = r.id;
-    } else {
-      MUSIC_PLAYLIST.push({ kind: 'song', title: r.title || '本地音乐', artist: '本地导入', src: url, trackId: r.id });
-    }
-  });
+  try { list = await dbGetAll(); } catch (e) { list = []; }
+  if (list.length) {
+    list.sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
+    list.forEach(r => {
+      if (!r || !r.blob) return;
+      const url = URL.createObjectURL(r.blob);
+      const rTitle = r.title || '';
+      let same = MUSIC_PLAYLIST.findIndex(s => s.title === rTitle && !s.src);
+      if (same < 0) same = MUSIC_PLAYLIST.findIndex(s => !s.src && rTitle && (rTitle.endsWith(s.title) || rTitle.includes(s.title)));
+      if (same >= 0) {
+        MUSIC_PLAYLIST[same].src = url;
+        MUSIC_PLAYLIST[same].trackId = r.id;
+      } else {
+        MUSIC_PLAYLIST.push({ kind: 'song', title: r.title || '本地音乐', artist: '本地导入', src: url, trackId: r.id });
+      }
+    });
+  }
+  applyMusicOrder();
+  saveMusicOrder();
   let last = '';
   try { last = localStorage.getItem('echo_last_song') || ''; } catch (e) {}
   const hit = MUSIC_PLAYLIST.findIndex(s => s.title === last);
@@ -615,6 +830,7 @@ function removeLocalTrack(i) {
   const song = MUSIC_PLAYLIST[i];
   if (!song || !song.trackId) return;
   MUSIC_PLAYLIST.splice(i, 1);
+  saveMusicOrder();
   if (i < musicIndex) musicIndex--;
   if (musicIndex >= MUSIC_PLAYLIST.length) musicIndex = 0;
   if (MUSIC_PLAYLIST.length === 0) musicPause();
@@ -714,6 +930,7 @@ function renderMusicList() {
   });
 }
 function openMusicList() {
+  preloadCurrentSong();
   renderMusicList();
   if (musicListModal) musicListModal.classList.add('show');
 }

@@ -144,18 +144,27 @@
         </div>
         
         <div class="tool-panel" id="toolPanel">
-          <div class="tool-grid">
-            <div class="tool-item" id="toolCamera"><div class="tool-icon">📷</div><span>拍照</span></div>
-            <div class="tool-item" id="toolImg"><div class="tool-icon">🖼️</div><span>图片</span></div>
-            <div class="tool-item" id="toolCall"><div class="tool-icon">📞</div><span>语音通话</span></div>
-            <div class="tool-item" id="toolLoc"><div class="tool-icon">📍</div><span>他在哪</span></div>
-            <div class="tool-item" id="toolRed"><div class="tool-icon">🧧</div><span>红包</span></div>
-            <div class="tool-item" id="toolGift"><div class="tool-icon">🎁</div><span>送礼物</span></div>
-            <div class="tool-item" id="toolTrans"><div class="tool-icon">💰</div><span>转账</span></div>
-            <div class="tool-item" id="toolPat"><div class="tool-icon">💞</div><span>互动</span></div>
-            <div class="tool-item" id="toolMusic"><div class="tool-icon">🎵</div><span>音乐</span></div>
-            <div class="tool-item" id="toolVoice" style="display:none;"><div class="tool-icon">🎙️</div><span>录音</span></div>
+          <div class="tool-pager" id="toolPager">
+            <div class="tool-page">
+              <div class="tool-grid">
+                <div class="tool-item" id="toolCamera"><div class="tool-icon">📷</div><span>拍照</span></div>
+                <div class="tool-item" id="toolImg"><div class="tool-icon">🖼️</div><span>图片</span></div>
+                <div class="tool-item" id="toolCall"><div class="tool-icon">📞</div><span>语音通话</span></div>
+                <div class="tool-item" id="toolLoc"><div class="tool-icon">📍</div><span>他在哪</span></div>
+                <div class="tool-item" id="toolRed"><div class="tool-icon">🧧</div><span>红包</span></div>
+                <div class="tool-item" id="toolGift"><div class="tool-icon">🎁</div><span>送礼物</span></div>
+                <div class="tool-item" id="toolTrans"><div class="tool-icon">💰</div><span>转账</span></div>
+                <div class="tool-item" id="toolPat"><div class="tool-icon">💞</div><span>互动</span></div>
+              </div>
+            </div>
+            <div class="tool-page">
+              <div class="tool-grid">
+                <div class="tool-item" id="toolMusic"><div class="tool-icon">🎵</div><span>音乐</span></div>
+                <div class="tool-item" id="toolVoice" style="display:none;"><div class="tool-icon">🎙️</div><span>录音</span></div>
+              </div>
+            </div>
           </div>
+          <div class="tool-dots" id="toolDots"><i class="active"></i><i></i></div>
         </div>
         <input type="file" id="imageInput" accept="image/*" style="display: none;">
         <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
@@ -217,7 +226,23 @@
           <div class="title">音乐管理</div>
           <button class="text-btn primary" id="musicManageAdd">＋ 导入</button>
         </div>
-        <div class="music-manage-tip">音频文件保存在浏览器本地，关闭页面后仍可继续使用。歌词请选择 .lrc 文件，文件名与歌曲标题一致即可自动匹配。如需显示双语歌词，可将译文命名为「歌名.zh.lrc」与原版一同选择，或在同一时间戳下写入两行（第一行原文，第二行译文）。</div>
+        <div class="mm-toolbar">
+          <button class="btn-plain" id="musicBatchToggle">批量管理</button>
+          <button class="btn-plain" id="musicTipToggle">说明</button>
+          <span id="musicCountLabel"></span>
+          <div id="musicBatchActions">
+            <button class="btn-plain" id="musicSelectAll">全选</button>
+            <button class="btn-plain" id="musicMoveUp">↑ 上移</button>
+            <button class="btn-plain" id="musicMoveDown">↓ 下移</button>
+            <button class="btn-del" id="musicBatchDelete">删除</button>
+            <button class="btn-plain" id="musicCheckFiles" title="检查音频文件">检测</button>
+          </div>
+        </div>
+        <div id="musicCheckResult" class="music-check-result"></div>
+        <div class="music-manage-tip" id="musicManageTip">
+          音频文件保存在浏览器本地，关闭页面后仍可继续使用。歌词请选择 .lrc 文件，文件名与歌曲标题一致即可自动匹配。如需显示双语歌词，可将译文命名为「歌名.zh.lrc」与原版一同选择，或在同一时间戳下写入两行（第一行原文，第二行译文）。
+          <button class="btn-plain" id="musicRestoreHidden" style="display:none; margin-top:8px;">恢复隐藏的曲目</button>
+        </div>
         <div class="music-manage-list" id="musicManageList"></div>
         <input type="file" id="musicManageFile" accept="audio/*,.lrc" multiple hidden>
       </div>
@@ -367,6 +392,32 @@
             </div>
           </div>
           
+          <div class="setting-group">
+            <div class="setting-row">
+              <label>对方头像</label>
+              <div class="file-pick">
+                <input type="file" id="setOtherAvatar" accept="image/*">
+                <label class="file-btn" for="setOtherAvatar">选择图片</label>
+                <span class="file-name" id="setOtherAvatarName"></span>
+              </div>
+            </div>
+            <div class="setting-row">
+              <label>我的头像</label>
+              <div class="file-pick">
+                <input type="file" id="setMyAvatar" accept="image/*">
+                <label class="file-btn" for="setMyAvatar">选择图片</label>
+                <span class="file-name" id="setMyAvatarName"></span>
+              </div>
+            </div>
+            <div class="setting-row">
+              <label>聊天壁纸</label>
+              <div class="file-pick">
+                <input type="file" id="setWallpaper" accept="image/*">
+                <label class="file-btn" for="setWallpaper">选择图片</label>
+                <span class="file-name" id="setWallpaperName"></span>
+              </div>
+            </div>
+          </div>
           <div class='setting-group'>
             <div class='setting-row'><label>显示“正在输入”气泡</label><label class='switch'><input type='checkbox' id='setShowTyping'><span class='knob'></span></label></div>
             <div class='setting-row'><label>消息与通话音效</label><label class='switch'><input type='checkbox' id='setSound'><span class='knob'></span></label></div>
@@ -418,32 +469,6 @@
             </div>
           </div>
           <div class="setting-group">
-            <div class="setting-row">
-              <label>对方头像</label>
-              <div class="file-pick">
-                <input type="file" id="setOtherAvatar" accept="image/*">
-                <label class="file-btn" for="setOtherAvatar">选择图片</label>
-                <span class="file-name" id="setOtherAvatarName">未选择</span>
-              </div>
-            </div>
-            <div class="setting-row">
-              <label>我的头像</label>
-              <div class="file-pick">
-                <input type="file" id="setMyAvatar" accept="image/*">
-                <label class="file-btn" for="setMyAvatar">选择图片</label>
-                <span class="file-name" id="setMyAvatarName">未选择</span>
-              </div>
-            </div>
-            <div class="setting-row">
-              <label>聊天壁纸</label>
-              <div class="file-pick">
-                <input type="file" id="setWallpaper" accept="image/*">
-                <label class="file-btn" for="setWallpaper">选择图片</label>
-                <span class="file-name" id="setWallpaperName">未选择</span>
-              </div>
-            </div>
-          </div>
-          <div class="setting-group">
             <div class="setting-row-col">
               <label>回复延迟: <span id="delayText" class="highlight-text">0.5 分钟</span></label>
               <input type="range" id="setReplyDelay" min="0.1" max="5.0" step="0.1">
@@ -453,8 +478,8 @@
               <input type="range" id="setReplyCount" min="1" max="5" step="1">
             </div>
             <div class="setting-row-col">
-              <label>签名自动切换(分钟): <span id="sigTimeText" class="highlight-text">5 分钟</span></label>
-              <input type="range" id="setSigTimer" min="1" max="30" step="1">
+              <label>签名切换间隔(分钟): <span id="sigTimeText" class="highlight-text">15 分钟</span></label>
+              <input type="range" id="setSigTimer" min="15" max="60" step="5">
             </div>
             <div class="setting-row-col">
               <label>自动回复间隔(分钟，0为关闭): <span id="autoReplyTimeText" class="highlight-text">0 分钟</span></label>

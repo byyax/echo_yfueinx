@@ -1,3 +1,42 @@
+// 加号面板：两页，横向滑动；电脑滚轮翻页，底部两个小点可点
+(function initToolPager() {
+  const pager = document.getElementById('toolPager');
+  const dots = Array.from(document.querySelectorAll('#toolDots i'));
+  if (!pager || !dots.length) return;
+  let page = 0;
+  let wheelLock = 0;
+
+  function updateDots() {
+    dots.forEach((d, i) => d.classList.toggle('active', i === page));
+  }
+  function goTo(i, smooth) {
+    page = Math.max(0, Math.min(dots.length - 1, i));
+    const left = page * pager.clientWidth;
+    if (smooth && pager.scrollTo) pager.scrollTo({ left, behavior: 'smooth' });
+    else pager.scrollLeft = left;
+    updateDots();
+  }
+
+  pager.addEventListener('scroll', () => {
+    if (!pager.clientWidth) return;
+    const i = Math.round(pager.scrollLeft / pager.clientWidth);
+    if (i !== page && i >= 0 && i < dots.length) { page = i; updateDots(); }
+  }, { passive: true });
+  dots.forEach((d, i) => d.addEventListener('click', () => goTo(i, true)));
+  pager.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    e.preventDefault();
+    const now = Date.now();
+    if (now - wheelLock < 450) return;
+    wheelLock = now;
+    goTo(page + (e.deltaY > 0 ? 1 : -1), true);
+  }, { passive: false });
+
+  const plusBtn = document.getElementById('plusBtn');
+  if (plusBtn) plusBtn.addEventListener('click', () => setTimeout(() => goTo(page, false), 320));
+  window.addEventListener('resize', () => { if (pager.clientWidth) goTo(page, false); });
+})();
+
 const toolImg = document.getElementById('toolImg');
 if(toolImg) toolImg.onclick = () => document.getElementById('imageInput').click();
 

@@ -9,7 +9,8 @@ function applyChatSettings() {
   const pageEl = document.getElementById('pageChat');
   if (pageEl) pageEl.style.backgroundImage = chatSettings.wallpaper ? `url(${chatSettings.wallpaper})` : 'none';
   if (chatEl) chatEl.style.backgroundImage = 'none';
-  const sigEl = document.getElementById('signatureBar'); if(sigEl) sigEl.textContent = chatSettings.signature;
+  const sigEl = document.getElementById('signatureBar');
+  if (sigEl && !sigEl.classList.contains('lyric-bubble')) sigEl.textContent = chatSettings.signature;
   refreshTimeLabels();
 }
 
@@ -686,15 +687,52 @@ setInterval(() => {
   }
 }, 5000); 
 
-setInterval(() => {
-  if (signatureLibrary.length > 0) {
-    // 35% 概率触发签名更新
-    if (Math.random() < 0.35) {
-      chatSettings.signature = signatureLibrary[Math.floor(Math.random() * signatureLibrary.length)].val;
-      saveAllData(); applyChatSettings();
-    }
+// ===== 个性签名：进站概率换一条，之后 15~30 分钟大概率换 =====
+let signatureTimer = null;
+
+function pickDifferentSignature() {
+  const lib = (typeof signatureLibrary !== 'undefined' && signatureLibrary) ? signatureLibrary : [];
+  if (!lib.length) return '';
+  const pool = lib.filter(s => s && s.val && s.val !== chatSettings.signature);
+  const list = pool.length ? pool : lib;
+  const item = list[Math.floor(Math.random() * list.length)];
+  return item && item.val ? item.val : '';
+}
+
+function changeSignatureNow() {
+  const next = pickDifferentSignature();
+  if (!next || next === chatSettings.signature) return false;
+  chatSettings.signature = next;
+  saveAllData();
+  const sigEl = document.getElementById('signatureBar');
+  if (sigEl && sigEl.classList.contains('lyric-bubble')) {
+    if (typeof savedSignatureText !== 'undefined') savedSignatureText = next;
+  } else {
+    applyChatSettings();
   }
-}, (chatSettings.sigTimer || 5) * 60000); // 按照设置里的分钟数执行，每次有 50% 概率变
+  return true;
+}
+
+function scheduleSignatureChange(delayMs) {
+  if (signatureTimer) clearTimeout(signatureTimer);
+  const base = Math.max(15, Number(chatSettings.sigTimer) || 15);
+  const wait = (typeof delayMs === 'number') ? delayMs : (base + Math.random() * base) * 60000;
+  signatureTimer = setTimeout(() => {
+    if (Math.random() < 0.85) {
+      changeSignatureNow();
+      scheduleSignatureChange();
+    } else {
+      // 偶尔这一次不换，5~10 分钟后再试
+      scheduleSignatureChange((5 + Math.random() * 5) * 60000);
+    }
+  }, wait);
+}
+
+// 进站：40% 概率先换一条
+setTimeout(() => {
+  if (Math.random() < 0.4) changeSignatureNow();
+}, 1600);
+scheduleSignatureChange();
 
 const sendBtn = document.getElementById('sendBtn');
 if(sendBtn) sendBtn.onclick = () => { 

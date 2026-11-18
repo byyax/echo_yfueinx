@@ -213,7 +213,15 @@ playSfx('send');                                    // 试听音效</code></pre>
 if (!chatSettings.myName) chatSettings.myName = '你';
 if (!chatSettings.signature) chatSettings.signature = '这个人很懒';</code></pre>
 <p><strong>时间格式</strong>：<code>chat_core.js</code> → <code>getTimeStr(time)</code>。保存设置后，<code>refreshTimeLabels()</code> 会就地重刷所有时间，不用重启。</p>
-<p><strong>检查</strong>：Console 里 <code>chatSettings.myName</code>；保存后看聊天页标题和时间。</p>
+<p><strong>签名自动切换</strong>：<code>chat_core.js</code> 底部。</p>
+<ul>
+<li>进站 1.6 秒后 40% 概率换一条；</li>
+<li><code>scheduleSignatureChange()</code> 在 <code>sigTimer</code> 到 <code>sigTimer × 2</code> 分钟之间随机（默认 15–30 分钟）；</li>
+<li>到点 85% 换，15% 这次不换、5–10 分钟后再试；</li>
+<li><code>pickDifferentSignature()</code> 会避开当前这句，不会连续重复；</li>
+<li>正在播放音乐时只更新 <code>savedSignatureText</code>，不覆盖歌词栏。</li>
+</ul>
+<p><strong>检查</strong>：Console 里 <code>pickDifferentSignature()</code>、<code>changeSignatureNow()</code>；设置页的「签名切换间隔」现在最小 15 分钟。</p>
 <p><strong>坑</strong>：设置页没点保存就退出，会弹「未保存」提醒。</p>
 <h3>6.2 回复节奏</h3>
 <p><strong>原理</strong>：<code>sendMessage</code> 之后不会立刻回复，而是 <code>simulateReplyWithDelay()</code> 定时调 <code>randomReply()</code>。</p>
@@ -285,6 +293,24 @@ if (!chatSettings.signature) chatSettings.signature = '这个人很懒';</code><
 <pre><code>{ kind: 'song', title: '歌名', artist: '歌手', src: 'music/文件名.mp3' }</code></pre>
 <p>歌词可以点歌单的「词」导入，或打包进 <code>music_lyrics.js</code>（key 必须和 <code>title</code> 一模一样）。</p>
 <p><strong>改播放模式</strong>：<code>PLAY_MODES</code> 数组和 <code>autoAdvance()</code>。</p>
+<p><strong>批量管理与排序</strong>（后台音乐管理页）：</p>
+<ul>
+<li><code>manage_music.js</code> 负责勾选、上移/下移、删除，选中的歌曲存在 <code>musicSelected</code>；</li>
+<li>顺序存在 <code>echo_music_order</code>，隐藏的内置曲目存在 <code>echo_music_hidden</code>；</li>
+<li>排序 key 由 <code>chat_music.js</code> 的 <code>musicKey()</code> 生成：内置用 <code>b:标题|歌手</code>，本地导入用 <code>t:trackId</code>；</li>
+<li>启动时 <code>applyHiddenMusicAtBoot()</code> 去掉隐藏曲目，<code>restoreLocalSongs()</code> 之后调用 <code>applyMusicOrder()</code>；</li>
+<li>移动、删除、导入之后都会 <code>saveMusicOrder()</code>；</li>
+<li>想改排序规则或“恢复隐藏”的入口，看 <code>moveSelectedMusic()</code> 和 <code>restoreHiddenMusic()</code>。</li>
+</ul>
+<p><strong>播放状态与排错</strong>：</p>
+<ul>
+<li><code>musicLoading</code> / <code>musicError</code> 控制播放条上的「加载中…」「文件找不到…」；</li>
+<li>音频事件：<code>loadstart</code> / <code>waiting</code> 开始计时，<code>canplay</code> / <code>playing</code> 清除；</li>
+<li>20 秒还没加载完，会显示「加载超时」，避免一直转；</li>
+<li><code>preloadCurrentSong()</code> 在打开歌单时先预载当前歌曲，点播放会更快；</li>
+<li>我发出的「一起听」被接受时，<code>acceptMyMusicInvite()</code> 会把卡片改成「已接受」并调用 <code>playSongByTitle()</code>；</li>
+<li>音乐管理「批量管理」行里的「检测」用 <code>fetch</code> 逐个检查 <code>src</code>，结果显示在工具栏下方。</li>
+</ul>
 <p><strong>坑</strong>：<code>.ncm</code> 不能播；文件名有空格/中文时 <code>src</code> 必须完全一致；mp3 太大传不上 GitHub。</p>
 <h3>6.10 情绪池</h3>
 <p><strong>原理</strong>：</p>
@@ -330,6 +356,17 @@ location.reload();</code></pre>
 <p><strong>换图标</strong>：覆盖 <code>icons/icon-192.png</code>、<code>icon-512.png</code>、<code>icon-maskable-512.png</code>、<code>apple-touch-icon.png</code>。</p>
 <p><strong>坑</strong>：没上传 icons、用 file://、QQ 浏览器只做快捷方式，都会导致图标不对。</p>
 <p>完整的图标清单、maskable 留边、换图步骤见第八节。</p>
+<hr>
+<h3>6.15 加号工具面板</h3>
+<p><strong>布局</strong>：<code>index.html</code> 的 <code>.tool-pager</code> + 两个 <code>.tool-page</code>，每页一个 <code>.tool-grid</code>（4 列 2 行）。</p>
+<ul>
+<li>第一页 8 个工具；第二页从第一行开始（音乐、录音）；</li>
+<li>横向滚动带 <code>scroll-snap-type: x mandatory</code>，触摸滑动有惯性，点圆点/滚轮用平滑动画；</li>
+<li>底部两个圆点 <code>#toolDots</code>，激活颜色用 <code>var(--primary)</code>；</li>
+<li>翻页逻辑在 <code>chat_tools.js</code> 顶部的 <code>initToolPager()</code>；</li>
+<li>打开面板后会重新对齐当前页。</li>
+</ul>
+<p>加新工具：放到对应 <code>.tool-page</code> 的 <code>.tool-grid</code> 里，再在 js 里绑点击；超过 8 个就放到第二页。</p>
 <hr>
 <h2>七、往各个模块加内容</h2>
 <p>这一节都是“加东西”的完整步骤：先改哪里，再怎么验证，最后是常见坑。</p>
@@ -519,7 +556,7 @@ location.reload();</code></pre>
 <p>见前面 6.11：<code>PALETTES</code> 加一行 + <code>style.css</code> 加一段。渐变再加 <code>--bubble-grad</code> / <code>--bubble-me-grad</code>。</p>
 <h3>7.9 加一个新的工具按钮（进阶）</h3>
 <ol start="1">
-<li><code>index.html</code> → <code>.tool-grid</code> 里加一个格子：</li>
+<li><code>index.html</code> → 对应 <code>.tool-page</code> 的 <code>.tool-grid</code> 里加一个格子：</li>
 </ol>
 <pre><code>&lt;div class="tool-item" id="toolDiary"&gt;&lt;div class="tool-icon"&gt;📔&lt;/div&gt;&lt;span&gt;日记&lt;/span&gt;&lt;/div&gt;</code></pre>
 <ol start="2">
@@ -650,8 +687,75 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 <li>改得太快：把 <code>MIN_SHOW</code> 调大。</li>
 </ul>
 <hr>
-<h2>十、概率一览</h2>
-<table><thead><tr><th>位置</th><th>概率</th></tr></thead><tbody><tr><td>拍一拍</td><td>每条回复 6%</td></tr><tr><td>分享/邀请听歌</td><td>5%（各一半）</td></tr><tr><td>礼物/红包/转账</td><td>5%；礼物 55%、红包 30%、转账 15%</td></tr><tr><td>引用</td><td>20%</td></tr><tr><td>回图片</td><td>12%</td></tr><tr><td>附带 Emoji</td><td>30%</td></tr><tr><td>随机来电</td><td>每 5 分钟 4%</td></tr><tr><td>签名更新</td><td>每周期 35%</td></tr><tr><td>红包/转账金额</td><td>78% 区间随机；22% 特殊数字</td></tr><tr><td>礼物档位</td><td>55% / 30% / 12% / 3%</td></tr><tr><td>情绪：他文字命中关键词</td><td>55%</td></tr><tr><td>情绪：他说「没事」</td><td>55%</td></tr><tr><td>情绪：你说「没事」</td><td>45%</td></tr><tr><td>情绪：你的文字带情绪</td><td>40%</td></tr><tr><td>通话后有情绪反应</td><td>78%</td></tr><tr><td>久别 30 分钟–3 小时</td><td>50%</td></tr><tr><td>久别 3–12 小时</td><td>70%</td></tr><tr><td>久别 12 小时以上</td><td>88%</td></tr><tr><td>情绪消息轻刷</td><td>文字 30%/42%，图音 20%，Emoji 55%</td></tr><tr><td>情绪至少停留</td><td>40 秒</td></tr><tr><td>干等刷新</td><td>20 秒×30% / 40 秒×25% / 60 秒×18% / 90 秒×12%</td></tr></tbody></table>
+<h2>十、随机与概率事件总表</h2>
+<p>这一节把网站上所有“会自己变”的东西集中写清楚：顶栏电量、网络、他的在线状态、副状态、回复节奏、红包金额、来电、音乐、情绪、签名。想改哪一项，按表里的位置去找；数字都是“每次判定”的概率。</p>
+<h3>10.1 顶栏：网络和电量（<code>router.js</code> → <code>initStatusBar()</code>）</h3>
+<p><strong>刚打开时</strong></p>
+<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>网络</td><td>WiFi 70%；不是 WiFi 时，5G 80%（总 24%）、2G 20%（总 6%）</td></tr><tr><td>电量</td><td>随机 20–99%</td></tr><tr><td>充电</td><td>初始不充电</td></tr></tbody></table>
+<p><strong>之后每 10 秒</strong></p>
+<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>网络变化</td><td>20% 概率刷新；刷新时 WiFi 50%、5G 40%、2G 10%</td></tr><tr><td>不充电</td><td>电量减 0 或 1（各 50%）</td></tr><tr><td>低于 10%</td><td>自动变成充电状态，电量固定在 10%</td></tr><tr><td>充电中</td><td>每 10 秒加 1 或 2（各 50%），到 100% 停止充电</td></tr><tr><td>颜色</td><td>≤10% 红色，≤20% 橙色，其余绿色</td></tr></tbody></table>
+<p>它只是装饰，不影响聊天逻辑。想改快慢就改 <code>initStatusBar()</code> 里的 <code>10000</code> 和那几个数字。注意：不要在控制台反复调用 <code>initStatusBar()</code>，它每次都会再开一个定时器。</p>
+<h3>10.2 他的名字下面的在线状态（<code>router.js</code>）</h3>
+<p>名字右边有两个小气泡：左边是主状态，右边是副状态。</p>
+<p><strong>主状态权重</strong>（总权重 109）</p>
+<table><thead><tr><th>状态</th><th>权重</th><th>约概率</th></tr></thead><tbody><tr><td>在线</td><td>30</td><td>27.5%</td></tr><tr><td>在线-摸鱼中</td><td>9</td><td>8.3%</td></tr><tr><td>在线-等你消息</td><td>7</td><td>6.4%</td></tr><tr><td>在线-发呆中</td><td>6</td><td>5.5%</td></tr><tr><td>心情不错</td><td>6</td><td>5.5%</td></tr><tr><td>在线-饥饿中</td><td>6</td><td>5.5%</td></tr><tr><td>工作中</td><td>6</td><td>5.5%</td></tr><tr><td>沉迷学习</td><td>5</td><td>4.6%</td></tr><tr><td>忙碌中</td><td>5</td><td>4.6%</td></tr><tr><td>找我玩</td><td>4</td><td>3.7%</td></tr><tr><td>无聊</td><td>4</td><td>3.7%</td></tr><tr><td>听歌中</td><td>4</td><td>3.7%</td></tr><tr><td>健身中</td><td>3</td><td>2.8%</td></tr><tr><td>干饭中</td><td>3</td><td>2.8%</td></tr><tr><td>困了</td><td>3</td><td>2.8%</td></tr><tr><td>攀岩中</td><td>2</td><td>1.8%</td></tr><tr><td>滑雪中</td><td>2</td><td>1.8%</td></tr><tr><td>睡觉中</td><td>2</td><td>1.8%</td></tr><tr><td>出差中</td><td>1</td><td>0.9%</td></tr><tr><td>离线</td><td>1</td><td>0.9%</td></tr></tbody></table>
+<p><strong>副状态权重</strong>（总权重 102，出现时再按权重抽）</p>
+<p>攀岩 7 · 健身 7 · 奶茶 7 · 听歌 7 · 打球 6 · 干饭 6 · 滑雪 5 · 冲浪 5 · 发呆 5 · 吸猫 5 · 游戏 5 · 睡觉 4 · 自拍 4 · 追剧 4 · 咖啡 4 · 出差 3 · 作业 3 · 洗头 3 · 超市 3 · 遛狗 3 · 修图 3 · 放空 3</p>
+<p><strong>什么时候变</strong></p>
+<table><thead><tr><th>时机</th><th>规则</th></tr></thead><tbody><tr><td>进站</td><td>30% 概率立刻随机一次；70% 先显示「在线」</td></tr><tr><td>进站时副状态</td><td>没触发随机主状态时，30% 概率随机一个副状态；触发随机主状态时按 45% 规则</td></tr><tr><td>平时</td><td>每 60 秒检查一次，到时间就换</td></tr><tr><td>下一次换的时间</td><td>8–25 分钟随机</td></tr><tr><td>随机换主状态</td><td>按上面的权重抽</td></tr><tr><td>随机换副状态</td><td>45% 概率出现，再按权重抽；否则没有副状态</td></tr><tr><td>他从离线回来</td><td>主状态变成「在线」，副状态清空，下次 8–25 分钟后</td></tr></tbody></table>
+<p><strong>离线状态的影响</strong>：主状态抽到「离线」时，你发消息后他会延迟 90–240 秒才“回来”，先发一句离线回复，再等 1.2–2.7 秒正常回复。</p>
+<blockquote>这里的「在线状态」和聊天气泡下面的「情绪」是两套系统：状态是装饰，情绪由 <code>chat_mood.js</code> 单独计算。</blockquote>
+<h3>10.3 消息、回复节奏</h3>
+<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>他回你的延迟</td><td>0 到设置里的「回复延迟」之间随机，均匀分布；默认 0–30 秒</td></tr><tr><td>正在输入</td><td>延迟大于 2 秒才显示；在延迟的一半（最多 1 秒）时出现</td></tr><tr><td>回复条数</td><td>默认 1 条；设置页可改</td></tr><tr><td>定时回复</td><td>每 5 秒检查一次；你超过设定分钟没说话，他主动发</td></tr><tr><td>定时回复条数</td><td><code>autoReplyCount</code>，每条间隔 1.5 秒</td></tr><tr><td>💌 让他主动</td><td>按回复条数发；每条延迟累加随机回复时间 + 1 秒</td></tr><tr><td>离线延迟</td><td>90–240 秒，然后先发一句离线回复</td></tr><tr><td>离线回复后的正式回复</td><td>1.2–2.7 秒后</td></tr><tr><td>拍一拍反应</td><td>1 秒后回一句</td></tr><tr><td>你发红包/转账/礼物/互动</td><td>2–5 秒后自动“对方已收”</td></tr><tr><td>互动回应</td><td>1.5–3 秒后</td></tr><tr><td>邀请一起听的回应</td><td>1.6–3 秒后</td></tr></tbody></table>
+<h3>10.4 他随机回什么（<code>chat_core.js</code> → <code>randomReply()</code>）</h3>
+<p>依次判定，前面的命中就不再往后走：</p>
+<table><thead><tr><th>顺序</th><th>内容</th><th>概率</th></tr></thead><tbody><tr><td>1</td><td>拍一拍</td><td>6%</td></tr><tr><td>2</td><td>分享/邀请听歌</td><td>5%；其中分享 50%、邀请 50%</td></tr><tr><td>3</td><td>礼物/红包/转账</td><td>5%</td></tr><tr><td>4</td><td>引用你最近的话</td><td>20%</td></tr><tr><td>5</td><td>回图片</td><td>12%（图库非空时）</td></tr><tr><td>6</td><td>从字卡抽一条文字</td><td>剩余概率</td></tr><tr><td>7</td><td>文字后附带 Emoji</td><td>30%（有 Emoji 库时）</td></tr></tbody></table>
+<p>邀请一起听时，50% 指定一首歌、50% 只发“一起听”不指定。引用是从最近 20 条你的文字里随机挑一条。字卡为空时，他会回「（字卡库是空的）」。</p>
+<h3>10.5 红包、转账、礼物</h3>
+<p><strong>触发</strong>：每条回复 5% 概率进入金钱事件。</p>
+<table><thead><tr><th>类型</th><th>占金钱事件</th></tr></thead><tbody><tr><td>礼物</td><td>55%</td></tr><tr><td>红包</td><td>30%</td></tr><tr><td>转账</td><td>15%</td></tr></tbody></table>
+<p><strong>礼物档位</strong>：便宜 55%、中档 30%、高档 12%、奢侈 3%；同一档内再均匀随机。</p>
+<p><strong>红包/转账金额</strong></p>
+<ul>
+<li>78% 在区间里随机：红包 ¥8–200，转账 ¥100–2000（整数）；</li>
+<li>22% 抽特殊数字，权重越大越常见：</li>
+</ul>
+<table><thead><tr><th>金额</th><th>权重</th></tr></thead><tbody><tr><td>6</td><td>8</td></tr><tr><td>52</td><td>16</td></tr><tr><td>66</td><td>10</td></tr><tr><td>88</td><td>10</td></tr><tr><td>520</td><td>12</td></tr><tr><td>521</td><td>7</td></tr><tr><td>666</td><td>5</td></tr><tr><td>710</td><td>3</td></tr><tr><td>888</td><td>4</td></tr><tr><td>1112</td><td>2.5</td></tr><tr><td>1314</td><td>2</td></tr><tr><td>5200</td><td>1.6</td></tr><tr><td>8888</td><td>0.9</td></tr><tr><td>13140</td><td>0.4</td></tr><tr><td>52000</td><td>0.2</td></tr></tbody></table>
+<p>备注也是从各自的小词库里随机抽一句。</p>
+<h3>10.6 语音通话</h3>
+<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>他主动来电</td><td>每 5 分钟 4% 概率，平均约 2 小时一次</td></tr><tr><td>你打给他：无人接听</td><td>15%</td></tr><tr><td>你打给他：拒接</td><td>10%</td></tr><tr><td>你打给他：接通</td><td>75%</td></tr><tr><td>等待接通时间</td><td>2.5–5.5 秒</td></tr><tr><td>来电无人接</td><td>30 秒后自动挂断</td></tr><tr><td>通话结束影响心情</td><td>78% 会有反应，22% 没反应</td></tr></tbody></table>
+<h3>10.7 互动、音乐、位置</h3>
+<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>互动回应</td><td>1.5–3 秒；从该动作的回复词库随机抽一句</td></tr><tr><td>随机挑歌</td><td>整个歌单均匀随机</td></tr><tr><td>一起听回应</td><td>1.6–3 秒</td></tr><tr><td>随机播放下一首</td><td>从除当前歌以外的曲目里均匀随机</td></tr><tr><td>列表循环下一首</td><td>按歌单顺序 +1</td></tr><tr><td>单曲循环</td><td>从头重播</td></tr><tr><td>「他在哪」</td><td>从位置库均匀随机</td></tr></tbody></table>
+<p>录音没有随机数，只有最长 60 秒和大小上限。</p>
+<h3>10.8 情绪池（<code>chat_mood.js</code>）</h3>
+<p><strong>消息触发轻刷</strong></p>
+<table><thead><tr><th>消息</th><th>概率</th></tr></thead><tbody><tr><td>你发文字</td><td>30%</td></tr><tr><td>他发文字</td><td>42%</td></tr><tr><td>图片/语音</td><td>20%</td></tr><tr><td>纯 Emoji</td><td>55%</td></tr></tbody></table>
+<p>关键词、口是心非属于“情绪事件”，见下面的「文字情绪」，和上面的轻刷是两回事。</p>
+<p><strong>特殊互动加权</strong></p>
+<table><thead><tr><th>互动</th><th>触发概率</th><th>权重变化</th></tr></thead><tbody><tr><td>红包/转账/礼物</td><td>65%</td><td>开心 ×2.2、激动 ×1.5；他送时等待 ×1.6</td></tr><tr><td>分享/邀请听歌</td><td>60%</td><td>开心 ×1.8、亲密 ×2.2、激动 ×1.5</td></tr><tr><td>抱抱/贴贴/亲亲</td><td>60%</td><td>亲密 ×3、激动 ×1.4</td></tr><tr><td>接受一起听</td><td>70%</td><td>亲密 ×2、开心 ×1.6</td></tr><tr><td>拆红包/收礼物</td><td>50%</td><td>开心 ×1.8</td></tr><tr><td>位置</td><td>35%</td><td>平静 ×1.3</td></tr></tbody></table>
+<p><strong>文字情绪</strong></p>
+<table><thead><tr><th>情况</th><th>概率</th></tr></thead><tbody><tr><td>他的话命中开心/难过/生气关键词</td><td>55%</td></tr><tr><td>他说「没事」等口是心非</td><td>55%</td></tr><tr><td>你说「没事」等</td><td>45%</td></tr><tr><td>你的文字带情绪，他跟着反应</td><td>40%</td></tr><tr><td>命中关键词但反而嘴硬</td><td>12%</td></tr></tbody></table>
+<p><strong>干等时刷新</strong></p>
+<table><thead><tr><th>等了多久</th><th>检查间隔</th><th>每次刷新概率</th><th>平均变化</th></tr></thead><tbody><tr><td>1 分钟内</td><td>20 秒</td><td>30%</td><td>约 1 分钟</td></tr><tr><td>1–5 分钟</td><td>40 秒</td><td>25%</td><td>约 2.5 分钟</td></tr><tr><td>5–15 分钟</td><td>60 秒</td><td>18%</td><td>约 5–6 分钟</td></tr><tr><td>15 分钟以上</td><td>90 秒</td><td>12%</td><td>约 12 分钟</td></tr></tbody></table>
+<p>普通情绪至少停留 40 秒（<code>MOOD_MIN_HOLD</code>）。</p>
+<p><strong>久别回来</strong></p>
+<table><thead><tr><th>隔了多久</th><th>概率</th><th>情绪</th></tr></thead><tbody><tr><td>30 分钟–3 小时</td><td>50%</td><td>开心/回来啦</td></tr><tr><td>3–12 小时</td><td>70%</td><td>激动/可算来了</td></tr><tr><td>12 小时以上</td><td>88%</td><td>想你/终于来了</td></tr><tr><td>超过两天</td><td>在以上基础上 20%</td><td>换成嘴硬/才不想你</td></tr></tbody></table>
+<p>同一段久别 2 小时内不重复。</p>
+<p><strong>字卡关键词</strong>：标签或正文命中就直接加权，不再掷概率：吃醋类 ×4、亲密类 ×5 + 激动 ×1.8。</p>
+<h3>10.9 个性签名（<code>chat_core.js</code> 底部）</h3>
+<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>进站</td><td>40% 概率换一条</td></tr><tr><td>平时间隔</td><td>设置值到它的 2 倍随机；默认 15–30 分钟</td></tr><tr><td>到点换的概率</td><td>85%</td></tr><tr><td>这次没换</td><td>5–10 分钟后再试</td></tr><tr><td>选择</td><td>避开当前这句，优先换别的</td></tr><tr><td>音乐播放中</td><td>只记录新签名，不覆盖歌词，音乐结束再显示</td></tr></tbody></table>
+<h3>10.10 其他小随机</h3>
+<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>状态栏网络/电量</td><td>见 10.1，每 10 秒</td></tr><tr><td>他的主/副状态</td><td>见 10.2，8–25 分钟</td></tr><tr><td>随机挑歌</td><td>均匀</td></tr><tr><td>歌曲备注、离线回复、拍一拍反应/文案</td><td>从各自词库均匀抽一句</td></tr><tr><td>情绪具体文案</td><td>从当前情绪的词库均匀抽一组</td></tr><tr><td>本地导入歌曲 ID</td><td>随机字符串，仅用于存储，不影响行为</td></tr></tbody></table>
+<h3>10.11 想改概率，去哪里找</h3>
+<table><thead><tr><th>想改什么</th><th>位置</th></tr></thead><tbody><tr><td>网络/电量</td><td><code>router.js</code> → <code>initStatusBar()</code></td></tr><tr><td>在线状态权重、切换时间</td><td><code>router.js</code> → <code>STATUS_MAIN</code>、<code>STATUS_SUB</code>、<code>rollOtherStatus()</code>、<code>initOtherStatus()</code></td></tr><tr><td>回复延迟</td><td>设置页；底层 <code>chat_core.js</code> → <code>getRandomDelay()</code></td></tr><tr><td>随机回复内容</td><td><code>chat_core.js</code> → <code>randomReply()</code></td></tr><tr><td>红包/礼物</td><td><code>chat_money.js</code> → <code>pickRandomGift()</code>、<code>randomMoneyAmount()</code>、<code>MONEY_SPECIALS</code></td></tr><tr><td>来电/接通</td><td><code>chat_call.js</code> → 来电 <code>0.04</code>、拨打 <code>0.15/0.25</code></td></tr><tr><td>情绪</td><td><code>chat_mood.js</code> → <code>moodWeights()</code>、<code>moodAfterMessage()</code>、<code>moodTickChance()</code></td></tr><tr><td>签名</td><td><code>chat_core.js</code> → <code>scheduleSignatureChange()</code></td></tr><tr><td>音乐随机</td><td><code>chat_music.js</code> → <code>pickRandomSong()</code>、<code>autoAdvance()</code></td></tr></tbody></table>
+<p><strong>怎么验证</strong></p>
+<pre><code>rollOtherStatus();                 // 立刻换一次在线状态
+changeSignatureNow();              // 立刻换一条签名
+triggerIncomingCall();             // 立刻来一通电话
+randomMoneyPayload('redpacket');   // 抽一个红包金额
+pickRandomGift();                  // 抽一个礼物
+moodWeights();                     // 看当前情绪权重</code></pre>
+<p>改完强刷，多试几次。概率是“每次判定”的数字，不是保证 10 次里一定出现 3 次。</p>
 <hr>
 <h2>十一、常见代码错误</h2>
 <h3>1. 中文标点</h3>

@@ -113,10 +113,14 @@ function setFileLabel(inputId, text) {
   const el = document.getElementById(inputId + 'Name');
   if (el) el.textContent = text;
 }
+function fileLabel(value, name) {
+  if (!value) return '';
+  return name ? '已选择 · ' + name : '已选择';
+}
 function refreshFileLabels() {
-  setFileLabel('setOtherAvatar', chatSettings.otherAvatar ? '已有' : '未选择');
-  setFileLabel('setMyAvatar', chatSettings.myAvatar ? '已有' : '未选择');
-  setFileLabel('setWallpaper', chatSettings.wallpaper ? '已有' : '未选择');
+  setFileLabel('setOtherAvatar', fileLabel(chatSettings.otherAvatar, chatSettings.otherAvatarName));
+  setFileLabel('setMyAvatar', fileLabel(chatSettings.myAvatar, chatSettings.myAvatarName));
+  setFileLabel('setWallpaper', fileLabel(chatSettings.wallpaper, chatSettings.wallpaperName));
 }
 refreshFileLabels();
 
@@ -132,7 +136,8 @@ function bindAvatarUpload(inputId, settingKey) {
       reader.onload = (ev) => {
         if (!pendingSettings) pendingSettings = {};
         pendingSettings.wallpaper = ev.target.result;
-        setFileLabel('setWallpaper', '已选择');
+        pendingSettings.wallpaperName = file.name || '';
+        setFileLabel('setWallpaper', file.name ? '已选择 · ' + file.name : '已选择');
         markSettingsDirty();
         showToast('壁纸已选择，记得点右上角保存');
       };
@@ -149,6 +154,7 @@ bindAvatarUpload('setWallpaper', 'wallpaper');
 
 // ===== 裁剪弹窗逻辑（方形/圆形；裁剪框最大范围=原图短边，拉条用于放大） =====
 let cropTargetKey = '';
+let cropFileName = '';
 let cropShape = 'square';
 const cropContainer = document.getElementById('cropContainer');
 const cropImgEl = document.getElementById('cropImage');
@@ -185,6 +191,7 @@ function applyCropTransform() {
 function startCrop(event, settingKey) {
   const file = event.target.files[0]; if (!file) return;
   cropTargetKey = settingKey;
+  cropFileName = file.name || '';
   const reader = new FileReader();
   reader.onload = (e) => {
     cropImgEl.src = e.target.result;
@@ -247,8 +254,11 @@ document.getElementById('confirmCrop').onclick = () => {
   }
   if (!pendingSettings) pendingSettings = {};
   pendingSettings[cropTargetKey] = base64;
+  pendingSettings[cropTargetKey + 'Name'] = cropFileName;
   const inputIdMap = { otherAvatar: 'setOtherAvatar', myAvatar: 'setMyAvatar' };
-  if (inputIdMap[cropTargetKey]) setFileLabel(inputIdMap[cropTargetKey], '已选择');
+  if (inputIdMap[cropTargetKey]) {
+    setFileLabel(inputIdMap[cropTargetKey], cropFileName ? '已选择 · ' + cropFileName : '已选择');
+  }
   markSettingsDirty();
   document.getElementById('cropModal').classList.remove('show');
   showToast('已裁剪，点右上角保存后生效');
@@ -264,7 +274,7 @@ if (saveSettingsBtn) {
     chatSettings.myPatSuffix = (document.getElementById('setMyPatSuffix').value.trim()) || '';
     chatSettings.replyDelay = parseFloat(document.getElementById('setReplyDelay').value) || 0.5;
     chatSettings.replyCount = parseInt(document.getElementById('setReplyCount').value) || 1;
-    chatSettings.sigTimer = parseInt(document.getElementById('setSigTimer').value) || 5;
+    chatSettings.sigTimer = Math.max(15, parseInt(document.getElementById('setSigTimer').value) || 15);
     chatSettings.autoReplyTime = parseInt(document.getElementById('setAutoReplyTime').value) || 0;
     chatSettings.autoReplyCount = parseInt(document.getElementById('setAutoReplyCount').value) || 1;
     
@@ -283,8 +293,11 @@ if (saveSettingsBtn) {
     // 暂存的图片正式写入
     if (pendingSettings) {
       if (pendingSettings.otherAvatar !== undefined) chatSettings.otherAvatar = pendingSettings.otherAvatar;
+      if (pendingSettings.otherAvatarName !== undefined) chatSettings.otherAvatarName = pendingSettings.otherAvatarName;
       if (pendingSettings.myAvatar !== undefined) chatSettings.myAvatar = pendingSettings.myAvatar;
+      if (pendingSettings.myAvatarName !== undefined) chatSettings.myAvatarName = pendingSettings.myAvatarName;
       if (pendingSettings.wallpaper !== undefined) chatSettings.wallpaper = pendingSettings.wallpaper;
+      if (pendingSettings.wallpaperName !== undefined) chatSettings.wallpaperName = pendingSettings.wallpaperName;
       pendingSettings = null;
     }
 
