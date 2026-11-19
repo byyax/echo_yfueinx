@@ -24,6 +24,9 @@
       ['echoDebug.networkRecover()', '模拟 2G 恢复并可能补一句'],
       ['echoDebug.typing(true)', '显示“正在输入”，false 收起'],
       ['echoDebug.reply()', '立即随机回一条'],
+      ['echoDebug.signature("内容")', '把当前个性签名改成指定内容'],
+      ['echoDebug.randomSignature()', '从签名库随机换一条'],
+      ['echoDebug.signatureList()', '查看签名库'],
       ['debugMoodSwitch("sad")', '切换情绪（旧命令）'],
       ['debugMoodUpgrade()', '当前情绪升一档（旧命令）']
     ];
@@ -166,6 +169,37 @@
     }
     if (typeof showTypingIndicator === 'function') showTypingIndicator('测试输入…');
     return '已显示正在输入';
+  };
+
+  E.signature = function (text) {
+    if (text === undefined || text === null) return E.randomSignature();
+    const value = String(text).trim();
+    if (!value) return '签名不能为空';
+    chatSettings.signature = value;
+    saveAllData();
+    const sigEl = document.getElementById('signatureBar');
+    if (sigEl && sigEl.classList.contains('lyric-bubble')) {
+      if (typeof savedSignatureText !== 'undefined') savedSignatureText = value;
+    } else if (typeof setSignatureText === 'function') {
+      setSignatureText(value);
+    } else if (typeof applyChatSettings === 'function') {
+      applyChatSettings();
+    }
+    return '个性签名已更新：' + value;
+  };
+
+  E.randomSignature = function () {
+    if (typeof changeSignatureNow !== 'function') return '签名函数不可用';
+    if (changeSignatureNow()) return '已随机换签名：' + chatSettings.signature;
+    return '签名库为空或没有别的签名';
+  };
+
+  E.signatureList = function () {
+    const list = (typeof signatureLibrary !== 'undefined' && Array.isArray(signatureLibrary)) ? signatureLibrary : [];
+    if (!list.length) return '签名库为空';
+    list.forEach((item, i) => console.log(i + 1 + '.', item && item.val));
+    if (chatSettings && chatSettings.signature) say('当前：' + chatSettings.signature);
+    return '共 ' + list.length + ' 条签名';
   };
 
   E.reply = function () {

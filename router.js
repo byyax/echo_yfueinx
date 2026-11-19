@@ -380,9 +380,15 @@ function initStatusBar() {
   }, 10000);
 }
 
-if(chatEl) {
-  // 首屏只画最近 200 条；加载更早的消息时每次再补 200 条。
+// 首屏只画最近 200 条；加载更早的消息时每次再补 200 条。
+// IndexedDB 读完整记录是异步的，必须等记录进内存后再画，否则会先闪出空聊天页。
+function renderInitialChat() {
+  if (!chatEl) return;
   renderChatHistoryWindow(CHAT_RENDER_INITIAL);
+}
+if (chatEl) {
+  if (window.__chatDataReady) renderInitialChat();
+  else window.addEventListener('chat-data-ready', renderInitialChat, { once: true });
 }
 // ===== 仿微信状态引擎 =====
 const STATUS_MAIN = [

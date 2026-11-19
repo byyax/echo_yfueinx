@@ -11,7 +11,11 @@ let contents = JSON.parse(localStorage.getItem('chat_contents')) || [
 ];
 let myEmojis = JSON.parse(localStorage.getItem('my_emojis')) || [];
 let chatSettings = JSON.parse(localStorage.getItem('chat_settings')) || {};
-let chatHistory = JSON.parse(localStorage.getItem('chat_history')) || [];
+let chatHistory = [];
+try {
+  const savedHistory = JSON.parse(localStorage.getItem('chat_history'));
+  if (Array.isArray(savedHistory)) chatHistory = savedHistory;
+} catch (e) {}
 let payPassword = localStorage.getItem('pay_password') || null;
 
 let locLibrary = JSON.parse(localStorage.getItem('loc_library')) || [
@@ -199,21 +203,27 @@ if (!chatSettings.hourFormat) chatSettings.hourFormat = '24';
 let lastSigUpdate = Date.now();
 let lastInteractionTime = Date.now();
 
-chatHistory.forEach(msg => {
-  if (!msg) return;
-  if (typeof msg.content === 'string') msg.content = { val: msg.content };
-  if (!msg.content) msg.content = { val: '' };
-  const c = msg.content;
-  if (c.val && typeof c.val === 'object') {
-    const inner = c.val;
-    if (inner.amount !== undefined && c.amount === undefined) c.amount = inner.amount;
-    if (inner.note !== undefined && c.note === undefined) c.note = inner.note;
-    if (inner.name !== undefined && c.name === undefined) c.name = inner.name;
-    if (inner.isOpened !== undefined) c.isOpened = c.isOpened || inner.isOpened;
-    c.val = typeof inner.val === 'string' ? inner.val : (inner.name || '');
-  }
-  if (c.val === undefined || c.val === null) c.val = c.name || c.note || '';
-});
+// 旧存档兼容：把字符串内容、嵌套的金额/备注字段统一成当前结构。
+// IndexedDB 里读出来的完整记录也会再走一遍，避免旧版本数据换存储后缺字段。
+function normalizeChatHistoryList(list) {
+  (list || []).forEach(msg => {
+    if (!msg) return;
+    if (typeof msg.content === 'string') msg.content = { val: msg.content };
+    if (!msg.content) msg.content = { val: '' };
+    const c = msg.content;
+    if (c.val && typeof c.val === 'object') {
+      const inner = c.val;
+      if (inner.amount !== undefined && c.amount === undefined) c.amount = inner.amount;
+      if (inner.note !== undefined && c.note === undefined) c.note = inner.note;
+      if (inner.name !== undefined && c.name === undefined) c.name = inner.name;
+      if (inner.isOpened !== undefined) c.isOpened = c.isOpened || inner.isOpened;
+      c.val = typeof inner.val === 'string' ? inner.val : (inner.name || '');
+    }
+    if (c.val === undefined || c.val === null) c.val = c.name || c.note || '';
+  });
+  return list;
+}
+normalizeChatHistoryList(chatHistory);
 
 let saveAllDataTimer = null;
 let saveAllDataPending = false;
@@ -242,7 +252,7 @@ function warnStorageProblem() {
   if (now - lastStorageWarnAt < 30000) return;
   lastStorageWarnAt = now;
   if (typeof showToast === 'function') {
-    showToast('本地存储已满，最近的消息可能没有保存；请先导出备份并清理记录');
+    showToast('本地设置存储已满，最近的设置可能没有保存；请先导出备份并清理数据');
   }
 }
 function safeSetItem(key, value) {
@@ -260,39 +270,18 @@ function persistAllDataNow() {
   if (!saveAllDataPending) return;
   saveAllDataPending = false;
 
-  // 删除、清空、导入是有意修改历史，不能又被旧存档合并回来。
-  const skipHistoryMerge = window.__skipHistoryMerge === true;
-  window.__skipHistoryMerge = false;
-
-  // 多开页面时，旧页面不能拿自己落后的 chatHistory 覆盖新页面刚保存的消息。
-  if (!skipHistoryMerge) {
-    try {
-      const storedRaw = localStorage.getItem('chat_history');
-      if (storedRaw) {
-        const stored = JSON.parse(storedRaw);
-        if (Array.isArray(stored) && lastHistoryTime(stored) > lastHistoryTime(chatHistory)) {
-          chatHistory = mergeHistoryLists(chatHistory, stored);
-        }
-      }
-    } catch (e) {}
-  }
-
-  let historyJson = '[]';
-  try { historyJson = JSON.stringify(chatHistory); } catch (e) { warnStorageProblem(); }
-
+  // v14：设置、字卡等小数据继续放 localStorage；完整聊天记录交给 IndexedDB。
+  // 这样 5MB 的聊天记录不会再挤占设置空间，也不会在保存设置时写满。
   safeSetItem('chat_tags', JSON.stringify(tags));
   safeSetItem('chat_contents', JSON.stringify(contents));
   safeSetItem('my_emojis', JSON.stringify(myEmojis));
   safeSetItem('chat_settings', JSON.stringify(chatSettings));
-  const historySaved = safeSetItem('chat_history', historyJson);
   safeSetItem('loc_library', JSON.stringify(locLibrary));
   safeSetItem('poke_library', JSON.stringify(pokeLibrary));
   safeSetItem('signature_library', JSON.stringify(signatureLibrary));
   safeSetItem('interact_library', JSON.stringify(interactLibrary));
 
-  // localStorage 正常时低频备份；写满时立刻写 IndexedDB，避免这一段消息彻底丢。
-  if (historySaved) scheduleChatHistoryBackup();
-  else writeChatHistoryBackup();
+  if (typeof scheduleHistorySave === 'function') scheduleHistorySave();
 }
 
 // 连续发送/开关卡片时合并写入，避免每次都把整个聊天记录序列化一遍。
@@ -305,93 +294,18 @@ function saveAllData() {
   }, 180);
 }
 
-// ===== 聊天记录第二层备份 =====
-// localStorage 写满、被浏览器清理或多开页面互相覆盖时，IndexedDB 里还能留一份。
-const CHAT_BACKUP_DB = 'echo_chat_backup';
-const CHAT_BACKUP_STORE = 'history';
-let chatBackupDbPromise = null;
-let chatBackupTimer = null;
-
-function openChatBackupDb() {
-  if (!window.indexedDB) return Promise.reject(new Error('no-indexeddb'));
-  if (chatBackupDbPromise) return chatBackupDbPromise;
-  chatBackupDbPromise = new Promise((resolve, reject) => {
-    const req = indexedDB.open(CHAT_BACKUP_DB, 1);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(CHAT_BACKUP_STORE)) {
-        db.createObjectStore(CHAT_BACKUP_STORE, { keyPath: 'id' });
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error || new Error('backup-db-open-failed'));
-  });
-  return chatBackupDbPromise;
+// ===== 页面离开时把未保存的记录刷进 IndexedDB =====
+// IndexedDB 是异步的，不能保证浏览器一定等写完；正常使用时会提前 900ms 写入，
+// 这里主要兜住“刚发完消息就立刻切走”的情况。
+function flushAllDataNow() {
+  persistAllDataNow();
+  // 先同步留一小段最近消息，防止 IndexedDB 异步写入还没完成页面就被关掉。
+  if (typeof writeHistoryTailCache === 'function') writeHistoryTailCache();
+  if (typeof flushHistorySave === 'function') flushHistorySave();
 }
-
-function writeChatHistoryBackup() {
-  if (!window.indexedDB) return;
-  const skipMerge = window.__skipBackupMerge === true;
-  window.__skipBackupMerge = false;
-  openChatBackupDb().then(db => {
-    const tx = db.transaction(CHAT_BACKUP_STORE, 'readwrite');
-    const store = tx.objectStore(CHAT_BACKUP_STORE);
-    const get = store.get('latest');
-    get.onsuccess = () => {
-      const old = get.result;
-      let outgoing = chatHistory;
-      // 旧页面不要用落后的历史覆盖较新的备份；清空/导入/删除除外。
-      if (!skipMerge && old && Array.isArray(old.history) && lastHistoryTime(old.history) > lastHistoryTime(outgoing)) {
-        outgoing = mergeHistoryLists(outgoing, old.history);
-      }
-      store.put({ id: 'latest', history: outgoing, savedAt: Date.now() });
-    };
-  }).catch(() => {});
-}
-
-function scheduleChatHistoryBackup() {
-  if (chatBackupTimer) return;
-  chatBackupTimer = setTimeout(() => {
-    chatBackupTimer = null;
-    writeChatHistoryBackup();
-  }, 1200);
-}
-
-function clearChatHistoryBackup() {
-  if (chatBackupTimer) { clearTimeout(chatBackupTimer); chatBackupTimer = null; }
-  window.__skipBackupMerge = true;
-  if (!window.indexedDB) return;
-  openChatBackupDb().then(db => {
-    const tx = db.transaction(CHAT_BACKUP_STORE, 'readwrite');
-    tx.objectStore(CHAT_BACKUP_STORE).delete('latest');
-  }).catch(() => {});
-}
-
-function restoreChatHistoryBackup() {
-  if (!window.indexedDB) return;
-  openChatBackupDb().then(db => {
-    const tx = db.transaction(CHAT_BACKUP_STORE, 'readonly');
-    const get = tx.objectStore(CHAT_BACKUP_STORE).get('latest');
-    get.onsuccess = () => {
-      const saved = get.result;
-      const list = saved && saved.history;
-      if (!Array.isArray(list) || !list.length) return;
-      if (lastHistoryTime(list) <= lastHistoryTime(chatHistory)) return;
-      chatHistory = mergeHistoryLists(chatHistory, list);
-      saveAllData();
-      if (window.__appRevealed && typeof renderChatHistoryWindow === 'function') {
-        const keep = Math.max(200, chatHistory.length - (typeof chatRenderStart === 'number' ? chatRenderStart : 0));
-        renderChatHistoryWindow(keep);
-      }
-    };
-  }).catch(() => {});
-}
-
-setTimeout(restoreChatHistoryBackup, 900);
-
-window.addEventListener('pagehide', persistAllDataNow);
-window.addEventListener('beforeunload', persistAllDataNow);
-document.addEventListener('visibilitychange', () => { if (document.hidden) persistAllDataNow(); });
+window.addEventListener('pagehide', flushAllDataNow);
+window.addEventListener('beforeunload', flushAllDataNow);
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushAllDataNow(); });
 
 // 往按钮里放图标字符时，包一层 span，好让"图标色调"滤镜作用到它
 function setIconText(el, glyph) {

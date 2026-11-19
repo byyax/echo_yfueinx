@@ -22,6 +22,46 @@ function refreshAvatarDOM() {
   });
 }
 
+// 个性签名：短签名跟着字数自然变宽；偏长先缩小字号；仍然放不下才缓慢左右滚动。
+function setSignatureText(text) {
+  const el = document.getElementById('signatureBar');
+  if (!el || el.classList.contains('lyric-bubble')) return;
+  const value = String(text == null ? '' : text).trim() || '这个人很懒，什么都没留下';
+  el.classList.remove('sig-long', 'sig-xlong', 'sig-scroll');
+  el.style.removeProperty('--sig-shift');
+  el.style.removeProperty('--sig-marquee-dur');
+  el.title = value;
+  el.textContent = '';
+  const span = document.createElement('span');
+  span.className = 'signature-text';
+  span.textContent = value;
+  el.appendChild(span);
+
+  const overflows = () => span.scrollWidth > span.clientWidth + 1;
+  if (overflows()) el.classList.add('sig-long');
+  if (overflows()) el.classList.add('sig-xlong');
+  if (overflows()) {
+    el.classList.add('sig-scroll');
+    const shift = Math.max(8, span.scrollWidth - span.clientWidth + 4);
+    el.style.setProperty('--sig-shift', `-${shift}px`);
+    el.style.setProperty('--sig-marquee-dur', `${Math.min(14, Math.max(7, 4 + shift / 26))}s`);
+  }
+}
+
+let _sigMeasureTimer = null;
+function remeasureSignatureSoon() {
+  if (_sigMeasureTimer) clearTimeout(_sigMeasureTimer);
+  _sigMeasureTimer = setTimeout(() => {
+    _sigMeasureTimer = null;
+    setSignatureText(chatSettings.signature);
+  }, 120);
+}
+window.addEventListener('resize', remeasureSignatureSoon);
+window.addEventListener('app-revealed', remeasureSignatureSoon);
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(remeasureSignatureSoon).catch(() => {});
+}
+
 function applyChatSettings() {
   const titleEl = document.getElementById('chatTitle'); if(titleEl) titleEl.textContent = chatSettings.otherName;
   // 壁纸挂在整页上：播放器/工具面板开合只推动气泡，背景不会跟着放大缩小
@@ -29,7 +69,7 @@ function applyChatSettings() {
   if (pageEl) pageEl.style.backgroundImage = chatSettings.wallpaper ? `url(${chatSettings.wallpaper})` : 'none';
   if (chatEl) chatEl.style.backgroundImage = 'none';
   const sigEl = document.getElementById('signatureBar');
-  if (sigEl && !sigEl.classList.contains('lyric-bubble')) sigEl.textContent = chatSettings.signature;
+  if (sigEl && !sigEl.classList.contains('lyric-bubble')) setSignatureText(chatSettings.signature);
   refreshTimeLabels();
   refreshAvatarDOM();
 }
@@ -305,20 +345,50 @@ function finishOpenCard(time, type) {
   showToast('已收取');
 }
 
-// 语音消息播放
+// 语音消息播放：同一条再点一次是暂停/继续，换一条才重新播放。
 let _voiceAudio = null;
+let _voiceEl = null;
 function playVoice(el, src) {
-  if (_voiceAudio) { try { _voiceAudio.pause(); } catch (e) {} _voiceAudio = null; }
   const icon = el.querySelector('.voice-play');
-  if (icon) icon.textContent = '▶';
+  // 点正在播放的同一条：暂停；再点：从暂停位置继续。
+  if (_voiceAudio && _voiceEl === el) {
+    if (_voiceAudio.paused) {
+      const p = _voiceAudio.play();
+      if (icon) icon.textContent = '⏸';
+      if (p && p.catch) p.catch(() => { if (icon) icon.textContent = '▶'; });
+    } else {
+      _voiceAudio.pause();
+      if (icon) icon.textContent = '▶';
+    }
+    return;
+  }
+  // 换一条：先停掉上一条。
+  if (_voiceAudio) { try { _voiceAudio.pause(); } catch (e) {} }
+  const oldIcon = _voiceEl && _voiceEl.querySelector('.voice-play');
+  if (oldIcon) oldIcon.textContent = '▶';
+  _voiceAudio = null;
+  _voiceEl = null;
   if (!src) return;
   const audio = new Audio(src);
   _voiceAudio = audio;
+  _voiceEl = el;
   if (icon) icon.textContent = '⏸';
-  audio.onended = () => { if (icon) icon.textContent = '▶'; };
-  audio.onerror = () => { if (icon) icon.textContent = '▶'; showToast('这段语音放不出来'); };
+  audio.onplay = () => { if (icon) icon.textContent = '⏸'; };
+  audio.onpause = () => { if (icon && !audio.ended) icon.textContent = '▶'; };
+  audio.onended = () => {
+    if (icon) icon.textContent = '▶';
+    if (_voiceAudio === audio) { _voiceAudio = null; _voiceEl = null; }
+  };
+  audio.onerror = () => {
+    if (icon) icon.textContent = '▶';
+    if (_voiceAudio === audio) { _voiceAudio = null; _voiceEl = null; }
+    showToast('这段语音放不出来');
+  };
   const p = audio.play();
-  if (p && p.catch) p.catch(() => { if (icon) icon.textContent = '▶'; });
+  if (p && p.catch) p.catch(() => {
+    if (icon) icon.textContent = '▶';
+    if (_voiceAudio === audio) { _voiceAudio = null; _voiceEl = null; }
+  });
 }
 
 // 首屏只渲染最近一部分消息；向上加载时每次多补一批，避免手机一次性创建几千条 DOM。
@@ -1332,7 +1402,7 @@ document.addEventListener('click', (e) => {
     document.getElementById('deleteBubbleModal').classList.remove('show');
     if (ctx) {
       const idx = chatHistory.findIndex(m => m.time === ctx.time && m.role === (ctx.isMe ? 'me' : 'other'));
-      if (idx > -1) { chatHistory.splice(idx, 1); window.__skipHistoryMerge = true; clearChatHistoryBackup(); saveAllData(); }
+      if (idx > -1) { chatHistory.splice(idx, 1); window.__skipHistoryMerge = true; saveAllData(); }
       if (ctx.rowEl && ctx.rowEl.parentNode) ctx.rowEl.remove();
       showToast('已删除');
     }

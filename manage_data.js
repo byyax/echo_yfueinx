@@ -64,7 +64,14 @@ if(menuData) menuData.onclick = () => {
   switchPage('pageData');
   let totalSize = 0;
   for (let key in localStorage) { if (localStorage.hasOwnProperty(key)) totalSize += (localStorage[key].length + key.length) * 2; }
-  document.getElementById('dataSize').textContent = (totalSize / 1024).toFixed(1) + ' KB';
+  // 聊天记录已移到 IndexedDB，占用空间要把它另外算进去，不能只统计 localStorage。
+  // 如果极端情况下退回 localStorage，则上面的循环已经统计过，不能重复加。
+  if (window.__historyStoreMode !== 'localstorage' && typeof estimateChatHistoryBytes === 'function') {
+    totalSize += estimateChatHistoryBytes();
+  }
+  document.getElementById('dataSize').textContent = formatSize(totalSize);
+  const modeEl = document.getElementById('dataStorageMode');
+  if (modeEl) modeEl.textContent = window.__historyStoreMode === 'localstorage' ? '浏览器本地存储' : 'IndexedDB';
   document.getElementById('dataMsgCount').textContent = chatHistory.length + ' 条';
   document.getElementById('dataCardCount').textContent = (contents.length + locLibrary.length + pokeLibrary.length + signatureLibrary.length) + ' 项';
   const mediaEl = document.getElementById('dataMediaSize');
@@ -103,17 +110,23 @@ if (clearMediaBtn) {
 }
 
 document.getElementById('clearHistoryBtn').onclick = () => {
-  showConfirm('清空记录', '⚠️ 警告：确定清空所有聊天记录吗？此操作不可逆！', () => {
-    chatHistory = []; window.__skipHistoryMerge = true; clearChatHistoryBackup(); saveAllData();
-    chatEl.innerHTML = '<div class="sys">你已添加对方为好友，现在可以开始聊天了</div>'; 
+  showConfirm('清空记录', '⚠️ 警告：确定清空所有聊天记录吗？此操作不可逆！', async () => {
+    chatHistory = [];
+    window.__skipHistoryMerge = true;
+    if (typeof replaceHistoryStore === 'function') await replaceHistoryStore([]);
+    else saveAllData();
+    chatEl.innerHTML = '<div class="sys">你已添加对方为好友，现在可以开始聊天了</div>';
     showToast('聊天记录已清空');
   });
 };
 document.getElementById('clearAllBtn').onclick = () => {
-  showConfirm('清空全部', '💥 警告：确定清空所有数据吗？此操作不可逆！', () => {
-    if (typeof persistAllDataNow === 'function') persistAllDataNow();
-    clearChatHistoryBackup();
-    localStorage.clear(); location.reload();
+  showConfirm('清空全部', '💥 警告：确定清空所有数据吗？此操作不可逆！', async () => {
+    // 取消还没执行的自动保存，避免清空后又把设置/字卡写回来。
+    if (saveAllDataTimer) { clearTimeout(saveAllDataTimer); saveAllDataTimer = null; }
+    saveAllDataPending = false;
+    if (typeof clearHistoryStore === 'function') await clearHistoryStore();
+    try { localStorage.clear(); } catch (e) {}
+    location.reload();
   });
 };
 
@@ -266,7 +279,7 @@ function processImportedData(data) {
   if (currentImportType === 'all') {
     if (data.tags) tags = data.tags; if (data.contents) contents = data.contents; if (data.myEmojis) myEmojis = data.myEmojis;
     if (data.chatSettings) chatSettings = Object.assign(chatSettings, data.chatSettings);
-    if (data.chatHistory) chatHistory = data.chatHistory; if (data.locLibrary) locLibrary = data.locLibrary;
+    if (data.chatHistory) chatHistory = normalizeChatHistoryList(data.chatHistory); if (data.locLibrary) locLibrary = data.locLibrary;
     if (data.pokeLibrary) pokeLibrary = data.pokeLibrary; if (data.signatureLibrary) signatureLibrary = data.signatureLibrary;
     if (data.interactLibrary) interactLibrary = data.interactLibrary;
     if (data.theme) applyImportedTheme(data.theme);
@@ -280,14 +293,20 @@ function processImportedData(data) {
     if (data.pokeLibrary) pokeLibrary = data.pokeLibrary; if (data.signatureLibrary) signatureLibrary = data.signatureLibrary;
     if (data.interactLibrary) interactLibrary = data.interactLibrary;
   } else if (currentImportType === 'chat') {
-    if (data.chatHistory) chatHistory = data.chatHistory;
+    if (data.chatHistory) chatHistory = normalizeChatHistoryList(data.chatHistory);
   } else if (currentImportType === 'settings') {
     if (data.chatSettings) chatSettings = Object.assign(chatSettings, data.chatSettings);
     if (data.theme) applyImportedTheme(data.theme);
   }
-  
-  window.__skipHistoryMerge = true;
-  clearChatHistoryBackup();
+
+  // 只有真正导入了聊天记录时才替换 IndexedDB 里的历史；
+  // 单独导入设置/字卡不能把现有聊天记录误清空。
+  const historyImported = (currentImportType === 'all' || currentImportType === 'chat') && data.chatHistory;
+  if (historyImported && typeof replaceHistoryStore === 'function') {
+    replaceHistoryStore(chatHistory);
+    // 防止稍后到达的自动保存又和旧 IndexedDB 记录合并。
+    window.__skipHistoryMerge = true;
+  }
   saveAllData();
 
   setTimeout(() => {

@@ -1,4 +1,8 @@
 let currentHistoryTab = 'history';
+const HISTORY_PAGE_SIZE = 300;
+let historyRenderLimit = HISTORY_PAGE_SIZE;
+
+function resetHistoryRenderLimit() { historyRenderLimit = HISTORY_PAGE_SIZE; }
 
 // 切换顶部 tab
 document.querySelectorAll('[data-historytab]').forEach(btn => {
@@ -30,9 +34,13 @@ document.getElementById('historyDateSearch').onchange = function() {
     this.classList.remove('has-value');
     if (wrapper) wrapper.classList.remove('has-value');
   }
-  renderHistory(this.value); 
+  resetHistoryRenderLimit();
+  renderHistory(this.value);
 };
-document.getElementById('historyTextSearch').oninput = function() { renderHistory(); };
+document.getElementById('historyTextSearch').oninput = function() {
+  resetHistoryRenderLimit();
+  renderHistory();
+};
 
 // 进入页面时自动重置刷新
 (function watchHistoryPage() {
@@ -51,6 +59,7 @@ document.getElementById('historyTextSearch').oninput = function() { renderHistor
       const textInput = document.getElementById('historyTextSearch');
       if (textInput) textInput.value = '';
       
+      resetHistoryRenderLimit();
       if (currentHistoryTab === 'cards') renderCardStats();
       else renderHistory();
     }
@@ -64,12 +73,16 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-function renderHistory(filterDate = '') {
+function renderHistory(filterDate = '', preserveScroll = false) {
+  const dateInput = document.getElementById('historyDateSearch');
+  if (!filterDate && dateInput) filterDate = dateInput.value;
   const keywordInput = document.getElementById('historyTextSearch');
   const keyword = keywordInput ? keywordInput.value.toLowerCase() : '';
-  const list = document.getElementById('historyList'); if(!list) return; list.innerHTML = '';
+  const list = document.getElementById('historyList'); if(!list) return;
+  const prevScrollHeight = list.scrollHeight;
+  const prevScrollTop = list.scrollTop;
   let filtered = chatHistory;
-  
+
   if (filterDate) {
     filtered = filtered.filter(msg => {
       const d = new Date(msg.time);
@@ -89,22 +102,33 @@ function renderHistory(filterDate = '') {
 
   if(filtered.length === 0) { list.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px;">没有记录</div>'; return; }
 
+  // 搜索始终针对全部记录；只是页面不一次性画几万条，避免手机卡死。
+  const total = filtered.length;
+  const start = Math.max(0, total - historyRenderLimit);
+  const visible = filtered.slice(start);
+  const parts = [];
+
+  if (start > 0) {
+    parts.push(`<div style="text-align:center; margin:8px 0 14px; font-size:12px; color:#9ca3af;">共 ${total} 条，已显示最近 ${visible.length} 条</div>`);
+    parts.push(`<div style="text-align:center; margin:0 0 16px;"><button type="button" id="historyLoadEarlier" style="border:0; background:var(--border-color); color:var(--text-main); padding:9px 18px; border-radius:16px; font-size:13px; cursor:pointer;">显示更早的 ${start} 条</button></div>`);
+  }
+
   let lastDateStr = '';
-  filtered.forEach(msg => {
+  visible.forEach(msg => {
     const d = new Date(msg.time);
     const dateStr = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
 
     if (dateStr !== lastDateStr) {
-      list.innerHTML += `<div style="text-align:center; margin:18px 0 12px;"><span style="display:inline-block; background:var(--border-color); color:#6b7280; font-size:12px; padding:4px 14px; border-radius:12px;">${dateStr}</span></div>`;
+      parts.push(`<div style="text-align:center; margin:18px 0 12px;"><span style="display:inline-block; background:var(--border-color); color:#6b7280; font-size:12px; padding:4px 14px; border-radius:12px;">${dateStr}</span></div>`);
       lastDateStr = dateStr;
     }
 
     const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 
     if (msg.role === 'system') {
-      list.innerHTML += `<div style="text-align:center; font-size:12px; color:#999; margin:10px 0;">${escapeHtml(msg.content.val || msg.content)}</div>`;
+      parts.push(`<div style="text-align:center; font-size:12px; color:#999; margin:10px 0;">${escapeHtml(msg.content.val || msg.content)}</div>`);
     } else {
-      const isMe = msg.role === 'me'; 
+      const isMe = msg.role === 'me';
       let content = '';
       const c = msg.content || {};
       if (msg.type === 'text' || msg.type === 'pat') content = c.val || '';
@@ -116,27 +140,37 @@ function renderHistory(filterDate = '') {
       else if (msg.type === 'interact') content = `[互动 ${c.name || ''}]`;
       else if (msg.type === 'call') content = `[通话] ${c.val || ''}`;
       else content = '[卡片]';
-      
+
       const av = isMe ? chatSettings.myAvatar : chatSettings.otherAvatar;
       const avImg = av
         ? `<img src="${av}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`
         : (isMe
           ? escapeHtml(chatSettings.myName.charAt(0))
           : `<img src="icons/icon-heart-192.png" class="default-heart-avatar" style="width:84%;height:84%;object-fit:contain;">`);
-      
-      list.innerHTML += `<div style="display:flex; flex-direction:${isMe?'row-reverse':'row'}; margin-bottom:15px; gap:10px;">
+
+      parts.push(`<div style="display:flex; flex-direction:${isMe?'row-reverse':'row'}; margin-bottom:15px; gap:10px;">
           <div style="width:44px; height:44px; background:#ccc; border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; flex-shrink:0;">${avImg}</div>
           <div style="max-width:70%; display:flex; flex-direction:column; align-items:${isMe?'flex-end':'flex-start'};">
             <div style="background:${isMe?'var(--bubble-me)':'var(--bubble-other)'}; padding:10px 14px; border-radius:16px; font-size:15px; color:var(--text-main); box-shadow:var(--shadow-sm); word-break:break-all;">${escapeHtml(content)}</div>
             <div style="font-size:10px; color:#999; margin-top:4px; padding:0 4px;">${timeStr}</div>
           </div>
-        </div>`;
+        </div>`);
     }
   });
 
-  // 渲染完成后自动滚动到底部（最新消息）
+  list.innerHTML = parts.join('');
+
+  const earlier = document.getElementById('historyLoadEarlier');
+  if (earlier) {
+    earlier.onclick = () => {
+      historyRenderLimit += HISTORY_PAGE_SIZE;
+      renderHistory(filterDate, true);
+    };
+  }
+
   setTimeout(() => {
-    list.scrollTop = list.scrollHeight;
+    if (preserveScroll) list.scrollTop = prevScrollTop + (list.scrollHeight - prevScrollHeight);
+    else list.scrollTop = list.scrollHeight;
   }, 10);
 }
 
@@ -165,6 +199,15 @@ function getCardStats(limit = 10) {
     .sort((a, b) => b.count - a.count)
     .slice(0, limit);
 }
+
+// 如果用户在 IndexedDB 还没读完时已经打开了历史页，就绪后补画一次。
+window.addEventListener('chat-data-ready', () => {
+  const page = document.getElementById('pageHistory');
+  if (!page || !page.classList.contains('active')) return;
+  resetHistoryRenderLimit();
+  if (currentHistoryTab === 'cards') renderCardStats();
+  else renderHistory();
+});
 
 function renderCardStats() {
   const list = document.getElementById('cardStatsList');

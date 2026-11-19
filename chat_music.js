@@ -353,7 +353,9 @@ function stopLyricSession() {
   if (signatureBarEl) {
     signatureBarEl.classList.remove('lyric-scroll', 'lyric-bubble', 'two-line');
     signatureBarEl.style.removeProperty('--line-dur');
-    signatureBarEl.textContent = chatSettings.signature || savedSignatureText || '这个人很懒，什么都没留下';
+    const restoreText = chatSettings.signature || savedSignatureText || '这个人很懒，什么都没留下';
+    if (typeof setSignatureText === 'function') setSignatureText(restoreText);
+    else signatureBarEl.textContent = restoreText;
   }
   if (signatureWrapperEl) signatureWrapperEl.classList.remove('music-mode');
   lyricLines = [];

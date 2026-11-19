@@ -104,7 +104,7 @@
 <li><code>sendMessage</code> 组装 <code>content</code>（文字、引用等）；</li>
 <li>调 <code>addMessageDOM()</code> 立刻把气泡画到屏幕上；</li>
 <li>把这条消息 push 进 <code>chatHistory</code>；</li>
-<li><code>saveAllData()</code> 把整个 <code>chatHistory</code> 写进 localStorage；</li>
+<li><code>saveAllData()</code> 稍后把设置等小数据写进 localStorage，把完整的 <code>chatHistory</code> 交给 IndexedDB；</li>
 <li>更新 <code>lastInteractionTime</code>；</li>
 <li>播放发送音效；</li>
 <li>调 <code>moodAfterMessage()</code>，按概率影响他的心情；</li>
@@ -113,8 +113,9 @@
 <p>关键点：<strong>屏幕上的气泡和历史记录是两回事</strong>。 <code>addMessageDOM</code> 只负责画；真正的数据在 <code>chatHistory</code>，刷新后靠它重新画。</p>
 <p><strong>手机端首屏优化</strong>：聊天图片使用 <code>loading="lazy"</code> 和 <code>decoding="async"</code>；初始化批量渲染时设置 <code>window.__deferChatScroll = true</code>，避免每条消息都强制滚动布局，最后只滚一次到底部；启动页的 <code>waitImages()</code> 只等待首屏附近的图片。</p>
 <p><code>renderChatHistoryWindow()</code> 首屏只渲染最近 <code>CHAT_RENDER_INITIAL = 200</code> 条，聊天顶部出现「加载更早」按钮，每次再补 <code>CHAT_RENDER_STEP = 200</code> 条；加载更早时保留当前滚动位置。</p>
-<p><code>saveAllData()</code> 改成 180ms 合并保存：连续发消息/操作时只保留最后一次写入，<code>pagehide</code>、<code>beforeunload</code> 和页面隐藏时会同步刷盘，避免手机卡顿时反复序列化整份历史。</p>
-<p>保存前会和 localStorage 里已有的 <code>chat_history</code> 比较，发现另一个页面已经写入了更新的消息就先合并，避免旧页面把新记录覆盖。localStorage 写满时不再静默失败，会提示导出并清理；同时在 IndexedDB 的 <code>echo_chat_backup</code> 里留一份历史备份，下次打开如果发现备份比 localStorage 新会自动恢复。</p>
+<p><code>saveAllData()</code> 改成 180ms 合并保存：连续发消息/操作时只保留最后一次写入；完整聊天记录再由 <code>history_store.js</code> 延迟 900ms 写进 IndexedDB，<code>pagehide</code>、<code>beforeunload</code> 和页面隐藏时会尝试立即刷盘。</p>
+<p>写 IndexedDB 前会先读一次已有记录，发现另一个页面已经写入了更新的消息就先合并，避免旧页面把新记录覆盖。localStorage 只留设置、字卡、标签等小数据，不再受聊天记录体积影响；旧的 <code>chat_history</code> 会在首次启动成功迁移后删除，v13 的 <code>echo_chat_backup</code> 也会并入新库。</p>
+<p>启动页会等 <code>chat-data-ready</code> 后再撤掉，避免先闪出空聊天页；后台聊天记录搜索仍然在完整的内存数组上进行。</p>
 <h3>5. 他的随机回复怎么来的</h3>
 <p>你发完消息后，<code>simulateReplyWithDelay()</code> 会：</p>
 <ol start="1">
@@ -135,10 +136,12 @@
 <p>所以“他回什么”本质上是<strong>一层层随机数</strong>。</p>
 <h3>6. 数据怎么存</h3>
 <ul>
-<li><code>saveAllData()</code>：把设置、历史、字卡、标签、表情、位置、拍一拍、签名、互动写进 localStorage；</li>
-<li>聊天历史额外备份到 IndexedDB 的 <code>echo_chat_backup</code>；它不是主存储，只在 localStorage 写满、被清理或多页面冲突时兜底；</li>
+<li><code>chatHistory</code> 主存储：IndexedDB 的 <code>echo_history</code> / <code>history</code> / <code>latest</code>，完整数组存在一条记录里；</li>
+<li><code>saveAllData()</code>：设置、字卡、标签、表情、位置、拍一拍、签名、互动写进 localStorage；同时通知 <code>history_store.js</code> 保存聊天记录；</li>
+<li>首次升级会读取旧的 <code>localStorage.chat_history</code> 和 v13 的 <code>echo_chat_backup</code>，合并后写入 <code>echo_history</code>，成功后再删除 localStorage 里的历史；</li>
+<li>页面隐藏/离开时，<code>history_store.js</code> 会把最近约 40 条普通消息同步写入 <code>localStorage.echo_history_tail</code>，下次启动合并后清除；图片/语音不会进入这个小缓存；</li>
 <li>本地导入的 mp3：存在 IndexedDB（<code>echo_music</code>），不在 localStorage；</li>
-<li>导出/导入：<code>manage_data.js</code>，把上面这些打包成 JSON。</li>
+<li>导出/导入：<code>manage_data.js</code>，把上面这些打包成 JSON；导入聊天记录时直接替换 <code>echo_history</code>，不再尝试塞进 5MB 的 localStorage。</li>
 </ul>
 <h3>7. 情绪引擎</h3>
 <p><code>chat_mood.js</code> 分三层：</p>
@@ -158,19 +161,23 @@
 <h3>9. 启动流程</h3>
 <ol start="1">
 <li>浏览器先显示 <code>#bootScreen</code>（写在 <code>index.html</code> 里）；</li>
-<li>所有 js 执行，<code>router.js</code> 最后渲染聊天记录、配色、状态栏；</li>
+<li><code>history_store.js</code> 从 IndexedDB 读取完整聊天记录，迁移旧存档，完成后派发 <code>chat-data-ready</code>；</li>
+<li><code>router.js</code> 等到 <code>chat-data-ready</code> 再渲染聊天记录，然后渲染配色、状态栏；</li>
 <li><code>router.js</code> 最后一行的 <code>window.__appReady = true</code> 告诉启动画面“画完了”；</li>
-<li>启动画面再等字体、至少 2 秒，然后淡出；15 秒兜底；</li>
+<li>启动画面再等聊天记录、字体、至少 2 秒，然后淡出；15 秒兜底；</li>
 <li>淡出结束、<code>display:none</code> 之后，设置 <code>window.__appRevealed = true</code> 并派发 <code>app-revealed</code>；</li>
 <li><code>chat_mood.js</code> 在此之前用 <code>moodBootReady</code> 拦截情绪刷新，收到事件后才首次绘制情绪气泡，让出现动画完整可见。</li>
 </ol>
 <hr>
 <h2>三、文件结构</h2>
-<table><thead><tr><th>文件</th><th>负责</th></tr></thead><tbody><tr><td><code>index.html</code></td><td>页面骨架、弹窗、启动画面、脚本顺序</td></tr><tr><td><code>style.css</code></td><td>全部样式、35 套配色、动画</td></tr><tr><td><code>data.js</code></td><td>全局数据、默认设置、配色表、通用函数</td></tr><tr><td><code>chat_core.js</code></td><td>画气泡、发消息、随机回复、拍一拍、引用</td></tr><tr><td><code>chat_stickers.js</code></td><td>表情面板</td></tr><tr><td><code>chat_tools.js</code></td><td>图片、拍照、位置、互动、录音</td></tr><tr><td><code>chat_call.js</code></td><td>语音通话、来电、小窗、通话心情</td></tr><tr><td><code>chat_money.js</code></td><td>红包、转账、支付密码、礼物商城</td></tr><tr><td><code>manage_cards.js</code></td><td>字卡库、标签、批量、查重、文字字卡导入</td></tr><tr><td><code>manage_settings.js</code></td><td>聊天设置、配色选择、头像裁剪</td></tr><tr><td><code>manage_history.js</code></td><td>聊天记录页、字卡统计</td></tr><tr><td><code>manage_data.js</code></td><td>导出、导入、清理</td></tr><tr><td><code>manage_music.js</code></td><td>音乐管理页</td></tr><tr><td><code>music_lyrics.js</code></td><td>内置歌词</td></tr><tr><td><code>chat_music.js</code></td><td>播放器、歌单、歌词同步、导入</td></tr><tr><td><code>mood_pools.js</code></td><td>16 档情绪数据、通用补充、基础权重、emoji、动画映射</td></tr><tr><td><code>chat_mood.js</code></td><td>情绪抽签、权重衰减、事件、渲染</td></tr><tr><td><code>router.js</code></td><td>页面切换、配色、状态栏、初始化</td></tr><tr><td><code>custom_icons.js</code></td><td>把 emoji 图标换成图片</td></tr><tr><td><code>pwa.js</code> / <code>sw.js</code></td><td>安装到桌面、手机通知</td></tr></tbody></table>
+<table><thead><tr><th>文件</th><th>负责</th></tr></thead><tbody><tr><td><code>index.html</code></td><td>页面骨架、弹窗、启动画面、脚本顺序</td></tr><tr><td><code>style.css</code></td><td>全部样式、35 套配色、动画</td></tr><tr><td><code>data.js</code></td><td>全局数据、默认设置、配色表、通用函数</td></tr><tr><td><code>history_store.js</code></td><td>聊天记录 IndexedDB 主存储、v13 迁移、启动就绪信号</td></tr><tr><td><code>chat_core.js</code></td><td>画气泡、发消息、随机回复、拍一拍、引用</td></tr><tr><td><code>chat_stickers.js</code></td><td>表情面板</td></tr><tr><td><code>chat_tools.js</code></td><td>图片、拍照、位置、互动、录音</td></tr><tr><td><code>chat_call.js</code></td><td>语音通话、来电、小窗、通话心情</td></tr><tr><td><code>chat_money.js</code></td><td>红包、转账、支付密码、礼物商城</td></tr><tr><td><code>manage_cards.js</code></td><td>字卡库、标签、批量、查重、文字字卡导入</td></tr><tr><td><code>manage_settings.js</code></td><td>聊天设置、配色选择、头像裁剪</td></tr><tr><td><code>manage_history.js</code></td><td>聊天记录页、字卡统计</td></tr><tr><td><code>manage_data.js</code></td><td>导出、导入、清理</td></tr><tr><td><code>manage_music.js</code></td><td>音乐管理页</td></tr><tr><td><code>music_lyrics.js</code></td><td>内置歌词</td></tr><tr><td><code>chat_music.js</code></td><td>播放器、歌单、歌词同步、导入</td></tr><tr><td><code>mood_pools.js</code></td><td>16 档情绪数据、通用补充、基础权重、emoji、动画映射</td></tr><tr><td><code>chat_mood.js</code></td><td>情绪抽签、权重衰减、事件、渲染</td></tr><tr><td><code>router.js</code></td><td>页面切换、配色、状态栏、初始化</td></tr><tr><td><code>custom_icons.js</code></td><td>把 emoji 图标换成图片</td></tr><tr><td><code>pwa.js</code> / <code>sw.js</code></td><td>安装到桌面、手机通知</td></tr></tbody></table>
 <hr>
 <h2>四、数据模型</h2>
 <h3>1. localStorage 键</h3>
-<table><thead><tr><th>键</th><th>内容</th></tr></thead><tbody><tr><td><code>chat_settings</code></td><td>所有设置</td></tr><tr><td><code>chat_history</code></td><td>聊天记录数组</td></tr><tr><td><code>chat_contents</code> / <code>chat_tags</code></td><td>字卡、标签</td></tr><tr><td><code>my_emojis</code></td><td>我的表情</td></tr><tr><td><code>loc_library</code> / <code>poke_library</code> / <code>signature_library</code> / <code>interact_library</code></td><td>位置、拍一拍、签名、互动</td></tr><tr><td><code>pay_password</code></td><td>支付密码</td></tr><tr><td><code>echo_lyric_歌名</code></td><td>导入的歌词</td></tr><tr><td><code>echo_play_mode</code> / <code>echo_last_song</code></td><td>播放模式、上次听的歌</td></tr><tr><td><code>export_media</code></td><td>导出是否带图片</td></tr><tr><td><code>echo_mood_seen_at</code> / <code>echo_mood_return_at</code></td><td>情绪池的在线时间、久别冷却</td></tr></tbody></table>
+<table><thead><tr><th>键</th><th>内容</th></tr></thead><tbody><tr><td><code>chat_settings</code></td><td>所有设置</td></tr><tr><td><code>chat_contents</code> / <code>chat_tags</code></td><td>字卡、标签</td></tr><tr><td><code>my_emojis</code></td><td>我的表情</td></tr><tr><td><code>loc_library</code> / <code>poke_library</code> / <code>signature_library</code> / <code>interact_library</code></td><td>位置、拍一拍、签名、互动</td></tr><tr><td><code>pay_password</code></td><td>支付密码</td></tr><tr><td><code>echo_lyric_歌名</code></td><td>导入的歌词</td></tr><tr><td><code>echo_play_mode</code> / <code>echo_last_song</code></td><td>播放模式、上次听的歌</td></tr><tr><td><code>export_media</code></td><td>导出是否带图片</td></tr><tr><td><code>echo_mood_seen_at</code> / <code>echo_mood_return_at</code></td><td>情绪池的在线时间、久别冷却</td></tr></tbody></table>
+<h3>1.1 IndexedDB</h3>
+<table><thead><tr><th>库 / 表</th><th>内容</th></tr></thead><tbody><tr><td><code>echo_history</code> → <code>history</code> → <code>latest</code></td><td>完整聊天记录数组 <code>{ id: 'latest', list: [...], savedAt }</code></td></tr><tr><td><code>echo_music</code></td><td>本地导入的音乐</td></tr><tr><td><code>echo_chat_backup</code></td><td>v13 旧备份库，只在首次升级时读取，迁移成功后删除</td></tr></tbody></table>
+<p><code>localStorage.chat_history</code> 只作为 v13 升级来源，v14 正常运行时不写入这个键。</p>
 <h3>2. 一条消息</h3>
 <pre><code>{
   role: 'me',            // me / other / system
@@ -188,8 +195,11 @@
 <h2>五、调试方法</h2>
 <h3>1. 最常用</h3>
 <pre><code>localStorage.getItem('chat_settings');     // 看设置
-localStorage.getItem('chat_history');      // 看历史
-JSON.parse(localStorage.getItem('chat_history')).length;</code></pre>
+chatHistory.length;                        // 看历史条数（完整记录已在内存里）
+estimateChatHistoryBytes();                // 看聊天记录大约占多少字节
+window.__historyStoreMode;                 // indexeddb / localstorage
+await clearHistoryStore();                 // 清空聊天记录（会同时清内存和 IndexedDB）</code></pre>
+<p>在 DevTools → Application → IndexedDB → <code>echo_history</code> → <code>history</code> 里可以看到 <code>latest</code> 记录。</p>
 <h3>2. 直接调用函数</h3>
 <pre><code>sendMessage('测试', 'text', false);                 // 让他发一条文字
 sendMessage('测试', 'text', true);                  // 你发一条
@@ -229,7 +239,9 @@ if (!chatSettings.signature) chatSettings.signature = '我喜欢夏天和你淋�
 <li>到点 85% 换，15% 这次不换、5–10 分钟后再试；</li>
 <li><code>pickDifferentSignature()</code> 会避开当前这句，不会连续重复；</li>
 <li>正在播放音乐时只更新 <code>savedSignatureText</code>，不覆盖歌词栏。</li>
+<li>签名气泡由 <code>setSignatureText()</code> 控制：短签名按字数自适应；偏长依次加 <code>sig-long</code> / <code>sig-xlong</code> 缩小字号；仍放不下才加 <code>sig-scroll</code>，根据超出距离设置 <code>--sig-shift</code> 和滚动时长。</li>
 </ul>
+<p><strong>建议长度</strong>：单条 8–20 个字，24 个字以内效果最佳；更长会自动缩小字号，缓慢左右滚动。后台添加/编辑签名时弹窗里也有提示。</p>
 <p><strong>检查</strong>：Console 里 <code>pickDifferentSignature()</code>、<code>changeSignatureNow()</code>；设置页的「签名切换间隔」现在最小 15 分钟。</p>
 <p><strong>注意</strong>：设置页没点保存就退出，会弹「未保存」提醒。</p>
 <h3>6.2 回复节奏</h3>
@@ -701,11 +713,12 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 }</code></pre>
 <p><code>steps(8)</code> 表示 8 帧逐格切换；外面的 <code>#bootHeart</code> 负责上下弹跳。</p>
 <h3>3. 什么时候放行</h3>
-<p>脚本同时等四件事：</p>
+<p>脚本同时等五件事：</p>
 <ol start="1">
 <li>页面 <code>load</code>；</li>
+<li>图片/字体加载完（图片最多等 2.5 秒，字体最多多等 3 秒）；</li>
+<li><code>window.__chatDataReady === true</code>（<code>history_store.js</code> 从 IndexedDB 读完并迁移完）；</li>
 <li><code>window.__appReady === true</code>（<code>router.js</code> 最后一行置位）；</li>
-<li>字体加载完（<code>document.fonts.ready</code>，最多多等 3 秒）；</li>
 <li>启动画面至少显示 <strong>2 秒</strong>（从打开页面开始算）。</li>
 </ol>
 <p>之后连等两帧再淡出；后台标签页 rAF 被暂停时，450ms 计时器兜底；15 秒强制作废。淡出结束并设置 <code>display:none</code> 后，才会设置 <code>window.__appRevealed = true</code> 并派发 <code>app-revealed</code>；<code>chat_mood.js</code> 收到这个事件后才首次绘制情绪气泡。</p>
@@ -833,7 +846,8 @@ moodWeights();                     // 看当前情绪权重</code></pre>
 <p>日常测试建议直接用 <code>echoDebug</code>，完整命令见根目录 <code>调试手册.md/.html</code>；入口是 <code>echoDebug.help()</code>。</p>
 <pre><code>// 数据
 localStorage.getItem('chat_settings');
-localStorage.getItem('chat_history');
+chatHistory.length;
+estimateChatHistoryBytes();
 // 消息
 sendMessage('测试', 'text', false);
 sendMessage({ name:'歌名', artist:'歌手' }, 'musicshare', false);
@@ -855,7 +869,7 @@ switchPage('pageManager');
 applyPalette('aurora');</code></pre>
 <hr>
 <h2>十三、术语表</h2>
-<table><thead><tr><th>词</th><th>意思</th></tr></thead><tbody><tr><td>全局作用域</td><td>所有 js 共享同一个空间，函数可以互相调用</td></tr><tr><td>localStorage</td><td>浏览器的小仓库，存文字和设置</td></tr><tr><td>IndexedDB</td><td>更大的仓库，存本地导入的 mp3 和聊天历史备份</td></tr><tr><td>JSON</td><td><code>{ "键": "值" }</code> 的数据格式，导出文件就是它</td></tr><tr><td>CSS 变量</td><td><code>--primary</code> 这类变量，改一处全站生效</td></tr><tr><td>事件监听</td><td><code>onclick</code>、<code>addEventListener</code>，用户操作后触发的函数</td></tr><tr><td>base64</td><td>图片/语音变成的一大串文字</td></tr><tr><td>Service Worker</td><td>PWA 的后台脚本，安装到桌面需要它</td></tr><tr><td>LRC</td><td>带时间轴的歌词文件</td></tr></tbody></table>
+<table><thead><tr><th>词</th><th>意思</th></tr></thead><tbody><tr><td>全局作用域</td><td>所有 js 共享同一个空间，函数可以互相调用</td></tr><tr><td>localStorage</td><td>浏览器的小仓库，约 5MB；v14 只存设置、字卡等小数据</td></tr><tr><td>IndexedDB</td><td>更大的仓库，存完整聊天记录和本地导入的 mp3</td></tr><tr><td>JSON</td><td><code>{ "键": "值" }</code> 的数据格式，导出文件就是它</td></tr><tr><td>CSS 变量</td><td><code>--primary</code> 这类变量，改一处全站生效</td></tr><tr><td>事件监听</td><td><code>onclick</code>、<code>addEventListener</code>，用户操作后触发的函数</td></tr><tr><td>base64</td><td>图片/语音变成的一大串文字</td></tr><tr><td>Service Worker</td><td>PWA 的后台脚本，安装到桌面需要它</td></tr><tr><td>LRC</td><td>带时间轴的歌词文件</td></tr></tbody></table>
 <hr>
 <h2>十四、最后</h2>
 <p>改代码最稳的顺序是：</p>

@@ -54,7 +54,7 @@
   </style>
 </head>
 <body>
-<div class="wrap"><nav class="toc"><strong>目录</strong><a href="#sec-1">1. 打开控制台</a><a href="#sec-2">2. 让对方发消息</a><a href="#sec-3">3. 测试 2G</a><a href="#sec-4">4. 测试离线</a><a href="#sec-5">5. 测试正在输入</a><a href="#sec-6">6. 让对方随机回复</a><a href="#sec-7">7. 测试情绪</a><a href="#sec-8">8. 建议的检查顺序</a><a href="#sec-9">9. 注意事项</a></nav><h1>Echo Yfueinx 调试手册</h1>
+<div class="wrap"><nav class="toc"><strong>目录</strong><a href="#sec-1">1. 打开控制台</a><a href="#sec-2">2. 让对方发消息</a><a href="#sec-3">3. 测试 2G</a><a href="#sec-4">4. 测试离线</a><a href="#sec-5">5. 测试正在输入</a><a href="#sec-6">6. 让对方随机回复</a><a href="#sec-7">7. 测试个性签名</a><a href="#sec-8">8. 测试情绪</a><a href="#sec-9">9. 建议的检查顺序</a><a href="#sec-10">10. 注意事项</a></nav><h1>Echo Yfueinx 调试手册</h1>
 <blockquote>
 <p>这些命令只在电脑浏览器控制台里使用。测试消息会真的写进聊天记录，建议先导出备份，测完长按删除。</p>
 </blockquote>
@@ -136,7 +136,18 @@ echoDebug.typing(false)
 <pre><code class="language-js">echoDebug.reply()
 </code></pre>
 <p>会走一次正常的随机回复，可能抽到字卡、礼物、音乐或拍一拍。</p>
-<h2 id="sec-7">7. 测试情绪</h2>
+<h2 id="sec-7">7. 测试个性签名</h2>
+<pre><code class="language-js">echoDebug.signature('测试签名')
+echoDebug.randomSignature()
+echoDebug.signatureList()
+</code></pre>
+<ul>
+<li><code>signature('内容')</code>：把当前签名改成指定文字，并立即刷新顶部签名栏；</li>
+<li><code>randomSignature()</code>：从签名库里随机换一条；</li>
+<li><code>signatureList()</code>：在控制台列出签名库和当前签名。</li>
+</ul>
+<p>如果正在播放音乐、签名栏显示歌词，新签名会先记下来，等音乐停止后再显示。也可以用来测试长签名：换成 30～40 个字，检查是否先缩字、再左右滚动。</p>
+<h2 id="sec-8">8. 测试情绪</h2>
 <pre><code class="language-js">debugMoodSwitch('sad')
 debugMoodSwitch('jealous')
 debugMoodSwitch('clingy')
@@ -147,7 +158,7 @@ debugLateNightMood()
 </code></pre>
 <p>常用情绪：</p>
 <p><code>calm</code>、<code>happy</code>、<code>excited</code>、<code>intimate</code>、<code>jealous</code>、<code>irritated</code>、<code>sad</code>、<code>anxious</code>、<code>anxiety</code>、<code>restrained</code>、<code>waiting</code>、<code>sleepy</code>、<code>clingy</code>、<code>playful</code>、<code>proud</code>、<code>thoughtful</code>。</p>
-<h2 id="sec-8">8. 建议的检查顺序</h2>
+<h2 id="sec-9">9. 建议的检查顺序</h2>
 <ol>
 <li>普通文字、礼物、红包、互动、位置、歌曲、选择卡各发一次；</li>
 <li>点开卡片，检查是否变成「已领取 / 已拆开 / 已接受 / 已播放」；</li>
@@ -156,12 +167,13 @@ debugLateNightMood()
 <li>检查情绪气泡是否出现、换色、升档；</li>
 <li>刷新页面，确认刚才的测试消息还在。</li>
 </ol>
-<h2 id="sec-9">9. 注意事项</h2>
+<h2 id="sec-10">10. 注意事项</h2>
 <ul>
 <li>手机浏览器一般没有控制台，请在电脑上测；</li>
 <li>命令报 <code>undefined</code> 或找不到 <code>echoDebug</code>，先强制刷新页面（<code>Ctrl + F5</code>）；</li>
 <li>测试消息是真实聊天记录，不要留着当正式聊天；</li>
-<li>如果测完发现消息丢失，先不要清空数据，重新打开可能会从浏览器备份恢复。</li>
+<li>如果测完发现消息丢失，先不要清空数据，重新打开可能会从 IndexedDB / 最近消息缓存恢复；</li>
+<li>查看聊天记录存储：控制台输入 <code>chatHistory.length</code>、<code>estimateChatHistoryBytes()</code>、<code>window.__historyStoreMode</code>；清空测试记录用 <code>await clearHistoryStore()</code>。</li>
 </ul>
 </div>
 </body>

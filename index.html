@@ -573,6 +573,7 @@
         <div class="card-list" style="padding: 15px;">
           <div class="setting-group">
             <div class="setting-row"><label>占用空间</label><span id="dataSize">0 KB</span></div>
+            <div class="setting-row"><label>聊天记录存储</label><span id="dataStorageMode">IndexedDB</span></div>
             <div class="setting-row"><label>聊天消息条数</label><span id="dataMsgCount">0 条</span></div>
             <div class="setting-row"><label>字卡总数</label><span id="dataCardCount">0 项</span></div>
             <div class="setting-row"><label>图片/语音占用</label><span id="dataMediaSize">0 KB</span></div>
@@ -840,6 +841,7 @@
           <h3 id="addModalTitle">添加</h3>
           <input type="hidden" id="editItemId">
           <div id="textAddArea"><textarea id="newCardsText" placeholder="一行一条"></textarea></div>
+          <p id="addModalHint" class="dialog-note" style="display:none; margin-top:8px;"></p>
           <div id="stickerAddArea" style="display:none;"><input type="file" id="newStickersInput" accept="image/*" multiple style="width:100%;"></div>
           
           <div class="select-row" id="addTagRow">
@@ -1080,6 +1082,7 @@
     <div id="toast" class="toast"></div>
 
     <script src="data.js"></script>
+    <script src="history_store.js"></script>
     <script src="chat_sound.js"></script>
     <script src="chat_core.js"></script>
     <script src="chat_stickers.js"></script>
@@ -1113,6 +1116,7 @@
         var MAX_WAIT = 15000;  // 兜底：卡住了也先放人进去
         var loadDone = document.readyState === 'complete';
         var appReady = window.__appReady === true;
+        var dataReady = window.__chatDataReady === true;
         var fontsDone = !(document.fonts && document.fonts.ready);
         var imagesDone = false;
         var settleDone = false;
@@ -1197,7 +1201,7 @@
         }
         function tryHide() {
           if (hidden) return;
-          if (!loadDone || !appReady || !fontsDone || !imagesDone) return;
+          if (!loadDone || !appReady || !dataReady || !fontsDone || !imagesDone) return;
           if (!settleDone) {
             // app-ready 后再留一小段时间，让最后一批 DOM 和滚动位置稳定下来
             settleDone = true;
@@ -1210,6 +1214,9 @@
         }
         if (loadDone) { setStage(46, '正在读取聊天记录…'); tryHide(); }
         else window.addEventListener('load', function () { loadDone = true; setStage(46, '正在读取聊天记录…'); tryHide(); });
+        // 聊天记录从 IndexedDB 异步载入；加载完之前不撤启动页，避免先闪出空聊天页。
+        if (dataReady) { setStage(54, '聊天记录已就绪…'); tryHide(); }
+        else window.addEventListener('chat-data-ready', function () { dataReady = true; setStage(54, '聊天记录已就绪…'); tryHide(); });
         // 信号可能在本文脚本之前就发出，所以先直接读一次标志
         if (appReady) { setStage(72, '正在唤醒聊天…'); tryHide(); }
         window.addEventListener('app-ready', function () { appReady = true; setStage(72, '正在唤醒聊天…'); tryHide(); });

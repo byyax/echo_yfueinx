@@ -253,19 +253,32 @@ function refreshCardsUI() {
   } catch(e) { console.error("刷新界面出错:", e); }
 }
 
+function updateAddModalHint() {
+  const hint = document.getElementById('addModalHint');
+  if (!hint) return;
+  if (currentLib === 'signature') {
+    hint.innerHTML = '建议单条 8–20 个字，24 个字以内效果最佳；<br>更长会自动缩小字号，缓慢左右滚动。';
+    hint.style.display = 'block';
+  } else {
+    hint.style.display = 'none';
+    hint.textContent = '';
+  }
+}
+
 document.getElementById('openAddModal').onclick = () => {
   editingItemId = null; document.getElementById('editItemId').value = '';
   const amt = document.getElementById('addModalTitle'); amt.textContent = `添加 ${currentLib === 'text' ? '字卡' : currentLib}`;
   const taa = document.getElementById('textAddArea'); taa.style.display = currentLib === 'image' ? 'none' : 'block';
   const saa = document.getElementById('stickerAddArea'); saa.style.display = currentLib === 'image' ? 'block' : 'none';
   const textarea = document.getElementById('newCardsText'); textarea.value = '';
-  
+
   const addTagRow = document.getElementById('addTagRow');
   if (addTagRow) addTagRow.style.display = (currentLib === 'text') ? 'flex' : 'none';
 
   if(currentLib === 'pat') textarea.placeholder = '格式：动作，用 [我] 和 [他] 代替。\n例如：捏了捏[我]的脸';
   else if(currentLib === 'signature') textarea.placeholder = '一行一条签名，后台会自动轮换';
   else textarea.placeholder = '一行一条，自动过滤完全相同的重复项';
+  updateAddModalHint();
   document.getElementById('addModal').classList.add('show');
 };
 
@@ -277,7 +290,7 @@ function openEditModal(item) {
   
   const addTagRow = document.getElementById('addTagRow');
   if (addTagRow) addTagRow.style.display = (currentLib === 'text') ? 'flex' : 'none';
-  
+  updateAddModalHint();
   document.getElementById('addModal').classList.add('show');
 }
 
