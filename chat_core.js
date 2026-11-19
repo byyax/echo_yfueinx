@@ -3,6 +3,8 @@ const msgInput = document.getElementById('msgInput');
 let currentQuote = null;
 let isTyping = false; // 正在输入状态
 let offlineAutoReplyTimer = null;
+let offlineReturnTimer = null;
+let offlineReturnDue = 0;
 
 function refreshAvatarDOM() {
   document.querySelectorAll('.avatar.other').forEach(av => {
@@ -132,6 +134,11 @@ function scrollToMessage(time) {
 
 // ===== 自动接收我发出的红包/转账/礼物 =====
 function autoReceiveMyCard(time) {
+  // 离线时不要“自动已收”，等他上线后再处理。
+  if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') {
+    if (typeof whenOtherOnline === 'function') whenOtherOnline(() => autoReceiveMyCard(time));
+    return;
+  }
   const msg = chatHistory.find(m => m.time === time && m.role === 'me');
   if (!msg || !msg.content || msg.content.isOpened) return;
   msg.content.isOpened = true;
@@ -352,6 +359,8 @@ function renderChatHistoryWindow(limit, opts) {
     if (preserveScroll) chatEl.scrollTop = oldTop + (chatEl.scrollHeight - oldHeight);
     else chatEl.scrollTop = chatEl.scrollHeight;
   }
+  // 重绘会移除情绪槽；这里补回来，避免「加载更早」或清空/导入后情绪池失踪。
+  if (typeof refreshMood === 'function') refreshMood(false);
 }
 
 function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
@@ -444,11 +453,11 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
       
       let icon = '', title = '', colorClass = '', subTitle = '';
       if(type === 'location') { icon = '📍'; title = content.val || '位置'; colorClass = 'loc'; subTitle = '位置信息'; }
-      if(type === 'redpacket') { 
-        icon = content.isOpened ? '🧧' : '🧧'; 
-        title = content.isOpened ? `¥${content.amount || '0.00'}` : (content.note || '恭喜发财'); 
-        colorClass = content.isOpened ? 'grey' : 'red'; 
-        subTitle = '红包'; 
+      if(type === 'redpacket') {
+        icon = content.isOpened ? '🧧' : '🧧';
+        title = content.isOpened ? `¥${content.amount || '0.00'}` : '恭喜发财';
+        colorClass = content.isOpened ? 'grey' : 'red';
+        subTitle = '红包';
       }
       if(type === 'transfer') { 
         icon = content.isOpened ? '✅' : '💰'; 
@@ -512,8 +521,8 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
       
       bodyDiv.innerHTML = `<div class="card-top"><div class="card-icon ${colorClass}">${icon}</div><div class="card-info"><h4>${title}</h4><p>${subTitle}</p></div></div><div class="card-bottom">${bottomText}</div>`;
 
-      // 推荐歌曲 / 转账：卡片里带一句备注
-      if ((type === 'musicshare' || type === 'transfer') && content.note) {
+      // 推荐歌曲 / 红包 / 转账：卡片里带一句备注
+      if ((type === 'musicshare' || type === 'redpacket' || type === 'transfer') && content.note) {
         const noteEl = document.createElement('div');
         noteEl.className = 'card-note';
         noteEl.textContent = content.note;
@@ -600,6 +609,13 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
     };
 
     const timeStr = document.createElement('div'); timeStr.className = 'bubble-time'; timeStr.textContent = getTimeStr(time);
+    if (chatSettings.readReceipts === true) {
+      const unread = isMe ? (content.read === false) : (content.readByMe === false);
+      const status = document.createElement('span');
+      status.className = 'read-status' + (unread ? ' unread' : '');
+      status.textContent = unread ? '未读' : '已读';
+      timeStr.appendChild(status);
+    }
     wrap.appendChild(bubble); wrap.appendChild(timeStr);
     row.appendChild(avatar); row.appendChild(wrap); chatEl.appendChild(row);
     // 批量重绘历史时先不逐条滚动，否则每条消息都会强制一次布局，手机端会明显卡顿。
@@ -619,8 +635,73 @@ document.getElementById('cancelQuoteBtn').onclick = () => {
   document.getElementById('quotePreview').style.display = 'none';
 };
 
+function markMyMessagesRead() {
+  if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') return;
+  let changed = false;
+  chatHistory.forEach(m => {
+    if (m && m.role === 'me' && m.content && m.content.read === false) {
+      m.content.read = true;
+      changed = true;
+    }
+  });
+  if (changed) saveAllData();
+  refreshReadReceiptUI();
+}
+
+function markHisMessagesRead() {
+  let changed = false;
+  chatHistory.forEach(m => {
+    if (m && m.role === 'other' && m.content && m.content.readByMe === false) {
+      m.content.readByMe = true;
+      changed = true;
+    }
+  });
+  if (changed) saveAllData();
+  refreshReadReceiptUI();
+}
+
+function refreshReadReceiptUI() {
+  document.querySelectorAll('.bubble[data-msg-time]').forEach(bubble => {
+    const row = bubble.closest('.row');
+    if (!row) return;
+    const timeEl = bubble.parentElement && bubble.parentElement.querySelector('.bubble-time');
+    if (!timeEl) return;
+    let status = timeEl.querySelector('.read-status');
+    if (chatSettings.readReceipts !== true) {
+      if (status) status.remove();
+      return;
+    }
+    const time = Number(bubble.dataset.msgTime);
+    const isMine = row.classList.contains('me');
+    const msg = chatHistory.find(m => m && m.time === time && (isMine ? m.role === 'me' : m.role === 'other'));
+    if (!msg) {
+      if (status) status.remove();
+      return;
+    }
+    if (!status) {
+      status = document.createElement('span');
+      status.className = 'read-status';
+      timeEl.appendChild(status);
+    }
+    const unread = isMine
+      ? !!(msg.content && msg.content.read === false)
+      : !!(msg.content && msg.content.readByMe === false);
+    status.textContent = unread ? '未读' : '已读';
+    status.classList.toggle('unread', unread);
+  });
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && chatSettings.readReceipts === true) markHisMessagesRead();
+});
+window.addEventListener('focus', () => {
+  if (chatSettings.readReceipts === true) markHisMessagesRead();
+});
+
 function sendMessage(val, type = 'text', isMe = true, customQuote = null) {
   const time = Date.now();
+  // 他发来消息时先收起“正在输入”，避免第二条消息到了、上一条还在转圈。
+  if (!isMe && typeof hideTypingIndicator === 'function') hideTypingIndicator();
   // 我发消息时，如果对方仍处于 2G 或离线，每 5 秒提醒一次当前连接状态。
   if (isMe && typeof notifyConnectionState === 'function') notifyConnectionState(false);
   // 记录这段 2G 期间我确实发过消息；网络恢复时才有必要补一句“刚才太卡了”。
@@ -633,9 +714,16 @@ function sendMessage(val, type = 'text', isMe = true, customQuote = null) {
     ? Object.assign({}, val, { val: val.val !== undefined ? val.val : '', isOpened: !!val.isOpened, quote: customQuote })
     : { val, isOpened: false, quote: customQuote };
   if (isObj && content.val === '' && content.name) content.val = content.name;
-  addMessageDOM(content, isMe, type, time);
+  if (chatSettings.readReceipts === true) {
+    if (isMe) content.read = false;
+    else content.readByMe = !document.hidden && document.hasFocus();
+  }
+  // 先写历史再画 DOM：即使某个气泡渲染出错，消息也不会从存档里消失。
   chatHistory.push({ role: isMe ? 'me' : 'other', type, content, time });
   saveAllData();
+  addMessageDOM(content, isMe, type, time);
+  if (!isMe) markMyMessagesRead();
+  if (!isMe && typeof notifyIncomingMessage === 'function') notifyIncomingMessage(content, type);
   lastInteractionTime = Date.now();
 
   // 他还在输入时我插话：把输入提示留在最下面，避免它被挤到我的消息上方
@@ -660,7 +748,9 @@ function sendMessage(val, type = 'text', isMe = true, customQuote = null) {
   // 否则“对方正在输入”或新 DOM 插入时，watchChat 会把旧情绪气泡挪到我的消息下面。
   if (isMe && typeof refreshMood === 'function') refreshMood(false);
 
-  if (isMe && (type === 'redpacket' || type === 'transfer' || type === 'gift' || type === 'interact')) {
+  // 互动的接受由 sendInteract()/finishMyInteraction() 负责；
+  // 这里只自动处理红包、转账、礼物，避免离线时互动被“自动已接受”。
+  if (isMe && (type === 'redpacket' || type === 'transfer' || type === 'gift')) {
     const delay = 2000 + Math.random() * 3000;
     setTimeout(() => autoReceiveMyCard(time), delay);
   }
@@ -707,10 +797,17 @@ function triggerPat(isMePatting) {
   // 普通情绪先藏起来，等下一次真实消息；事件情绪会居中显示
   if (typeof refreshMood === 'function') refreshMood(true);
   if (isMePatting) {
-    setTimeout(() => { 
-      const reactions = ['干嘛呀~', '嘿嘿', '怎么啦？', '戳我干嘛', '我在呢']; 
-      sendMessage(reactions[Math.floor(Math.random()*reactions.length)], 'text', false); 
-    }, 1000);
+    const react = () => {
+      const reactions = ['干嘛呀~', '嘿嘿', '怎么啦？', '戳我干嘛', '我在呢'];
+      sendMessage(reactions[Math.floor(Math.random() * reactions.length)], 'text', false);
+    };
+    if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') {
+      if (typeof noteOfflineNudge === 'function') noteOfflineNudge(1);
+      if (typeof scheduleOfflineReturn === 'function') scheduleOfflineReturn();
+      if (typeof whenOtherOnline === 'function') whenOtherOnline(react);
+    } else {
+      setTimeout(react, 1000);
+    }
   }
 }
 
@@ -875,6 +972,12 @@ function sendNetworkRecoveryLine() {
 }
 
 function randomReply() {
+  // 离线时不能从在线回复池里抽；改成离线自动回复并安排回来。
+  if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') {
+    if (typeof sendOfflineAutoReply === 'function') sendOfflineAutoReply();
+    if (typeof scheduleOfflineReturn === 'function') scheduleOfflineReturn();
+    return;
+  }
   // 偶尔拍一拍（约每 17 条回复一次）
   if (Math.random() < RANDOM_PAT_CHANCE) {
     triggerPat(false);
@@ -972,7 +1075,7 @@ const OFFLINE_AUTO_REPLIES = [
   '正在朝你飞奔而来...',
   '转人工'
 ];
-const OFFLINE_AUTO_REPLY_DELAY = 3000;
+const OFFLINE_AUTO_REPLY_DELAY = 2000;
 
 function sendOfflineAutoReply() {
   if (typeof getOtherStatusMain !== 'function' || getOtherStatusMain() !== '离线') return;
@@ -980,6 +1083,108 @@ function sendOfflineAutoReply() {
       sendRandomTextCardReply({ quoteChance: 0.08, autoReply: true })) return;
   const line = OFFLINE_AUTO_REPLIES[Math.floor(Math.random() * OFFLINE_AUTO_REPLIES.length)];
   sendMessage({ val: line, autoReply: true }, 'text', false);
+}
+
+// 你越主动找他（消息、互动、电话），他越容易提前上线；增幅有上限。
+function noteOfflineNudge(weight) {
+  window.__offlineNudges = Math.max(0, (window.__offlineNudges || 0) + (weight || 1));
+}
+function whenOtherOnline(callback, pollMs, maxMs) {
+  const start = Date.now();
+  const step = pollMs || 1500;
+  const limit = maxMs || 15 * 60000;
+  (function tick() {
+    if (typeof getOtherStatusMain !== 'function' || getOtherStatusMain() !== '离线') { callback(); return; }
+    if (Date.now() - start < limit) setTimeout(tick, step);
+  })();
+}
+
+// 离线期间攒下的互动/邀请/选择卡，上线后按队列一条一条回应，避免同时弹出。
+let onlineReplyQueue = [];
+let onlineReplyBusy = false;
+let onlineReplyDrainTimer = null;
+
+function enqueueOnlineReply(task, priority) {
+  if (typeof task !== 'function') return;
+  if (priority) onlineReplyQueue.unshift(task);
+  else onlineReplyQueue.push(task);
+  drainOnlineReplyQueue();
+}
+
+function drainOnlineReplyQueue() {
+  if (onlineReplyBusy || !onlineReplyQueue.length) return;
+  const offline = typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线';
+  const inCall = typeof callWidget !== 'undefined' && callWidget && callWidget.style.display === 'flex';
+  if (offline || window.__offlineReturnGate || inCall) {
+    if (onlineReplyDrainTimer) return;
+    onlineReplyDrainTimer = setTimeout(() => {
+      onlineReplyDrainTimer = null;
+      drainOnlineReplyQueue();
+    }, 1200);
+    return;
+  }
+  onlineReplyBusy = true;
+  const task = onlineReplyQueue.shift();
+  try { task(); } catch (e) { console.error('[online-reply-queue]', e); }
+  setTimeout(() => {
+    onlineReplyBusy = false;
+    drainOnlineReplyQueue();
+  }, 1800 + Math.random() * 1600);
+}
+function completeOfflineReturn() {
+  if (typeof getOtherStatusMain !== 'function' || getOtherStatusMain() !== '离线') return;
+  const reason = window.__offlineReason || 'generic';
+  const streak = (typeof countMyMessageStreak === 'function') ? countMyMessageStreak() : 0;
+  if (typeof moodAfterOfflineReturn === 'function') moodAfterOfflineReturn(streak);
+  const pickLine = (typeof pickOfflineReturnLine === 'function') ? pickOfflineReturnLine : null;
+  let line = pickLine ? pickLine(reason) : '';
+  if (!line) {
+    const lines = (typeof offlineReplyLines !== 'undefined' && offlineReplyLines.length) ? offlineReplyLines : ['刚看到消息！怎么啦'];
+    line = lines[Math.floor(Math.random() * lines.length)];
+  }
+  const offlineCall = (typeof takeOfflineCallNote === 'function') ? takeOfflineCallNote() : null;
+  const offlineCallLine = (offlineCall && typeof offlineCallNoteLine === 'function')
+    ? offlineCallNoteLine(offlineCall) : '';
+  window.__offlineReturnGate = true;
+  if (typeof setOtherOnline === 'function') setOtherOnline();
+  window.__offlineReason = '';
+  markMyMessagesRead();
+  if (Math.random() < 0.55) line += ' ' + (Math.random() < 0.5 ? '😭' : '🥺');
+  sendMessage(line, 'text', false);
+  setTimeout(() => {
+    window.__offlineReturnGate = false;
+    if (offlineCallLine && typeof enqueueOnlineReply === 'function') {
+      enqueueOnlineReply(() => sendMessage(offlineCallLine, 'text', false), true);
+    }
+    if (typeof drainOnlineReplyQueue === 'function') drainOnlineReplyQueue();
+  }, 1800 + Math.random() * 1200);
+  setTimeout(() => {
+    // 有攒下来的互动时，先按队列一条条读，不再额外插一条随机回复。
+    if (window.__offlineReturnGate) return;
+    if (typeof onlineReplyQueue !== 'undefined' && onlineReplyQueue.length) return;
+    randomReply();
+  }, 1200 + Math.random() * 1500);
+}
+function scheduleOfflineReturn() {
+  if (typeof getOtherStatusMain !== 'function' || getOtherStatusMain() !== '离线') return;
+  const nudges = window.__offlineNudges || 0;
+  // 最多把 90–240 秒缩短约 35%，仍然保留等待感。
+  const reduction = Math.min(0.35, nudges * 0.05);
+  const delay = Math.max(30000, (90000 + Math.random() * 150000) * (1 - reduction));
+  const due = Date.now() + delay;
+  if (offlineReturnTimer && due >= offlineReturnDue) return;
+  if (offlineReturnTimer) clearTimeout(offlineReturnTimer);
+  offlineReturnDue = due;
+  offlineReturnTimer = setTimeout(() => {
+    offlineReturnTimer = null;
+    offlineReturnDue = 0;
+    completeOfflineReturn();
+  }, delay);
+}
+function resetOfflineReturnState() {
+  if (offlineReturnTimer) { clearTimeout(offlineReturnTimer); offlineReturnTimer = null; }
+  offlineReturnDue = 0;
+  window.__offlineNudges = 0;
 }
 
 // 处理正在输入的延迟
@@ -992,26 +1197,16 @@ function simulateReplyWithDelay() {
       sendOfflineAutoReply();
     }, OFFLINE_AUTO_REPLY_DELAY);
 
-    const extra = 90000 + Math.random() * 150000;
-    setTimeout(() => {
-      // 多条消息可能各排了一个离线回复；第一个定时器回来后就不要再重复“刚上线”。
-      if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() !== '离线') return;
-      const streak = (typeof countMyMessageStreak === 'function') ? countMyMessageStreak() : 0;
-      if (typeof moodAfterOfflineReturn === 'function') moodAfterOfflineReturn(streak);
-      if (typeof setOtherOnline === 'function') setOtherOnline();
-      const lines = (typeof offlineReplyLines !== 'undefined' && offlineReplyLines.length) ? offlineReplyLines : ['刚看到消息！怎么啦'];
-      let line = lines[Math.floor(Math.random() * lines.length)];
-      // 真正回来后的回复不带 [自动回复]，结尾有较高概率带 😭 / 🥺
-      if (Math.random() < 0.55) {
-        line += ' ' + (Math.random() < 0.5 ? '😭' : '🥺');
-      }
-      sendMessage(line, 'text', false);
-      setTimeout(randomReply, 1200 + Math.random() * 1500);
-    }, extra);
+    noteOfflineNudge(1);
+    scheduleOfflineReturn();
     return;
   }
   const delay = getRandomDelay();
   const typingOn = chatSettings.showTyping !== false;
+  if (chatSettings.readReceipts === true) {
+    const typingAt = typingOn ? Math.min(1000, delay / 2) : delay;
+    setTimeout(markMyMessagesRead, Math.max(0, typingAt - 500));
+  }
   if (delay > 2000 && typingOn) {
     setTimeout(showTypingIndicator, Math.min(1000, delay / 2));
     setTimeout(() => { hideTypingIndicator(); randomReply(); }, delay);
@@ -1137,7 +1332,7 @@ document.addEventListener('click', (e) => {
     document.getElementById('deleteBubbleModal').classList.remove('show');
     if (ctx) {
       const idx = chatHistory.findIndex(m => m.time === ctx.time && m.role === (ctx.isMe ? 'me' : 'other'));
-      if (idx > -1) { chatHistory.splice(idx, 1); saveAllData(); }
+      if (idx > -1) { chatHistory.splice(idx, 1); window.__skipHistoryMerge = true; clearChatHistoryBackup(); saveAllData(); }
       if (ctx.rowEl && ctx.rowEl.parentNode) ctx.rowEl.remove();
       showToast('已删除');
     }

@@ -134,22 +134,32 @@ function scheduleChoiceReply(time, delay) {
   setTimeout(() => {
     const msg = chatHistory.find(m => m.time === time && m.role === 'me' && m.type === 'choice');
     if (!msg || !msg.content || (msg.content.chosen && msg.content.chosen.length)) return;
-    showTypingIndicator('思考中…');
-    setTimeout(() => {
-      hideTypingIndicator();
-      const opts = (msg.content.options || []).slice();
-      if (!opts.length) return;
-      const want = Math.min(Math.max(1, msg.content.pickCount || 1), opts.length);
-      // 洗牌后取前 want 个，再按原顺序排好
-      const idx = opts.map((_, i) => i);
-      for (let i = idx.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const t = idx[i]; idx[i] = idx[j]; idx[j] = t;
-      }
-      const chosen = idx.slice(0, want).sort((a, b) => a - b).map(i => opts[i]);
-      applyChoiceChosen(msg, chosen);
-      sendMessage(choiceReplyText(chosen), 'text', false);
-    }, 900 + Math.random() * 900);
+    const think = () => {
+      showTypingIndicator('思考中…');
+      setTimeout(() => {
+        hideTypingIndicator();
+        const opts = (msg.content.options || []).slice();
+        if (!opts.length) return;
+        const want = Math.min(Math.max(1, msg.content.pickCount || 1), opts.length);
+        // 洗牌后取前 want 个，再按原顺序排好
+        const idx = opts.map((_, i) => i);
+        for (let i = idx.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const t = idx[i]; idx[i] = idx[j]; idx[j] = t;
+        }
+        const chosen = idx.slice(0, want).sort((a, b) => a - b).map(i => opts[i]);
+        applyChoiceChosen(msg, chosen);
+        sendMessage(choiceReplyText(chosen), 'text', false);
+      }, 900 + Math.random() * 900);
+    };
+    if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') {
+      if (typeof noteOfflineNudge === 'function') noteOfflineNudge(1);
+      if (typeof scheduleOfflineReturn === 'function') scheduleOfflineReturn();
+    }
+    const waitOnline = (typeof whenOtherOnline === 'function') ? whenOtherOnline : (cb => cb());
+    waitOnline(() => {
+      if (typeof enqueueOnlineReply === 'function') enqueueOnlineReply(think); else think();
+    });
   }, wait);
 }
 

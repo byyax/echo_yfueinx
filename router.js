@@ -250,6 +250,10 @@ const menuSettings = document.getElementById('menuSettings'); if(menuSettings) m
   if (typingBox) typingBox.checked = chatSettings.showTyping !== false;
   const soundBox = document.getElementById('setSound');
   if (soundBox) soundBox.checked = chatSettings.sound !== false;
+  const readBox = document.getElementById('setReadReceipts');
+  if (readBox) readBox.checked = chatSettings.readReceipts === true;
+  const notifyBox = document.getElementById('setNotifications');
+  if (notifyBox) notifyBox.checked = chatSettings.notifications === true;
   const moodBox = document.getElementById('setMoodEnabled');
   if (moodBox) moodBox.checked = chatSettings.moodEnabled !== false;
   const bootTintBox = document.getElementById('setBootTint');
@@ -347,7 +351,8 @@ function setOtherNetworkMode(mode, opts) {
 
 function initStatusBar() {
   const batEl = document.getElementById('batteryIcon');
-  let isWifi = Math.random() < 0.7; let is5G = !isWifi && Math.random() < 0.8;
+  // 2G 只作为偶尔出现的状态：初始约 2%，之后每 10 秒约 0.45% 的概率切进去。
+  let isWifi = Math.random() < 0.8; let is5G = !isWifi && Math.random() < 0.9;
   let initialMode = isWifi ? 'WiFi' : (is5G ? '5G' : '2G');
   // 离线状态优先同步成 2G，避免“已离线但显示 WiFi”的矛盾画面。
   if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') initialMode = '2G';
@@ -365,9 +370,9 @@ function initStatusBar() {
     const offline = typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线';
     if (offline) {
       setOtherNetworkMode('2G', { silent: true });
-    } else if (Math.random() < 0.2) {
+    } else if (Math.random() < 0.15) {
       let r = Math.random();
-      setOtherNetworkMode(r < 0.5 ? 'WiFi' : (r < 0.9 ? '5G' : '2G'));
+      setOtherNetworkMode(r < 0.60 ? 'WiFi' : (r < 0.97 ? '5G' : '2G'));
     }
     if (isCharging) { battery += Math.floor(Math.random() * 2) + 1; if (battery >= 100) { battery = 100; isCharging = false; } }
     else { battery -= Math.floor(Math.random() * 2); if (battery <= 10) { isCharging = true; battery = 10; } }
@@ -441,10 +446,27 @@ function renderOtherStatus() {
     subPill.innerHTML = `<span class="st-icon">${otherStatus.sub.icon}</span>${otherStatus.sub.label}`;
     box.appendChild(subPill);
   }
+  // 状态切换后立即重判情绪：离线时隐藏，回来时恢复。
+  if (typeof refreshMood === 'function') refreshMood(false);
+}
+
+function chooseOfflineReason(prevStatusId) {
+  const r = Math.random();
+  if (prevStatusId === 'sleep' || prevStatusId === 'sleepy') {
+    return r < 0.8 ? 'sleep' : (r < 0.9 ? 'phone_off' : 'work');
+  }
+  if (prevStatusId === 'working' || prevStatusId === 'busy' || prevStatusId === 'trip') {
+    return r < 0.7 ? 'work' : (r < 0.9 ? 'phone_off' : 'sleep');
+  }
+  if (isLateNightHour()) {
+    return r < 0.72 ? 'sleep' : (r < 0.9 ? 'phone_off' : 'work');
+  }
+  return r < 0.45 ? 'work' : (r < 0.75 ? 'phone_off' : 'sleep');
 }
 
 function rollOtherStatus() {
   const wasOffline = otherStatus.main && otherStatus.main.id === 'offline';
+  const prevStatusId = otherStatus.main && otherStatus.main.id;
   const list = STATUS_MAIN.map(s => (
     s.id === 'offline' && isLateNightHour()
       ? Object.assign({}, s, { weight: s.weight * 2.5 })
@@ -455,6 +477,8 @@ function rollOtherStatus() {
   nextStatusChangeAt = Date.now() + (8 + Math.random() * 17) * 60 * 1000;
   const nowOffline = otherStatus.main.id === 'offline';
   if (nowOffline) {
+    window.__offlineReason = chooseOfflineReason(prevStatusId);
+    if (typeof resetOfflineReturnState === 'function') resetOfflineReturnState();
     setOtherNetworkMode('2G', { silent: true });
     notifyConnectionState(true);
   } else if (wasOffline) {
@@ -466,11 +490,13 @@ function rollOtherStatus() {
 function getOtherStatusMain() { return otherStatus.main ? otherStatus.main.label : '在线'; }
 function setOtherOnline() {
   const wasOffline = otherStatus.main && otherStatus.main.id === 'offline';
+  if (typeof resetOfflineReturnState === 'function') resetOfflineReturnState();
   otherStatus.main = STATUS_MAIN[0];
   otherStatus.sub = null;
   nextStatusChangeAt = Date.now() + (8 + Math.random() * 17) * 60 * 1000;
   if (wasOffline) setOtherNetworkMode(Math.random() < 0.7 ? 'WiFi' : '5G', { silent: true, noRecovery: true });
   renderOtherStatus();
+  if (typeof markMyMessagesRead === 'function') markMyMessagesRead();
 }
 
 // 进网站 30% 概率刷新一次状态；之后每 8~25 分钟窗口内按概率再变

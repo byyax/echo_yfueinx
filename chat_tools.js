@@ -68,8 +68,16 @@ if(toolLoc) toolLoc.onclick = () => {
   closePanels(); if(locLibrary.length === 0) return showToast('位置库是空的');
   sendMessage('你在哪呀？', 'text', true);
   setTimeout(() => {
-    const loc = locLibrary[Math.floor(Math.random() * locLibrary.length)];
-    sendMessage(loc.val, 'location', false);
+    const sendLocation = () => {
+      const loc = locLibrary[Math.floor(Math.random() * locLibrary.length)];
+      sendMessage(loc.val, 'location', false);
+    };
+    if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') {
+      if (typeof noteOfflineNudge === 'function') noteOfflineNudge(1);
+      if (typeof scheduleOfflineReturn === 'function') scheduleOfflineReturn();
+    }
+    const waitOnline = (typeof whenOtherOnline === 'function') ? whenOtherOnline : (cb => cb());
+    waitOnline(sendLocation);
   }, getRandomDelay());
 };
 
@@ -109,33 +117,54 @@ const REPLY_FALLBACK = {
 };
 
 function markMyInteractAccepted(msg) {
-  if (!msg || !msg.content) return;
+  // 离线时绝不接受；调用方会继续等上线。
+  if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') return false;
+  if (!msg || !msg.content) return false;
   msg.content.isOpened = true;
   saveAllData();
   const bubble = document.querySelector(`.bubble[data-msg-time="${msg.time}"]`);
-  if (!bubble) return;
-  bubble.classList.add('opened');
-  const icon = bubble.querySelector('.card-icon');
-  const subtitle = bubble.querySelector('.card-info p');
-  const bottom = bubble.querySelector('.card-bottom');
-  if (icon) icon.className = 'card-icon grey';
-  if (subtitle) subtitle.textContent = '已接受';
-  if (bottom) bottom.textContent = '已接受';
+  if (bubble) {
+    bubble.classList.add('opened');
+    const icon = bubble.querySelector('.card-icon');
+    const subtitle = bubble.querySelector('.card-info p');
+    const bottom = bubble.querySelector('.card-bottom');
+    if (icon) icon.className = 'card-icon grey';
+    if (subtitle) subtitle.textContent = '已接受';
+    if (bottom) bottom.textContent = '已接受';
+  }
+  return true;
+}
+
+function finishMyInteraction(msg, it) {
+  if (!markMyInteractAccepted(msg)) {
+    const waitOnline = (typeof whenOtherOnline === 'function') ? whenOtherOnline : (cb => cb());
+    waitOnline(() => finishMyInteraction(msg, it));
+    return;
+  }
+  if (!it) return;
+  if (Math.random() < HYBRID_INTERACT_CARD_RATE && typeof sendRandomTextCardReply === 'function'
+    && sendRandomTextCardReply({ quoteChance: 0.15 })) return;
+  const pool = (it.replies && it.replies.length) ? it.replies : REPLY_FALLBACK[it.name];
+  const text = (pool && pool.length)
+    ? pool[Math.floor(Math.random() * pool.length)]
+    : `（接受了你的${it.name}）`;
+  sendMessage(text, 'text', false);
 }
 
 function sendInteract(it) {
   sendMessage({ name: it.name, icon: it.icon, val: `想${it.name}`, isOpened: false, interact: true }, 'interact', true);
   const sent = chatHistory[chatHistory.length - 1];
-  // 对方回应：五成抽字卡，五成用动作自己的词库
+  // 对方离线时先不回应，等上线后再接受；同时会略微提高上线概率。
   setTimeout(() => {
-    markMyInteractAccepted(sent);
-    if (Math.random() < HYBRID_INTERACT_CARD_RATE && typeof sendRandomTextCardReply === 'function'
-      && sendRandomTextCardReply({ quoteChance: 0.15 })) return;
-    const pool = (it.replies && it.replies.length) ? it.replies : REPLY_FALLBACK[it.name];
-    const text = (pool && pool.length)
-      ? pool[Math.floor(Math.random() * pool.length)]
-      : `（接受了你的${it.name}）`;
-    sendMessage(text, 'text', false);
+    if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') {
+      if (typeof noteOfflineNudge === 'function') noteOfflineNudge(2);
+      if (typeof scheduleOfflineReturn === 'function') scheduleOfflineReturn();
+    }
+    const waitOnline = (typeof whenOtherOnline === 'function') ? whenOtherOnline : (cb => cb());
+    waitOnline(() => {
+      const run = () => finishMyInteraction(sent, it);
+      if (typeof enqueueOnlineReply === 'function') enqueueOnlineReply(run); else run();
+    });
   }, 1500 + Math.random() * 1500);
 }
 

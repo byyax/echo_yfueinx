@@ -708,17 +708,25 @@ const MUSIC_INVITE_ACCEPTS = [
 function scheduleMusicShareReply(song) {
   const delay = 1500 + Math.random() * 2000;
   setTimeout(() => {
-    // 六成抽一张你的字卡，四成用专门的听歌回复
-    if (Math.random() < HYBRID_MUSIC_CARD_RATE && typeof sendRandomTextCardReply === 'function'
-      && sendRandomTextCardReply({ quoteChance: 0.15 })) return;
-    const title = (song && song.title) || '这首';
-    let text = MUSIC_SHARE_REPLIES[Math.floor(Math.random() * MUSIC_SHARE_REPLIES.length)];
-    text = text.replace(/\{title\}/g, () => title);
-    if (typeof boostMood === 'function') {
-      boostMood('happy', 1.6, 3 * 60000);
-      boostMood('intimate', 1.4, 3 * 60000);
+    const reply = () => {
+      // 六成抽一张你的字卡，四成用专门的听歌回复
+      if (Math.random() < HYBRID_MUSIC_CARD_RATE && typeof sendRandomTextCardReply === 'function'
+        && sendRandomTextCardReply({ quoteChance: 0.15 })) return;
+      const title = (song && song.title) || '这首';
+      let text = MUSIC_SHARE_REPLIES[Math.floor(Math.random() * MUSIC_SHARE_REPLIES.length)];
+      text = text.replace(/\{title\}/g, () => title);
+      if (typeof boostMood === 'function') {
+        boostMood('happy', 1.6, 3 * 60000);
+        boostMood('intimate', 1.4, 3 * 60000);
+      }
+      sendMessage(text, 'text', false);
+    };
+    if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') {
+      if (typeof noteOfflineNudge === 'function') noteOfflineNudge(1);
+      if (typeof scheduleOfflineReturn === 'function') scheduleOfflineReturn();
     }
-    sendMessage(text, 'text', false);
+    const waitOnline = (typeof whenOtherOnline === 'function') ? whenOtherOnline : (cb => cb());
+    waitOnline(reply);
   }, delay);
 }
 function shareSongToChat(i) {
@@ -777,9 +785,19 @@ function inviteTogether(i) {
   showToast('邀请已发出');
   const wait = 1600 + Math.random() * 1400;
   setTimeout(() => {
-    const line = MUSIC_INVITE_ACCEPTS[Math.floor(Math.random() * MUSIC_INVITE_ACCEPTS.length)];
-    sendMessage(line, 'text', false);
-    acceptMyMusicInvite(s.title);
+    const accept = () => {
+      const line = MUSIC_INVITE_ACCEPTS[Math.floor(Math.random() * MUSIC_INVITE_ACCEPTS.length)];
+      sendMessage(line, 'text', false);
+      acceptMyMusicInvite(s.title);
+    };
+    if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') {
+      if (typeof noteOfflineNudge === 'function') noteOfflineNudge(2);
+      if (typeof scheduleOfflineReturn === 'function') scheduleOfflineReturn();
+    }
+    const waitOnline = (typeof whenOtherOnline === 'function') ? whenOtherOnline : (cb => cb());
+    waitOnline(() => {
+      if (typeof enqueueOnlineReply === 'function') enqueueOnlineReply(accept); else accept();
+    });
   }, wait);
 }
 

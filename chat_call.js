@@ -1,5 +1,9 @@
 let callTimer = null, callSeconds = 0, callTimeout = null;
 let callDirection = 'out'; // 'in' = 他打给我, 'out' = 我打给他
+let callStartedOffline = false;
+let callConnectedFromOffline = false;
+let callOfflineReason = '';
+let pendingOfflineCallNote = null;
 const callWidget = document.getElementById('callWidget');
 const callLargeView = document.getElementById('callLargeView');
 const callSmallView = document.getElementById('callSmallView');
@@ -88,6 +92,42 @@ const CALL_REPLY_LINES = {
     '听到你声音就安心了',
     '挂得有点快'
   ],
+  offline_completed: [
+    '网络刚恢复，终于听到你的声音了',
+    '对不起，让你担心了',
+    '刚刚睡着了，让你久等了',
+    '刚刚在忙，让你久等了',
+    '突然看到你给我打了好多电话，还好刚才接通了',
+    '刚上线就接到你的电话，真好',
+    '我的声音还很沙哑，因为刚睡醒',
+    '刚刚临时有事下线了，现在我回来了',
+    '手机关机了，刚才没接到电话'
+  ],
+  offline_missed_out: [
+    '刚刚睡着了，没接到你的电话',
+    '手机放枕头边，没听到',
+    '睡醒才看到未接来电',
+    '刚刚在忙，没接到电话',
+    '临时有事下线了，刚看到',
+    '忙完才看到你的未接',
+    '手机关机了，刚才没接到电话',
+    '突然看到你给我打了这么多电话',
+    '手机放远了，刚拿到',
+    '刚才没看到你的电话',
+    '对不起，让你担心了',
+    '刚上线才看到你的未接来电'
+  ],
+  offline_rejected_other: [
+    '刚刚信号太差，没接起来',
+    '刚刚在忙，没接到',
+    '手机放远了，没看到',
+    '对不起，让你担心了'
+  ],
+  offline_cancelled: [
+    '刚才信号太差，还没接通就断了',
+    '我还没连上，你就挂啦',
+    '再打一次？这次应该能接通'
+  ],
   cancelled: [
     '怎么取消了',
     '还没接通就挂啦',
@@ -102,9 +142,107 @@ const CALL_REPLY_CARD_RATE = {
   rejected_other: 0.4,
   rejected_me: 0.4,
   completed: 0.5,
-  cancelled: 0.5
+  cancelled: 0.5,
+  offline_completed: 0.3,
+  offline_missed_out: 0.3,
+  offline_rejected_other: 0.3,
+  offline_cancelled: 0.3
 };
 const CALL_REPLY_EMOJI = ['😌', '🥺', '😭', '😶', '😔', '🙂'];
+
+const OFFLINE_CALL_POOLS = {
+  sleep: [
+    '刚刚睡着了，让你久等了',
+    '我的声音还很沙哑，因为刚睡醒'
+  ],
+  work: [
+    '刚刚在忙，让你久等了',
+    '刚刚临时有事下线了，现在我回来了'
+  ],
+  phone_off: [
+    '手机关机了，刚才没接到电话',
+    '突然看到你给我打了好多电话，还好刚才接通了'
+  ],
+  generic: [
+    '网络刚恢复，终于听到你的声音了',
+    '对不起，让你担心了',
+    '刚上线就接到你的电话，真好'
+  ]
+};
+const OFFLINE_MISSED_POOLS = {
+  sleep: [
+    '刚刚睡着了，没接到你的电话',
+    '手机放枕头边，没听到',
+    '睡醒才看到未接来电'
+  ],
+  work: [
+    '刚刚在忙，没接到电话',
+    '临时有事下线了，刚看到',
+    '忙完才看到你的未接'
+  ],
+  phone_off: [
+    '手机关机了，刚才没接到电话',
+    '突然看到你给我打了这么多电话',
+    '手机放远了，刚拿到'
+  ],
+  generic: [
+    '刚才没看到你的电话',
+    '对不起，让你担心了',
+    '刚上线才看到你的未接来电'
+  ]
+};
+function pickOfflineCallLine(reason) {
+  if (typeof pickWeightedOfflineLine === 'function') {
+    return pickWeightedOfflineLine(OFFLINE_CALL_POOLS, reason || 'generic', 'generic');
+  }
+  const all = CALL_REPLY_LINES.offline_completed;
+  return all[Math.floor(Math.random() * all.length)];
+}
+function pickOfflineMissedLine(reason) {
+  if (typeof pickWeightedOfflineLine === 'function') {
+    return pickWeightedOfflineLine(OFFLINE_MISSED_POOLS, reason || 'generic', 'generic');
+  }
+  const all = CALL_REPLY_LINES.offline_missed_out;
+  return all[Math.floor(Math.random() * all.length)];
+}
+const OFFLINE_REJECTED_POOLS = {
+  sleep: ['刚刚睡着了，没接起来', '手机放枕头边，没听到'],
+  work: ['刚刚在忙，没接到', '临时下线了，刚看到'],
+  phone_off: ['手机关机了，刚才没接到', '信号太差，没接起来'],
+  generic: ['刚刚信号太差，没接起来', '对不起，让你担心了', '再打一次？']
+};
+const OFFLINE_CANCELLED_POOLS = {
+  sleep: ['刚才信号太差，还没接通就断了', '我还没连上，你就挂啦'],
+  work: ['刚才还在忙，没来得及接', '再打一次？这次应该能接通'],
+  phone_off: ['刚才信号太差，还没接通就断了', '我还没连上，你就挂啦'],
+  generic: ['刚才信号太差，还没接通就断了', '我还没连上，你就挂啦', '再打一次？这次应该能接通']
+};
+function pickOfflineRejectedLine(reason) {
+  if (typeof pickWeightedOfflineLine === 'function') {
+    return pickWeightedOfflineLine(OFFLINE_REJECTED_POOLS, reason || 'generic', 'generic');
+  }
+  const all = CALL_REPLY_LINES.offline_rejected_other;
+  return all[Math.floor(Math.random() * all.length)];
+}
+function pickOfflineCancelledLine(reason) {
+  if (typeof pickWeightedOfflineLine === 'function') {
+    return pickWeightedOfflineLine(OFFLINE_CANCELLED_POOLS, reason || 'generic', 'generic');
+  }
+  const all = CALL_REPLY_LINES.offline_cancelled;
+  return all[Math.floor(Math.random() * all.length)];
+}
+function takeOfflineCallNote() {
+  const note = pendingOfflineCallNote;
+  pendingOfflineCallNote = null;
+  if (!note || Date.now() - (note.at || 0) > 30 * 60000) return null;
+  return note;
+}
+function offlineCallNoteLine(note) {
+  if (!note) return '';
+  if (note.state === 'offline_rejected_other') return pickOfflineRejectedLine(note.reason);
+  if (note.state === 'offline_cancelled') return pickOfflineCancelledLine(note.reason);
+  return pickOfflineMissedLine(note.reason);
+}
 
 function scheduleCallReply(stateKey) {
   const pool = CALL_REPLY_LINES[stateKey];
@@ -116,7 +254,11 @@ function scheduleCallReply(stateKey) {
       if (sendRandomTextCardReply({ quoteChance: 0.05 })) return;
     }
     let line = pool[Math.floor(Math.random() * pool.length)];
-    if (Math.random() < 0.42) {
+    if (stateKey === 'offline_completed') line = pickOfflineCallLine(callOfflineReason);
+    else if (stateKey === 'offline_missed_out') line = pickOfflineMissedLine(callOfflineReason);
+    else if (stateKey === 'offline_rejected_other') line = pickOfflineRejectedLine(callOfflineReason);
+    else if (stateKey === 'offline_cancelled') line = pickOfflineCancelledLine(callOfflineReason);
+    if (stateKey.indexOf('offline_') !== 0 && Math.random() < 0.42) {
       line += ' ' + CALL_REPLY_EMOJI[Math.floor(Math.random() * CALL_REPLY_EMOJI.length)];
     }
     if (typeof sendMessage === 'function') sendMessage(line, 'text', false);
@@ -182,20 +324,22 @@ function endCall(state, who) {
   if (state === 'completed') {
     bubbleText = `通话结束 ${formatDuration(callSeconds)}`;
     bubbleIsMe = (callDirection === 'in'); // 他打给我 -> 我是被叫 -> 我这边发
-    callStateKey = 'completed';
+    callStateKey = callConnectedFromOffline ? 'offline_completed' : 'completed';
   } else if (state === 'rejected') {
     if (who === 'me') {
       bubbleText = '已挂断';                 // 他打给我，我没接就挂了
       callStateKey = 'rejected_me';
     } else {
       bubbleText = '对方已挂断';             // 我打给他，他没接就挂了
-      callStateKey = 'rejected_other';
+      const stillOffline = typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线';
+      callStateKey = (callStartedOffline && stillOffline) ? 'offline_rejected_other' : 'rejected_other';
     }
     bubbleIsMe = (who === 'me');
   } else if (state === 'cancelled') {
     bubbleText = '已取消';
     bubbleIsMe = (who === 'me');
-    callStateKey = 'cancelled';
+    const stillOffline = typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线';
+    callStateKey = (callStartedOffline && stillOffline) ? 'offline_cancelled' : 'cancelled';
   } else if (state === 'unanswered') {
     if (callDirection === 'in') {
       bubbleText = '未接来电';               // 他打给我，铃声响完我没接
@@ -204,7 +348,8 @@ function endCall(state, who) {
     } else {
       bubbleText = '对方未接来电';           // 我打给他，铃声响完他没接
       bubbleIsMe = false;
-      callStateKey = 'missed_out';
+      callStateKey = (callStartedOffline || (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线'))
+        ? 'offline_missed_out' : 'missed_out';
     }
   }
 
@@ -222,28 +367,73 @@ function endCall(state, who) {
   // 通话记录本身也是“最后一条消息”：没有事件情绪时，普通情绪按规则收起
   if (typeof refreshMood === 'function') refreshMood(false);
 
-  // 电话之后，他有一条混合回复：内置句子或字卡库
-  if (callStateKey) scheduleCallReply(callStateKey);
+  // 电话之后，他有一条混合回复：内置句子或字卡库。
+  // 离线且没接通时不立刻回复，先攒着，等他上线回来后再补。
+  if (callStateKey) {
+    const stillOffline = typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线';
+    if (callStartedOffline && state !== 'completed' && stillOffline) {
+      pendingOfflineCallNote = {
+        reason: callOfflineReason || window.__offlineReason || 'generic',
+        state: callStateKey,
+        at: Date.now()
+      };
+    } else {
+      scheduleCallReply(callStateKey);
+    }
+  }
+
+  // 离线时没打通也会让他更快考虑上线；打通则已经在接通时上线了。
+  const stillOfflineAtEnd = typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线';
+  if (callStartedOffline && state !== 'completed' && stillOfflineAtEnd) {
+    if (typeof noteOfflineNudge === 'function') noteOfflineNudge(3);
+    if (typeof scheduleOfflineReturn === 'function') scheduleOfflineReturn();
+  }
+  callStartedOffline = false;
+  callConnectedFromOffline = false;
+  // 通话结束后再处理离线期间攒下的互动，避免在通话中弹回复。
+  if (typeof drainOnlineReplyQueue === 'function') setTimeout(drainOnlineReplyQueue, 1500);
 }
 
 // 发起通话（我打给他）
 const toolCall = document.getElementById('toolCall');
 if(toolCall) toolCall.onclick = () => {
-  closePanels(); 
+  closePanels();
   callDirection = 'out';
   callWidget.style.display = 'flex';
+  callStartedOffline = (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线');
+  callConnectedFromOffline = false;
+  callOfflineReason = callStartedOffline ? (window.__offlineReason || 'generic') : '';
   initCallUI(false);
   playRingtone();
 
-  // 等待对方接通：15% 在忙接不到，10% 拒接，其余接通
+  // 在线：15% 在忙、10% 拒接；离线：接通率更低，等待更久。
   const roll = Math.random();
-  const isBusy = roll < 0.15;
-  const willReject = !isBusy && roll < 0.25;
-  const waitMs = 2500 + Math.random() * 3000;
+  const isBusy = roll < (callStartedOffline ? 0.45 : 0.15);
+  const willReject = !isBusy && roll < (callStartedOffline ? 0.65 : 0.25);
+  // 在线大部分 5 秒内接；离线分成快慢两档（2–10 秒 / 10–20 秒）。
+  const offlineFast = callStartedOffline && Math.random() < 0.5;
+  const waitMs = callStartedOffline
+    ? (offlineFast ? 2000 + Math.random() * 8000 : 10000 + Math.random() * 10000)
+    : (Math.random() < 0.75 ? 2000 + Math.random() * 3000 : 5000 + Math.random() * 5000);
   callTimeout = setTimeout(() => {
     if (callWidget.style.display !== 'flex') return;
     if (isBusy) { endCall('unanswered', 'other'); return; }
-    if (willReject) { endCall('rejected', 'other'); return; }
+    if (willReject) {
+      // 能主动挂断说明他其实上线了；未接才是仍在离线。
+      if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') {
+        pendingOfflineCallNote = null;
+        if (typeof setOtherOnline === 'function') setOtherOnline();
+      }
+      endCall('rejected', 'other');
+      return;
+    }
+    // 只要接通了，就说明他重新上线；结束通话后也保持在线。
+    if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') {
+      callConnectedFromOffline = true;
+      callOfflineReason = window.__offlineReason || 'generic';
+      pendingOfflineCallNote = null;
+      if (typeof setOtherOnline === 'function') setOtherOnline();
+    }
     stopRingtone();
     playCallTone();
     callStatusLarge.textContent = '通话中...';
@@ -257,7 +447,12 @@ if(toolCall) toolCall.onclick = () => {
 // 触发来电（对方打给我）
 function triggerIncomingCall() {
   if (callWidget.style.display === 'flex') return; // 正在通话中不触发
+  // 他离线时不会主动打来，避免“离线却来电”的矛盾状态。
+  if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') return;
   callDirection = 'in';
+  callStartedOffline = false;
+  callConnectedFromOffline = false;
+  callOfflineReason = '';
   callWidget.style.display = 'flex';
   initCallUI(true);
   playRingtone();

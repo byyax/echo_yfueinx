@@ -176,7 +176,9 @@ function refreshCardsUI() {
 
     const list = document.getElementById('cardList'); if(!list) return; list.innerHTML = '';
     const countLabel = document.getElementById('countLabel');
-    
+    const importCardsBtn = document.getElementById('importCardsBtn');
+    if (importCardsBtn) importCardsBtn.style.display = currentLib === 'text' ? 'inline-block' : 'none';
+
     if (currentLib === 'image') {
       list.className = 'card-list image-grid'; // 网格布局
     } else {
@@ -348,6 +350,238 @@ document.getElementById('saveAdd').onclick = async () => {
     showToast('内容为空，未添加');
   }
 };
+
+// ===== 导入文字字卡：只追加，不覆盖现有字卡 =====
+function cardImportText(item) {
+  if (typeof item === 'string') return item.trim();
+  if (!item || typeof item !== 'object') return '';
+  const value = item.val != null ? item.val
+    : item.text != null ? item.text
+    : item.content != null ? item.content
+    : item.value != null ? item.value
+    : item['内容'];
+  return value == null ? '' : String(value).trim();
+}
+
+function cardImportCategory(item, tagMap) {
+  if (!item || typeof item !== 'object') return '';
+  const direct = item.category != null ? item.category
+    : item.tagName != null ? item.tagName
+    : item.tag != null ? item.tag
+    : item['分类'] != null ? item['分类']
+    : item['标签'];
+  if (typeof direct === 'string' && direct.trim()) return direct.trim();
+  const tagId = item.tagId != null ? item.tagId : item.tag;
+  if (tagId && tagMap && tagMap[tagId]) return tagMap[tagId];
+  return '';
+}
+
+function cardsFromJSON(data) {
+  const out = [];
+  const tagMap = {};
+  const pushItem = item => {
+    if (item && typeof item === 'object' && item.type && item.type !== 'text') return;
+    const text = cardImportText(item);
+    if (!text) return;
+    out.push({ text, category: cardImportCategory(item, tagMap) });
+  };
+
+  if (Array.isArray(data)) { data.forEach(pushItem); return out; }
+  if (!data || typeof data !== 'object') return out;
+
+  if (Array.isArray(data.tags)) {
+    data.tags.forEach(t => { if (t && t.id) tagMap[t.id] = String(t.name || t.id); });
+  }
+  const list = Array.isArray(data.contents) ? data.contents
+    : Array.isArray(data.cards) ? data.cards
+    : Array.isArray(data.items) ? data.items : null;
+  if (list) { list.forEach(pushItem); return out; }
+
+  // 单条对象：{ val: '内容', category: '分类' }
+  pushItem(data);
+  return out;
+}
+
+function parseCSVLine(line) {
+  const out = [];
+  let cur = '';
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (quoted && line[i + 1] === '"') { cur += '"'; i++; }
+      else quoted = !quoted;
+    } else if (ch === ',' && !quoted) {
+      out.push(cur); cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+
+function cardsFromDelimited(lines, delimiter) {
+  const rows = lines.map(line => delimiter === '\t' ? line.split('\t') : parseCSVLine(line));
+  if (!rows.length) return [];
+  const first = rows[0].map(x => String(x || '').trim().toLowerCase());
+  const catHeader = first.findIndex(x => /^(category|tag|分类|标签)$/.test(x));
+  const textHeader = first.findIndex(x => /^(text|content|val|value|内容)$/.test(x));
+  const hasHeader = catHeader >= 0 || textHeader >= 0;
+  const out = [];
+  for (let i = hasHeader ? 1 : 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || !row.some(Boolean)) continue;
+    let category = '';
+    let text = '';
+    if (hasHeader) {
+      category = catHeader >= 0 ? String(row[catHeader] || '').trim() : '';
+      text = textHeader >= 0
+        ? String(row[textHeader] || '').trim()
+        : row.slice(catHeader + 1).join(',').trim();
+    } else if (row.length > 1) {
+      category = String(row[0] || '').trim();
+      text = row.slice(1).join(delimiter === '\t' ? '\t' : ',').trim();
+    } else {
+      text = String(row[0] || '').trim();
+    }
+    if (text) out.push({ text, category });
+  }
+  return out;
+}
+
+function cardsFromTextLines(lines) {
+  const out = [];
+  lines.forEach(raw => {
+    let line = String(raw || '').replace(/\r$/, '');
+    if (!line.trim()) return;
+    let category = '';
+    let text = line.trim();
+    const tab = line.indexOf('\t');
+    if (tab >= 0) {
+      category = line.slice(0, tab).trim();
+      text = line.slice(tab + 1).trim();
+    } else {
+      const bar = line.indexOf('|');
+      if (bar >= 0) {
+        category = line.slice(0, bar).trim();
+        text = line.slice(bar + 1).trim();
+      }
+    }
+    if (text) out.push({ text, category });
+  });
+  return out;
+}
+
+function parseCardImport(text, filename) {
+  const raw = String(text || '').replace(/^﻿/, '');
+  const trimmed = raw.trim();
+  if (!trimmed) return [];
+  const ext = String(filename || '').split('.').pop().toLowerCase();
+  if (ext === 'json' || trimmed[0] === '[' || trimmed[0] === '{') {
+    return cardsFromJSON(JSON.parse(trimmed));
+  }
+  const lines = raw.split(/\r?\n/);
+  if (ext === 'csv') return cardsFromDelimited(lines, ',');
+  if (ext === 'tsv') return cardsFromDelimited(lines, '\t');
+  return cardsFromTextLines(lines);
+}
+
+function previewTextCardImport(items) {
+  const existing = new Set(contents.filter(c => c && c.type === 'text').map(c => String(c.val)));
+  const seen = new Set();
+  const categories = new Set();
+  let add = 0, skip = 0;
+  items.forEach(item => {
+    const text = String(item && item.text || '').trim();
+    if (!text) return;
+    const category = String(item && item.category || '').trim();
+    if (category) categories.add(category);
+    if (existing.has(text) || seen.has(text)) { skip++; return; }
+    seen.add(text);
+    add++;
+  });
+  return { add, skip, categories: Array.from(categories) };
+}
+
+function applyTextCardImport(items) {
+  const timestamp = Date.now();
+  const tagByName = new Map();
+  tags.forEach(t => { if (t && t.name) tagByName.set(String(t.name).trim(), t.id); });
+  const existing = new Set(contents.filter(c => c && c.type === 'text').map(c => String(c.val)));
+  const seen = new Set();
+  let added = 0, skipped = 0, newTags = 0;
+
+  items.forEach((item, idx) => {
+    const text = String(item && item.text || '').trim();
+    if (!text) return;
+    if (existing.has(text) || seen.has(text)) { skipped++; return; }
+    seen.add(text);
+
+    const category = String(item && item.category || '').trim();
+    let tagId = 'unclassified';
+    if (category) {
+      if (tagByName.has(category)) {
+        tagId = tagByName.get(category);
+      } else {
+        const id = 't_imp_' + timestamp + '_' + newTags;
+        const colors = (typeof TAG_COLORS !== 'undefined' && TAG_COLORS.length) ? TAG_COLORS : ['#8c8c8c'];
+        tags.push({ id, name: category, color: colors[newTags % colors.length] });
+        tagByName.set(category, id);
+        tagId = id;
+        newTags++;
+      }
+    }
+    contents.push({ id: 'c_imp_' + timestamp + '_' + idx, type: 'text', val: text, tagId });
+    added++;
+  });
+
+  if (added) {
+    saveAllData();
+    currentLib = 'text';
+    currentTagId = 'all';
+    refreshCardsUI();
+  }
+  return { added, skipped, newTags };
+}
+
+const importCardsBtn = document.getElementById('importCardsBtn');
+const importCardsInput = document.getElementById('importCardsInput');
+if (importCardsBtn && importCardsInput) {
+  importCardsBtn.onclick = () => importCardsInput.click();
+  importCardsInput.onchange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let items;
+      try {
+        items = parseCardImport(reader.result, file.name);
+      } catch (err) {
+        console.warn('[cards] import parse failed', err);
+        return showToast('导入失败：JSON 格式不正确');
+      }
+      if (!items.length) return showToast('没有找到文字字卡');
+      const preview = previewTextCardImport(items);
+      if (!preview.add) return showToast(`没有可新增的字卡，${preview.skip} 条已存在`);
+      const catText = preview.categories.length
+        ? `\n识别到分类：${preview.categories.slice(0, 6).join('、')}${preview.categories.length > 6 ? ' 等' : ''}`
+        : '';
+      showConfirm('导入文字字卡',
+        `共读取 ${items.length} 条，预计新增 ${preview.add} 条${preview.skip ? `，跳过 ${preview.skip} 条重复` : ''}。${catText}\n只会追加文字字卡，不会覆盖现有字卡。`,
+        () => {
+          const result = applyTextCardImport(items);
+          const parts = [`已导入 ${result.added} 条字卡`];
+          if (result.newTags) parts.push(`新建 ${result.newTags} 个分类`);
+          if (result.skipped) parts.push(`跳过 ${result.skipped} 条重复`);
+          showToast(parts.join('，'));
+        });
+    };
+    reader.onerror = () => showToast('文件读取失败，请重试');
+    reader.readAsText(file, 'utf-8');
+  };
+}
 
 const selectAllBtn = document.getElementById('selectAllBtn');
 if(selectAllBtn) selectAllBtn.onclick = () => {

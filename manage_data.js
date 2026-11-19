@@ -104,7 +104,7 @@ if (clearMediaBtn) {
 
 document.getElementById('clearHistoryBtn').onclick = () => {
   showConfirm('清空记录', '⚠️ 警告：确定清空所有聊天记录吗？此操作不可逆！', () => {
-    chatHistory = []; saveAllData(); 
+    chatHistory = []; window.__skipHistoryMerge = true; clearChatHistoryBackup(); saveAllData();
     chatEl.innerHTML = '<div class="sys">你已添加对方为好友，现在可以开始聊天了</div>'; 
     showToast('聊天记录已清空');
   });
@@ -112,6 +112,7 @@ document.getElementById('clearHistoryBtn').onclick = () => {
 document.getElementById('clearAllBtn').onclick = () => {
   showConfirm('清空全部', '💥 警告：确定清空所有数据吗？此操作不可逆！', () => {
     if (typeof persistAllDataNow === 'function') persistAllDataNow();
+    clearChatHistoryBackup();
     localStorage.clear(); location.reload();
   });
 };
@@ -285,8 +286,10 @@ function processImportedData(data) {
     if (data.theme) applyImportedTheme(data.theme);
   }
   
-  saveAllData(); 
-  
+  window.__skipHistoryMerge = true;
+  clearChatHistoryBackup();
+  saveAllData();
+
   setTimeout(() => {
     const modal = document.getElementById('importDataModal');
     if (modal) modal.classList.remove('show');

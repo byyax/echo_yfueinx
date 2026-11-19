@@ -886,6 +886,8 @@ function moodAfterCall(state, who) {
 
 // ===== 渲染 =====
 function shouldShowMood(ev) {
+  // 对方离线时连人都不在，不显示情绪气泡；回来后再恢复。
+  if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') return false;
   if (ev) return true; // 通话/情绪事件，就算最后一条是你发的也照显示
   const last = lastRealMsg();
   if (!last || last.role !== 'other') return false;

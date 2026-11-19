@@ -114,6 +114,7 @@
 <p><strong>手机端首屏优化</strong>：聊天图片使用 <code>loading="lazy"</code> 和 <code>decoding="async"</code>；初始化批量渲染时设置 <code>window.__deferChatScroll = true</code>，避免每条消息都强制滚动布局，最后只滚一次到底部；启动页的 <code>waitImages()</code> 只等待首屏附近的图片。</p>
 <p><code>renderChatHistoryWindow()</code> 首屏只渲染最近 <code>CHAT_RENDER_INITIAL = 200</code> 条，聊天顶部出现「加载更早」按钮，每次再补 <code>CHAT_RENDER_STEP = 200</code> 条；加载更早时保留当前滚动位置。</p>
 <p><code>saveAllData()</code> 改成 180ms 合并保存：连续发消息/操作时只保留最后一次写入，<code>pagehide</code>、<code>beforeunload</code> 和页面隐藏时会同步刷盘，避免手机卡顿时反复序列化整份历史。</p>
+<p>保存前会和 localStorage 里已有的 <code>chat_history</code> 比较，发现另一个页面已经写入了更新的消息就先合并，避免旧页面把新记录覆盖。localStorage 写满时不再静默失败，会提示导出并清理；同时在 IndexedDB 的 <code>echo_chat_backup</code> 里留一份历史备份，下次打开如果发现备份比 localStorage 新会自动恢复。</p>
 <h3>5. 他的随机回复怎么来的</h3>
 <p>你发完消息后，<code>simulateReplyWithDelay()</code> 会：</p>
 <ol start="1">
@@ -135,6 +136,7 @@
 <h3>6. 数据怎么存</h3>
 <ul>
 <li><code>saveAllData()</code>：把设置、历史、字卡、标签、表情、位置、拍一拍、签名、互动写进 localStorage；</li>
+<li>聊天历史额外备份到 IndexedDB 的 <code>echo_chat_backup</code>；它不是主存储，只在 localStorage 写满、被清理或多页面冲突时兜底；</li>
 <li>本地导入的 mp3：存在 IndexedDB（<code>echo_music</code>），不在 localStorage；</li>
 <li>导出/导入：<code>manage_data.js</code>，把上面这些打包成 JSON。</li>
 </ul>
@@ -164,7 +166,7 @@
 </ol>
 <hr>
 <h2>三、文件结构</h2>
-<table><thead><tr><th>文件</th><th>负责</th></tr></thead><tbody><tr><td><code>index.html</code></td><td>页面骨架、弹窗、启动画面、脚本顺序</td></tr><tr><td><code>style.css</code></td><td>全部样式、35 套配色、动画</td></tr><tr><td><code>data.js</code></td><td>全局数据、默认设置、配色表、通用函数</td></tr><tr><td><code>chat_core.js</code></td><td>画气泡、发消息、随机回复、拍一拍、引用</td></tr><tr><td><code>chat_stickers.js</code></td><td>表情面板</td></tr><tr><td><code>chat_tools.js</code></td><td>图片、拍照、位置、互动、录音</td></tr><tr><td><code>chat_call.js</code></td><td>语音通话、来电、小窗、通话心情</td></tr><tr><td><code>chat_money.js</code></td><td>红包、转账、支付密码、礼物商城</td></tr><tr><td><code>manage_cards.js</code></td><td>字卡库、标签、批量、查重</td></tr><tr><td><code>manage_settings.js</code></td><td>聊天设置、配色选择、头像裁剪</td></tr><tr><td><code>manage_history.js</code></td><td>聊天记录页、字卡统计</td></tr><tr><td><code>manage_data.js</code></td><td>导出、导入、清理</td></tr><tr><td><code>manage_music.js</code></td><td>音乐管理页</td></tr><tr><td><code>music_lyrics.js</code></td><td>内置歌词</td></tr><tr><td><code>chat_music.js</code></td><td>播放器、歌单、歌词同步、导入</td></tr><tr><td><code>mood_pools.js</code></td><td>16 档情绪数据、通用补充、基础权重、emoji、动画映射</td></tr><tr><td><code>chat_mood.js</code></td><td>情绪抽签、权重衰减、事件、渲染</td></tr><tr><td><code>router.js</code></td><td>页面切换、配色、状态栏、初始化</td></tr><tr><td><code>custom_icons.js</code></td><td>把 emoji 图标换成图片</td></tr><tr><td><code>pwa.js</code> / <code>sw.js</code></td><td>安装到桌面</td></tr></tbody></table>
+<table><thead><tr><th>文件</th><th>负责</th></tr></thead><tbody><tr><td><code>index.html</code></td><td>页面骨架、弹窗、启动画面、脚本顺序</td></tr><tr><td><code>style.css</code></td><td>全部样式、35 套配色、动画</td></tr><tr><td><code>data.js</code></td><td>全局数据、默认设置、配色表、通用函数</td></tr><tr><td><code>chat_core.js</code></td><td>画气泡、发消息、随机回复、拍一拍、引用</td></tr><tr><td><code>chat_stickers.js</code></td><td>表情面板</td></tr><tr><td><code>chat_tools.js</code></td><td>图片、拍照、位置、互动、录音</td></tr><tr><td><code>chat_call.js</code></td><td>语音通话、来电、小窗、通话心情</td></tr><tr><td><code>chat_money.js</code></td><td>红包、转账、支付密码、礼物商城</td></tr><tr><td><code>manage_cards.js</code></td><td>字卡库、标签、批量、查重、文字字卡导入</td></tr><tr><td><code>manage_settings.js</code></td><td>聊天设置、配色选择、头像裁剪</td></tr><tr><td><code>manage_history.js</code></td><td>聊天记录页、字卡统计</td></tr><tr><td><code>manage_data.js</code></td><td>导出、导入、清理</td></tr><tr><td><code>manage_music.js</code></td><td>音乐管理页</td></tr><tr><td><code>music_lyrics.js</code></td><td>内置歌词</td></tr><tr><td><code>chat_music.js</code></td><td>播放器、歌单、歌词同步、导入</td></tr><tr><td><code>mood_pools.js</code></td><td>16 档情绪数据、通用补充、基础权重、emoji、动画映射</td></tr><tr><td><code>chat_mood.js</code></td><td>情绪抽签、权重衰减、事件、渲染</td></tr><tr><td><code>router.js</code></td><td>页面切换、配色、状态栏、初始化</td></tr><tr><td><code>custom_icons.js</code></td><td>把 emoji 图标换成图片</td></tr><tr><td><code>pwa.js</code> / <code>sw.js</code></td><td>安装到桌面、手机通知</td></tr></tbody></table>
 <hr>
 <h2>四、数据模型</h2>
 <h3>1. localStorage 键</h3>
@@ -242,6 +244,13 @@ if (!chatSettings.signature) chatSettings.signature = '我喜欢夏天和你淋�
 <h3>6.3 字卡与标签</h3>
 <p><strong>原理</strong>：<code>randomReply()</code> 里 <code>contents.filter(item =&gt; item.type === 'text')</code>，随机抽一条发送。</p>
 <p><strong>加字卡</strong>：后台 → 自定义回复；或直接改 <code>data.js</code> 初始数据（只对新存档生效）。</p>
+<p><strong>导入字卡</strong>：字卡页的「📥 导入」由 <code>manage_cards.js</code> 处理。它只追加 <code>type: 'text'</code>，不会覆盖现有字卡或表情；按文本精确去重。支持：</p>
+<ul>
+<li>TXT：一行一条，可选 <code>分类&lt;Tab&gt;内容</code> / <code>分类|内容</code>；</li>
+<li>CSV/TSV：默认第一列分类、第二列内容；有表头时识别 <code>分类/category/tag</code> 与 <code>内容/text/content/val</code>；</li>
+<li>JSON：数据管理导出的 <code>{ tags, contents }</code>、<code>[{ val, category }]</code>、对象数组或字符串数组。</li>
+</ul>
+<p>分类按名称复用已有标签；不存在的分类会新建标签并分配 <code>TAG_COLORS</code> 里的颜色。解析入口是 <code>parseCardImport()</code>，导入预览和写入分别是 <code>previewTextCardImport()</code> / <code>applyTextCardImport()</code>。</p>
 <p><strong>标签</strong>：<code>tags</code> 数组；卡片用 <code>tagId</code> 关联。标签名会参与情绪关键词判断。</p>
 <p><strong>注意</strong>：字卡库为空时不再发消息，改为弹出提示并可跳转「自定义回复」；标签删掉后卡片自动归「未分类」。</p>
 <h3>6.4 表情包</h3>
@@ -390,6 +399,8 @@ location.reload();</code></pre>
 <p><strong>原理</strong>：<code>manifest.webmanifest</code> 登记名称、图标、颜色；<code>sw.js</code> 提供 Service Worker；<code>pwa.js</code> 注册。</p>
 <p><strong>换图标</strong>：覆盖 <code>icons/icon-192.png</code>、<code>icon-512.png</code>、<code>icon-maskable-512.png</code>、<code>apple-touch-icon.png</code>。</p>
 <p><strong>注意</strong>：没上传 icons、用 file://、QQ 浏览器只做快捷方式，都会导致图标不对。</p>
+<p><strong>手机通知</strong>：<code>pwa.js</code> 的 <code>requestNotifyPermission()</code> 申请权限，<code>notifyIncomingMessage()</code> 在页面隐藏时通过 Service Worker 发通知；<code>sw.js</code> 的 <code>notificationclick</code> 会回到已打开页面。必须用 https / PWA，页面完全关闭后没有服务器推送，不会通知。</p>
+<p><strong>已读 / 未读</strong>：<code>chatSettings.readReceipts</code> 控制。你发出的消息用 <code>content.read</code> 表示他是否已读，<code>markMyMessagesRead()</code> 在对方输入提示前约 0.5 秒把未读改成已读；离线时不会标记，离线回来上线后统一标记。他发来的消息用 <code>content.readByMe</code> 表示我是否已读，页面在后台/失焦时为未读，<code>markHisMessagesRead()</code> 在回到前台/聚焦时标记。<code>refreshReadReceiptUI()</code> 负责开关后给已有消息补状态，双方都只显示「未读/已读」。</p>
 <p>完整的图标清单、maskable 留边、换图步骤见第八节。</p>
 <hr>
 <h3>6.15 加号工具面板</h3>
@@ -530,6 +541,7 @@ location.reload();</code></pre>
 <p>这三样<strong>不用改代码</strong>，后台就能加。</p>
 <ul>
 <li>字卡：后台 → 自定义回复 → 字卡 → 新增；支持批量粘贴、查重。</li>
+<li>导入字卡：同一页面的「📥 导入」，只追加文字字卡，不覆盖现有数据；支持 JSON/TXT/CSV，按文本去重，并按分类名称复用或新建标签。</li>
 <li>标签：同一个页面管理，名字和颜色都能改。</li>
 <li>表情：后台 → 自定义回复 → 表情包，或表情面板里的批量管理。</li>
 </ul>
@@ -726,9 +738,9 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 <p>这一节把网站上所有“会自己变”的东西集中写清楚：顶栏电量、网络、他的在线状态、副状态、回复节奏、红包金额、来电、音乐、情绪、签名。想改哪一项，按表里的位置去找；数字都是“每次判定”的概率。</p>
 <h3>10.1 顶栏：网络和电量（<code>router.js</code> → <code>initStatusBar()</code>）</h3>
 <p><strong>刚打开时</strong></p>
-<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>网络</td><td>WiFi 70%；不是 WiFi 时，5G 80%（总 24%）、2G 20%（总 6%）</td></tr><tr><td>电量</td><td>随机 20–99%</td></tr><tr><td>充电</td><td>初始不充电</td></tr></tbody></table>
+<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>网络</td><td>WiFi 80%；不是 WiFi 时，5G 90%（总 18%）、2G 10%（总 2%）</td></tr><tr><td>电量</td><td>随机 20–99%</td></tr><tr><td>充电</td><td>初始不充电</td></tr></tbody></table>
 <p><strong>之后每 10 秒</strong></p>
-<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>网络变化</td><td>20% 概率刷新；刷新时 WiFi 50%、5G 40%、2G 10%</td></tr><tr><td>不充电</td><td>电量减 0 或 1（各 50%）</td></tr><tr><td>低于 10%</td><td>自动变成充电状态，电量固定在 10%</td></tr><tr><td>充电中</td><td>每 10 秒加 1 或 2（各 50%），到 100% 停止充电</td></tr><tr><td>颜色</td><td>≤10% 红色，≤20% 橙色，其余绿色</td></tr></tbody></table>
+<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>网络变化</td><td>15% 概率刷新；刷新时 WiFi 60%、5G 37%、2G 3%</td></tr><tr><td>不充电</td><td>电量减 0 或 1（各 50%）</td></tr><tr><td>低于 10%</td><td>自动变成充电状态，电量固定在 10%</td></tr><tr><td>充电中</td><td>每 10 秒加 1 或 2（各 50%），到 100% 停止充电</td></tr><tr><td>颜色</td><td>≤10% 红色，≤20% 橙色，其余绿色</td></tr></tbody></table>
 <p>网络不再只是装饰：切到 2G 时会提示「📶 对方网络不佳，回复可能会慢一点」，<code>getRandomDelay()</code> 会在正常延迟上额外加 10 秒；状态恢复后不再提示。想改快慢就改 <code>initStatusBar()</code> 里的 <code>10000</code> 和那几个数字；想改 2G 惩罚，改 <code>getRandomDelay()</code> 里的 <code>10000</code>。注意：不要在控制台反复调用 <code>initStatusBar()</code>，它每次都会再开一个定时器。</p>
 <h3>10.2 他的名字下面的在线状态（<code>router.js</code>）</h3>
 <p>名字右边有两个小气泡：左边是主状态，右边是副状态。</p>
@@ -738,12 +750,13 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 <p>攀岩 7 · 健身 7 · 奶茶 7 · 听歌 7 · 打球 6 · 干饭 6 · 滑雪 5 · 冲浪 5 · 发呆 5 · 吸猫 5 · 游戏 5 · 睡觉 4 · 自拍 4 · 追剧 4 · 咖啡 4 · 出差 3 · 作业 3 · 洗头 3 · 超市 3 · 遛狗 3 · 修图 3 · 放空 3</p>
 <p><strong>什么时候变</strong></p>
 <table><thead><tr><th>时机</th><th>规则</th></tr></thead><tbody><tr><td>进站</td><td>30% 概率立刻随机一次；70% 先显示「在线」</td></tr><tr><td>进站时副状态</td><td>没触发随机主状态时，30% 概率随机一个副状态；触发随机主状态时按 45% 规则</td></tr><tr><td>平时</td><td>每 60 秒检查一次，到时间就换</td></tr><tr><td>下一次换的时间</td><td>8–25 分钟随机</td></tr><tr><td>随机换主状态</td><td>按上面的权重抽</td></tr><tr><td>随机换副状态</td><td>45% 概率出现，再按权重抽；否则没有副状态</td></tr><tr><td>他从离线回来</td><td>主状态变成「在线」，副状态清空，下次 8–25 分钟后</td></tr></tbody></table>
-<p><strong>离线状态的影响</strong>：主状态抽到「离线」时，会同步把网络设为 2G，并弹出「📴 对方已掉线，消息可能会晚一点」提示；你发消息后约 <strong>3 秒</strong>会先收到一条带 <code>[自动回复]</code> 的消息，不受聊天设置里的回复延迟影响。这条由 <code>sendOfflineAutoReply()</code> 生成：80% 从 <code>OFFLINE_AUTO_REPLIES</code> 六句内置短句抽取，20% 调用 <code>sendRandomTextCardReply()</code> 从字卡库抽取；字卡库为空时自动退回内置短句。约 90–240 秒后他才真正回来，先说一句离线回来文案（不带自动回复标记），再等 1.2–2.7 秒正常回复。离线期间距上次提示约 5 秒后再次发消息，会再看到一次连接状态提示；恢复在线后网络回到 WiFi/5G，不再提示。</p>
+<p><strong>离线状态的影响</strong>：主状态抽到「离线」时，会同步把网络设为 2G，并弹出「📴 对方已掉线，消息可能会晚一点」提示；你发消息后约 <strong>2 秒</strong>会先收到一条带 <code>[自动回复]</code> 的消息，不受聊天设置里的回复延迟影响。这条由 <code>sendOfflineAutoReply()</code> 生成：80% 从 <code>OFFLINE_AUTO_REPLIES</code> 六句内置短句抽取，20% 调用 <code>sendRandomTextCardReply()</code> 从字卡库抽取；字卡库为空时自动退回内置短句。约 90–240 秒后他才真正回来，先说一句离线回来文案（不带自动回复标记），再等 1.2–2.7 秒正常回复。离线期间距上次提示约 5 秒后再次发消息，会再看到一次连接状态提示；恢复在线后网络回到 WiFi/5G，不再提示。</p>
 <p><strong>连续消息与离线回来</strong>：<code>noteBadConnectionMessages()</code> 会在 2G/离线期间按当前连续发给他的消息数提升等待、焦虑（离线时还有不安/隐忍）的临时权重；<code>moodAfterOfflineReturn()</code> 会按离线期间积累的消息数选择回来的情绪：1 条偏等待/抱歉，2–4 条偏担心/不安，5 条以上偏焦急/慌。相关权重会持续一段时间的衰减。</p>
 <p><strong>2G 网络的影响</strong>：2G 且未离线时，<code>randomReply()</code> 进入文字分支后会按 <code>SLOW_NETWORK_BUILTIN_RATE</code> 判定：55% 从 <code>SLOW_NETWORK_REPLIES</code> 抽一句「卡死了」这类慢网短句，45% 继续抽字卡；拍一拍、音乐、礼物、图片仍在前面的分支按原概率触发。<code>sendMessage()</code> 会记录这段 2G 期间你确实发过消息；<code>setOtherNetworkMode()</code> 从 2G 切回 WiFi/5G 时，若这段至少持续 10 秒、且还有未回复的消息，就调用 <code>moodAfterNetworkRecover()</code>，并有 65% 概率在 1.2–3 秒后补一句 <code>NETWORK_RECOVERY_REPLIES</code>，两次补话至少间隔 90 秒。离线回来会传 <code>noRecovery: true</code>，不会和「刚上线」重复。相关文案和参数都在 <code>chat_core.js</code> 顶部、<code>router.js</code> 的 <code>maybeAnnounceNetworkRecovery()</code>、<code>chat_mood.js</code> 的 <code>moodAfterNetworkRecover()</code>。</p>
+<p><strong>离线期间的互动与来电</strong>：<code>sendInteract()</code>、<code>inviteTogether()</code>、<code>scheduleChoiceReply()</code> 会先检查 <code>getOtherStatusMain()</code>；离线时不接受，等 <code>whenOtherOnline()</code> 检测到上线后再回应。每次发消息、互动、邀请、选择卡或打不通的电话都会调用 <code>noteOfflineNudge()</code>，最多把 90–240 秒的回来等待缩短约 35%。离线来电不会主动打来；你打给他时接通率从在线约 75% 降到约 35%，等待分两档：约 50% 为 2–10 秒、约 50% 为 10–20 秒；没接通保持离线，接通时才 <code>setOtherOnline()</code>，结束通话后 <code>callStateKey</code> 使用 <code>offline_completed</code>，内置回复占 70%、字卡 30%；内置句按离线原因分类。若离线时他主动「挂断」，会先 <code>setOtherOnline()</code> 再走普通 <code>rejected_other</code>；只有「对方未接来电」保持离线。离线未接/取消不会立刻回复，而是存入 <code>pendingOfflineCallNote</code>，上线回来后再由队列补一条；如果之后有电话接通，这条会作废。离线攒下的互动/邀请/选择卡通过 <code>enqueueOnlineReply()</code> 串行处理，每条间隔约 1.8–3.4 秒；离线回来先发回来文案，通话中不处理，通话结束后再继续队列。</p>
 <blockquote>这里的「在线状态」和聊天气泡下面的「情绪」是两套系统：状态是装饰，情绪由 <code>chat_mood.js</code> 单独计算。</blockquote>
 <h3>10.3 消息、回复节奏</h3>
-<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>他回你的延迟</td><td>0 到设置里的「回复延迟」之间随机，均匀分布；默认 0–30 秒</td></tr><tr><td>正在输入</td><td>延迟大于 2 秒才显示；在延迟的一半（最多 1 秒）时出现</td></tr><tr><td>回复条数</td><td>默认 1 条；设置页可改</td></tr><tr><td>2G 附加延迟</td><td>在正常随机延迟上再加约 10 秒</td></tr><tr><td>2G 文字回复</td><td>55% 内置慢网短句 / 45% 字卡库；图片、拍一拍、音乐、礼物仍先按原概率判定</td></tr><tr><td>2G 恢复补话</td><td>2G 持续至少 10 秒且有未回复消息时，65% 概率在恢复后 1.2–3 秒补一句；90 秒冷却</td></tr><tr><td>2G 恢复情绪</td><td>1 条偏平静/抱歉，2–3 条偏期待/抱歉，4 条以上偏不安/焦急；事件约 3 分钟</td></tr><tr><td>离线自动回复</td><td>约 3 秒后发出，80% 内置短句 / 20% 字卡库，带 <code>[自动回复]</code> 标记</td></tr><tr><td>离线真正回来</td><td>约 90–240 秒后，先说回来文案，不带自动回复标记</td></tr><tr><td>定时回复</td><td>每 5 秒检查一次；你超过设定分钟没说话，他主动发</td></tr><tr><td>定时回复条数</td><td><code>autoReplyCount</code>，每条间隔 1.5 秒</td></tr><tr><td>💌 让他主动</td><td>按回复条数发；每条延迟累加随机回复时间 + 1 秒</td></tr><tr><td>离线延迟</td><td>90–240 秒，然后先发一句离线回复</td></tr><tr><td>离线回复后的正式回复</td><td>1.2–2.7 秒后</td></tr><tr><td>拍一拍反应</td><td>1 秒后回一句</td></tr><tr><td>你发红包/转账/礼物/互动</td><td>2–5 秒后自动“对方已收”</td></tr><tr><td>互动回应</td><td>1.5–3 秒后</td></tr><tr><td>邀请一起听的回应</td><td>1.6–3 秒后</td></tr></tbody></table>
+<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>他回你的延迟</td><td>0 到设置里的「回复延迟」之间随机，均匀分布；默认 0–30 秒</td></tr><tr><td>正在输入</td><td>延迟大于 2 秒才显示；在延迟的一半（最多 1 秒）时出现</td></tr><tr><td>回复条数</td><td>默认 1 条；设置页可改</td></tr><tr><td>2G 附加延迟</td><td>在正常随机延迟上再加约 10 秒</td></tr><tr><td>2G 文字回复</td><td>55% 内置慢网短句 / 45% 字卡库；图片、拍一拍、音乐、礼物仍先按原概率判定</td></tr><tr><td>2G 恢复补话</td><td>2G 持续至少 10 秒且有未回复消息时，65% 概率在恢复后 1.2–3 秒补一句；90 秒冷却</td></tr><tr><td>2G 恢复情绪</td><td>1 条偏平静/抱歉，2–3 条偏期待/抱歉，4 条以上偏不安/焦急；事件约 3 分钟</td></tr><tr><td>离线自动回复</td><td>约 2 秒后发出，80% 内置短句 / 20% 字卡库，带 <code>[自动回复]</code> 标记</td></tr><tr><td>离线真正回来</td><td>约 90–240 秒后，先说回来文案，不带自动回复标记</td></tr><tr><td>定时回复</td><td>每 5 秒检查一次；你超过设定分钟没说话，他主动发</td></tr><tr><td>定时回复条数</td><td><code>autoReplyCount</code>，每条间隔 1.5 秒</td></tr><tr><td>💌 让他主动</td><td>按回复条数发；每条延迟累加随机回复时间 + 1 秒</td></tr><tr><td>离线延迟</td><td>90–240 秒，然后先发一句离线回复</td></tr><tr><td>离线回复后的正式回复</td><td>1.2–2.7 秒后</td></tr><tr><td>拍一拍反应</td><td>1 秒后回一句</td></tr><tr><td>你发红包/转账/礼物</td><td>2–5 秒后自动“对方已收”；离线时等上线后再收</td></tr><tr><td>你发互动</td><td>1.5–3 秒后回应；离线时等上线后再接受</td></tr><tr><td>互动回应</td><td>1.5–3 秒后</td></tr><tr><td>邀请一起听的回应</td><td>1.6–3 秒后</td></tr></tbody></table>
 <h3>10.4 他随机回什么（<code>chat_core.js</code> → <code>randomReply()</code>）</h3>
 <p>依次判定，前面的命中就不再往后走：</p>
 <table><thead><tr><th>顺序</th><th>内容</th><th>概率</th></tr></thead><tbody><tr><td>1</td><td>拍一拍</td><td>6%</td></tr><tr><td>2</td><td>分享/邀请听歌</td><td>3%；分享约 1.95%、邀请约 1.05%；8 分钟冷却</td></tr><tr><td>3</td><td>礼物/红包/转账</td><td>5%</td></tr><tr><td>4</td><td>引用你最近的话</td><td>20%</td></tr><tr><td>5</td><td>回图片</td><td>12%（图库非空时）</td></tr><tr><td>6</td><td>从字卡抽一条文字</td><td>剩余概率</td></tr><tr><td>7</td><td>文字后附带 Emoji</td><td>30%（有 Emoji 库时）</td></tr></tbody></table>
@@ -760,7 +773,7 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 <table><thead><tr><th>金额</th><th>权重</th></tr></thead><tbody><tr><td>6</td><td>8</td></tr><tr><td>50</td><td>8</td></tr><tr><td>52</td><td>16</td></tr><tr><td>66</td><td>10</td></tr><tr><td>88</td><td>10</td></tr><tr><td>99</td><td>7</td></tr><tr><td>100</td><td>8</td></tr><tr><td>200</td><td>7</td></tr><tr><td>500</td><td>5</td></tr><tr><td>520</td><td>12</td></tr><tr><td>521</td><td>7</td></tr><tr><td>666</td><td>5</td></tr><tr><td>710</td><td>3</td></tr><tr><td>888</td><td>4</td></tr><tr><td>999</td><td>3</td></tr><tr><td>1000</td><td>3</td></tr><tr><td>1112</td><td>2.5</td></tr><tr><td>1314</td><td>2</td></tr><tr><td>2000</td><td>2</td></tr><tr><td>5200</td><td>1.6</td></tr><tr><td>8888</td><td>0.9</td></tr><tr><td>9999</td><td>0.8</td></tr><tr><td>13140</td><td>0.4</td></tr><tr><td>52000</td><td>0.2</td></tr></tbody></table>
 <p>备注也是从各自的小词库里随机抽一句；转账备注会显示在转账卡片上，内置词库包含「这个月生活费」「生活费，够不够」「零花钱，收好」等。</p>
 <h3>10.6 语音通话</h3>
-<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>他主动来电</td><td>每 5 分钟 4% 概率，平均约 2 小时一次</td></tr><tr><td>你打给他：无人接听</td><td>15%</td></tr><tr><td>你打给他：拒接</td><td>10%</td></tr><tr><td>你打给他：接通</td><td>75%</td></tr><tr><td>等待接通时间</td><td>2.5–5.5 秒</td></tr><tr><td>来电无人接</td><td>30 秒后自动挂断</td></tr><tr><td>通话结束影响心情</td><td>78% 会有反应，22% 没反应</td></tr><tr><td>通话后回复延迟</td><td>1.4–3.6 秒</td></tr><tr><td>通话后抽字卡</td><td>未接/挂断 40%，通话结束/已取消 50%；字卡库为空时使用内置句子</td></tr><tr><td>通话后内置句子带 emoji</td><td>42%</td></tr><tr><td>通话后的情绪权重</td><td>未接偏等待、不安；对方挂断偏为难、心虚；自己挂断偏失落；通话结束偏开心、亲密，约持续 5–8 分钟</td></tr></tbody></table>
+<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>他主动来电</td><td>每 5 分钟 4% 概率，平均约 2 小时一次</td></tr><tr><td>你打给他：无人接听</td><td>15%</td></tr><tr><td>你打给他：拒接</td><td>10%</td></tr><tr><td>你打给他：接通</td><td>75%</td></tr><tr><td>等待接通时间</td><td>在线：约 75% 为 2–5 秒，约 25% 为 5–10 秒；离线：约 50% 为 2–10 秒，约 50% 为 10–20 秒</td></tr><tr><td>来电无人接</td><td>30 秒后自动挂断</td></tr><tr><td>通话结束影响心情</td><td>78% 会有反应，22% 没反应</td></tr><tr><td>通话后回复延迟</td><td>1.4–3.6 秒</td></tr><tr><td>通话后抽字卡</td><td>未接/挂断 40%，通话结束/已取消 50%；字卡库为空时使用内置句子</td></tr><tr><td>通话后内置句子带 emoji</td><td>42%</td></tr><tr><td>通话后的情绪权重</td><td>未接偏等待、不安；对方挂断偏为难、心虚；自己挂断偏失落；通话结束偏开心、亲密，约持续 5–8 分钟</td></tr></tbody></table>
 <h3>10.7 互动、音乐、位置</h3>
 <table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>互动回应</td><td>1.5–3 秒；从该动作的回复词库随机抽一句</td></tr><tr><td>随机挑歌</td><td>整个歌单均匀随机</td></tr><tr><td>一起听回应</td><td>1.6–3 秒</td></tr><tr><td>随机播放下一首</td><td>从除当前歌以外的曲目里均匀随机</td></tr><tr><td>列表循环下一首</td><td>按歌单顺序 +1</td></tr><tr><td>单曲循环</td><td>从头重播</td></tr><tr><td>「他在哪」</td><td>从位置库均匀随机</td></tr></tbody></table>
 <p>录音没有随机数，只有最长 60 秒和大小上限。</p>
@@ -817,6 +830,7 @@ moodWeights();                     // 看当前情绪权重</code></pre>
 <p><code>index.html</code> 里很多 id 被 js 用 <code>getElementById</code> 绑事件，改 id 会直接失灵。</p>
 <hr>
 <h2>十二、调试小抄</h2>
+<p>日常测试建议直接用 <code>echoDebug</code>，完整命令见根目录 <code>调试手册.md/.html</code>；入口是 <code>echoDebug.help()</code>。</p>
 <pre><code>// 数据
 localStorage.getItem('chat_settings');
 localStorage.getItem('chat_history');
@@ -841,7 +855,7 @@ switchPage('pageManager');
 applyPalette('aurora');</code></pre>
 <hr>
 <h2>十三、术语表</h2>
-<table><thead><tr><th>词</th><th>意思</th></tr></thead><tbody><tr><td>全局作用域</td><td>所有 js 共享同一个空间，函数可以互相调用</td></tr><tr><td>localStorage</td><td>浏览器的小仓库，存文字和设置</td></tr><tr><td>IndexedDB</td><td>更大的仓库，存本地导入的 mp3</td></tr><tr><td>JSON</td><td><code>{ "键": "值" }</code> 的数据格式，导出文件就是它</td></tr><tr><td>CSS 变量</td><td><code>--primary</code> 这类变量，改一处全站生效</td></tr><tr><td>事件监听</td><td><code>onclick</code>、<code>addEventListener</code>，用户操作后触发的函数</td></tr><tr><td>base64</td><td>图片/语音变成的一大串文字</td></tr><tr><td>Service Worker</td><td>PWA 的后台脚本，安装到桌面需要它</td></tr><tr><td>LRC</td><td>带时间轴的歌词文件</td></tr></tbody></table>
+<table><thead><tr><th>词</th><th>意思</th></tr></thead><tbody><tr><td>全局作用域</td><td>所有 js 共享同一个空间，函数可以互相调用</td></tr><tr><td>localStorage</td><td>浏览器的小仓库，存文字和设置</td></tr><tr><td>IndexedDB</td><td>更大的仓库，存本地导入的 mp3 和聊天历史备份</td></tr><tr><td>JSON</td><td><code>{ "键": "值" }</code> 的数据格式，导出文件就是它</td></tr><tr><td>CSS 变量</td><td><code>--primary</code> 这类变量，改一处全站生效</td></tr><tr><td>事件监听</td><td><code>onclick</code>、<code>addEventListener</code>，用户操作后触发的函数</td></tr><tr><td>base64</td><td>图片/语音变成的一大串文字</td></tr><tr><td>Service Worker</td><td>PWA 的后台脚本，安装到桌面需要它</td></tr><tr><td>LRC</td><td>带时间轴的歌词文件</td></tr></tbody></table>
 <hr>
 <h2>十四、最后</h2>
 <p>改代码最稳的顺序是：</p>
@@ -934,8 +948,12 @@ applyPalette('aurora');</code></pre>
 <tr><td><code>rejected_me</code></td><td>怎么挂啦 / 不方便接吗 / 在忙的话跟我说一声 / 刚想跟你说点事 / 好吧，那晚点再说</td></tr>
 <tr><td><code>completed</code></td><td>刚挂就开始想你了 / 刚才好像没说够 / 下次再聊一会儿 / 听到你声音就安心了 / 挂得有点快</td></tr>
 <tr><td><code>cancelled</code></td><td>怎么取消了 / 还没接通就挂啦 / 是不方便吗 / 有事的话直接说 / 我还在呢</td></tr>
+<tr><td><code>offline_completed</code></td><td>网络刚恢复，终于听到你的声音了 / 对不起，让你担心了 / 刚刚睡着了，让你久等了 / 刚刚在忙，让你久等了 / 突然看到你给我打了好多电话，还好刚才接通了 / 刚上线就接到你的电话，真好 / 我的声音还很沙哑，因为刚睡醒 / 刚刚临时有事下线了，现在我回来了 / 手机关机了，刚才没接到电话</td></tr>
+<tr><td><code>offline_missed_out</code></td><td>离线未接来电：刚刚睡着了，没接到你的电话 / 手机放枕头边，没听到 / 刚刚在忙，没接到电话 / 手机关机了，刚才没接到电话 / 突然看到你给我打了这么多电话 / 刚才没看到你的电话 / 对不起，让你担心了（按 <code>sleep</code> / <code>work</code> / <code>phone_off</code> / <code>generic</code> 分类）</td></tr>
+<tr><td><code>offline_rejected_other</code></td><td>离线时对方挂断：刚刚信号太差，没接起来 / 刚刚在忙，没接到 / 手机放远了，没看到 / 对不起，让你担心了</td></tr>
+<tr><td><code>offline_cancelled</code></td><td>离线时取消：刚才信号太差，还没接通就断了 / 我还没连上，你就挂啦 / 再打一次？这次应该能接通</td></tr>
 </table>
-<p><code>CALL_REPLY_CARD_RATE</code>：<code>missed_in</code> / <code>missed_out</code> / <code>rejected_other</code> / <code>rejected_me</code> 为 <code>0.4</code>，<code>completed</code> / <code>cancelled</code> 为 <code>0.5</code>。抽字卡失败时退回同池内置句子；内置句子有 42% 概率追加 <code>CALL_REPLY_EMOJI</code> 中的一个 emoji。</p>
+<p><code>offline_completed</code> / <code>offline_missed_out</code> / <code>offline_rejected_other</code> / <code>offline_cancelled</code> 的内置句按 <code>sleep</code> / <code>work</code> / <code>phone_off</code> / <code>generic</code> 分类，优先抽当前离线原因对应的句子。<code>CALL_REPLY_CARD_RATE</code>：<code>missed_in</code> / <code>missed_out</code> / <code>rejected_other</code> / <code>rejected_me</code> 为 <code>0.4</code>，<code>completed</code> / <code>cancelled</code> 为 <code>0.5</code>，所有 <code>offline_*</code> 为 <code>0.3</code>（70% 内置 / 30% 字卡）。抽字卡失败时退回同池内置句子；<code>offline_*</code> 不追加 emoji，其他内置句子 42% 概率追加 <code>CALL_REPLY_EMOJI</code>。</p>
 
 <h3>4. 其他固定文案</h3>
 <table>
@@ -943,7 +961,7 @@ applyPalette('aurora');</code></pre>
 <tr><td>我邀请一起听，对方接受</td><td>好呀，一起听。 / 行，耳机分你一半。 / 来吧，我正好也想听。 / 好，点播放吧。 / 一起听会儿。 / 嗯，我在。</td><td><code>chat_music.js</code> 的 <code>MUSIC_INVITE_ACCEPTS</code></td></tr>
 <tr><td>2G 文字回复</td><td>卡死了 / 卡死了，消息转了半天 / 网太差了，刚刚那条才发出去 / 我这边卡得不行 / 等一下，我网络好慢 / 消息一直转圈 / 刚发出去，卡死了 / 这网慢得我想砸手机</td><td><code>chat_core.js</code> 的 <code>SLOW_NETWORK_REPLIES</code></td></tr>
 <tr><td>2G 恢复</td><td>刚才太卡了，现在终于好了 / 刚刚网络卡死了，现在好了 / 终于不卡了 / 刚才一直转圈，现在恢复了 / 网终于好了，刚才消息都发不出去 / 卡了半天，现在能好好说话了</td><td><code>chat_core.js</code> 的 <code>NETWORK_RECOVERY_REPLIES</code></td></tr>
-<tr><td>对方离线后回来</td><td>刚刚没看手机，怎么啦？ / 不好意思，我睡着了.. / 我才忙完回来，我好想你 / 刚上线，我把你的消息看完了 / 立刻朝你飞奔过来 / 刚才没看到，现在在呢 / 我回来了，刚忙完 / 手机放远了，刚拿到</td><td><code>data.js</code> 的 <code>offlineReplyLines</code></td></tr>
+<tr><td>对方离线后回来</td><td>按 <code>sleep</code>（睡着/刚醒）、<code>work</code>（忙完/临时下线）、<code>phone_off</code>（手机没看到/关机）、<code>generic</code> 分类；上线时优先抽对应原因的分类。深夜睡觉分类权重更高</td><td><code>data.js</code> 的 <code>OFFLINE_REPLY_POOLS</code></td></tr>
 <tr><td>字卡库为空</td><td>弹出提示，可直接跳转「自定义回复」</td><td><code>chat_core.js</code> 的 <code>promptEmptyCardLibrary()</code></td></tr>
 </table>
 
@@ -991,7 +1009,7 @@ applyPalette('aurora');</code></pre>
 </ul>
 
 <h3>4. 拍一拍</h3>
-<p>普通情绪在最后一条 DOM 是 <code>.sys</code> 时隐藏，等下一次真实消息；事件情绪仍显示，并通过 <code>pat-mode</code> 居中放在拍一拍下方。</p>
+<p>普通情绪在最后一条 DOM 是 <code>.sys</code> 时隐藏，等下一次真实消息；对方状态为「离线」时也隐藏，恢复在线后由 <code>renderOtherStatus()</code> 触发重判。事件情绪仍显示，并通过 <code>pat-mode</code> 居中放在拍一拍下方。</p>
 
 <h3>5. 混合比例</h3>
 <p><code>HYBRID_TEXT_CARD_RATE = 0.7</code>；互动 <code>HYBRID_INTERACT_CARD_RATE = 0.5</code>；推荐歌曲 <code>HYBRID_MUSIC_CARD_RATE = 0.6</code>；通话后 <code>CALL_REPLY_CARD_RATE</code> 未接/挂断 <code>0.4</code>、通话结束/已取消 <code>0.5</code>。</p>
@@ -1025,7 +1043,7 @@ pushMoodEvent('happy', ['开心', '开心+', '开心++'], 120000, 'test')</code>
 <ul>
 <li>深夜（00:00–05:00）<code>rollOtherStatus()</code> 把离线权重乘以 2.5；</li>
 <li><code>offlineReplyLines</code> 现有八句；</li>
-<li>离线自动回复约 3 秒后发出，80% 从 <code>OFFLINE_AUTO_REPLIES</code> 六句内置短句抽取，20% 抽字卡；字卡库为空时回到内置短句；</li>
+<li>离线自动回复约 2 秒后发出，80% 从 <code>OFFLINE_AUTO_REPLIES</code> 六句内置短句抽取，20% 抽字卡；字卡库为空时回到内置短句；</li>
 <li>离线自动回复带 <code>autoReply: true</code>，气泡前显示「[自动回复]」；</li>
 <li>离线回复有 55% 概率在结尾追加 😭 或 🥺；回到在线后的新消息不再带标记。</li>
 </ul>

@@ -121,6 +121,8 @@ button:active, .icon-btn:active, .text-btn:active { transform: scale(0.92) !impo
 .bubble.img-bubble { padding: 0; background: transparent; box-shadow: none; }
 .bubble.img-bubble img { max-width: 120px; max-height: 120px; display: block; border-radius: 12px; object-fit: cover; }
 .bubble-time { font-size: 10px; color: #999; margin-top: 4px; }
+.read-status { margin-left: 6px; color: #8a9299; }
+.read-status.unread { color: var(--primary-dark, #6B8E23); font-weight: 600; }
 
 /* 引用跳转：整行白色短促闪烁一下 */
 @keyframes row-flash {

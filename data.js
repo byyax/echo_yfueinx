@@ -53,17 +53,62 @@ interactLibrary.forEach(it => {
   if (!it.replies || !it.replies.length) it.replies = INTERACT_REPLIES[it.name] || [];
 });
 
-// 对方离线时的自动回复（回来后会先发一句）
-let offlineReplyLines = [
-  '刚刚没看手机，怎么啦？',
-  '不好意思，我睡着了..',
-  '我才忙完回来，我好想你',
-  '刚上线，我把你的消息看完了',
-  '立刻朝你飞奔过来',
-  '刚才没看到，现在在呢',
-  '我回来了，刚忙完',
-  '手机放远了，刚拿到'
-];
+// 对方离线回来的文案，按离线原因分类；上线时优先抽对应分类。
+const OFFLINE_REPLY_POOLS = {
+  sleep: [
+    '不好意思，我睡着了..',
+    '刚刚睡着了，让你久等了',
+    '我的声音还有点哑，刚睡醒',
+    '睡过头了，刚看到消息',
+    '刚醒，手机放枕头边没听到'
+  ],
+  work: [
+    '我才忙完回来，我好想你',
+    '刚刚在忙，让你久等了',
+    '我回来了，刚忙完',
+    '刚刚临时有事下线了，现在我回来了',
+    '忙完了，终于能看手机'
+  ],
+  phone_off: [
+    '刚刚没看手机，怎么啦？',
+    '手机放远了，刚拿到',
+    '手机关机了，刚才没接到电话',
+    '刚上线，我把你的消息看完了',
+    '刚才没看到，现在在呢'
+  ],
+  generic: [
+    '立刻朝你飞奔过来',
+    '我回来了',
+    '刚上线，我把你的消息看完了',
+    '刚刚没看手机，怎么啦？'
+  ]
+};
+// 兼容旧调试代码和兜底用；实际选择走 pickOfflineReturnLine()。
+let offlineReplyLines = Array.from(new Set([].concat(
+  OFFLINE_REPLY_POOLS.sleep,
+  OFFLINE_REPLY_POOLS.work,
+  OFFLINE_REPLY_POOLS.phone_off,
+  OFFLINE_REPLY_POOLS.generic
+)));
+
+function pickWeightedOfflineLine(pools, preferred, genericKey) {
+  const rows = [];
+  Object.keys(pools).forEach(key => {
+    const weight = key === preferred ? 3 : (key === genericKey ? 1 : 0.6);
+    (pools[key] || []).forEach(line => rows.push({ line, weight }));
+  });
+  if (!rows.length) return '';
+  const total = rows.reduce((sum, x) => sum + x.weight, 0);
+  let r = Math.random() * total;
+  for (const row of rows) {
+    r -= row.weight;
+    if (r <= 0) return row.line;
+  }
+  return rows[0].line;
+}
+function pickOfflineReturnLine(reason) {
+  return pickWeightedOfflineLine(OFFLINE_REPLY_POOLS, reason || 'generic', 'generic');
+}
 
 if (locLibrary.length > 0 && typeof locLibrary[0] === 'string') locLibrary = locLibrary.map((v, i) => ({ id: 'l_'+i, val: v }));
 if (pokeLibrary.length > 0 && typeof pokeLibrary[0] === 'string') pokeLibrary = pokeLibrary.map((v, i) => ({ id: 'p_'+i, val: v }));
@@ -135,6 +180,8 @@ if (chatSettings.autoReplyTime === undefined) chatSettings.autoReplyTime = 0;
 if (chatSettings.autoReplyCount === undefined) chatSettings.autoReplyCount = 1;
 if (chatSettings.moodEnabled === undefined) chatSettings.moodEnabled = true;
 if (chatSettings.showTyping === undefined) chatSettings.showTyping = true;
+if (chatSettings.readReceipts === undefined) chatSettings.readReceipts = false;
+if (chatSettings.notifications === undefined) chatSettings.notifications = false;
 // 开场动画是否跟随当前配色；关闭时固定使用默认绿色
 if (chatSettings.bootTint === undefined) chatSettings.bootTint = true;
 
@@ -171,19 +218,81 @@ chatHistory.forEach(msg => {
 let saveAllDataTimer = null;
 let saveAllDataPending = false;
 
+function lastHistoryTime(list) {
+  for (let i = (list || []).length - 1; i >= 0; i--) {
+    const m = list[i];
+    if (m && m.time) return m.time;
+  }
+  return 0;
+}
+function historyKeyOf(m) {
+  const c = (m && m.content) || {};
+  return [m && m.time, m && m.role, m && m.type, c.val, c.name, c.amount].join('|');
+}
+function mergeHistoryLists(current, incoming) {
+  const map = new Map();
+  (current || []).forEach(m => { if (m) map.set(historyKeyOf(m), m); });
+  (incoming || []).forEach(m => { if (m) map.set(historyKeyOf(m), m); });
+  return Array.from(map.values()).sort((a, b) => (a.time || 0) - (b.time || 0));
+}
+
+let lastStorageWarnAt = 0;
+function warnStorageProblem() {
+  const now = Date.now();
+  if (now - lastStorageWarnAt < 30000) return;
+  lastStorageWarnAt = now;
+  if (typeof showToast === 'function') {
+    showToast('本地存储已满，最近的消息可能没有保存；请先导出备份并清理记录');
+  }
+}
+function safeSetItem(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    warnStorageProblem();
+    return false;
+  }
+}
+
 function persistAllDataNow() {
   if (saveAllDataTimer) { clearTimeout(saveAllDataTimer); saveAllDataTimer = null; }
   if (!saveAllDataPending) return;
   saveAllDataPending = false;
-  localStorage.setItem('chat_tags', JSON.stringify(tags));
-  localStorage.setItem('chat_contents', JSON.stringify(contents));
-  localStorage.setItem('my_emojis', JSON.stringify(myEmojis));
-  localStorage.setItem('chat_settings', JSON.stringify(chatSettings));
-  localStorage.setItem('chat_history', JSON.stringify(chatHistory));
-  localStorage.setItem('loc_library', JSON.stringify(locLibrary));
-  localStorage.setItem('poke_library', JSON.stringify(pokeLibrary));
-  localStorage.setItem('signature_library', JSON.stringify(signatureLibrary));
-  localStorage.setItem('interact_library', JSON.stringify(interactLibrary));
+
+  // 删除、清空、导入是有意修改历史，不能又被旧存档合并回来。
+  const skipHistoryMerge = window.__skipHistoryMerge === true;
+  window.__skipHistoryMerge = false;
+
+  // 多开页面时，旧页面不能拿自己落后的 chatHistory 覆盖新页面刚保存的消息。
+  if (!skipHistoryMerge) {
+    try {
+      const storedRaw = localStorage.getItem('chat_history');
+      if (storedRaw) {
+        const stored = JSON.parse(storedRaw);
+        if (Array.isArray(stored) && lastHistoryTime(stored) > lastHistoryTime(chatHistory)) {
+          chatHistory = mergeHistoryLists(chatHistory, stored);
+        }
+      }
+    } catch (e) {}
+  }
+
+  let historyJson = '[]';
+  try { historyJson = JSON.stringify(chatHistory); } catch (e) { warnStorageProblem(); }
+
+  safeSetItem('chat_tags', JSON.stringify(tags));
+  safeSetItem('chat_contents', JSON.stringify(contents));
+  safeSetItem('my_emojis', JSON.stringify(myEmojis));
+  safeSetItem('chat_settings', JSON.stringify(chatSettings));
+  const historySaved = safeSetItem('chat_history', historyJson);
+  safeSetItem('loc_library', JSON.stringify(locLibrary));
+  safeSetItem('poke_library', JSON.stringify(pokeLibrary));
+  safeSetItem('signature_library', JSON.stringify(signatureLibrary));
+  safeSetItem('interact_library', JSON.stringify(interactLibrary));
+
+  // localStorage 正常时低频备份；写满时立刻写 IndexedDB，避免这一段消息彻底丢。
+  if (historySaved) scheduleChatHistoryBackup();
+  else writeChatHistoryBackup();
 }
 
 // 连续发送/开关卡片时合并写入，避免每次都把整个聊天记录序列化一遍。
@@ -195,6 +304,90 @@ function saveAllData() {
     persistAllDataNow();
   }, 180);
 }
+
+// ===== 聊天记录第二层备份 =====
+// localStorage 写满、被浏览器清理或多开页面互相覆盖时，IndexedDB 里还能留一份。
+const CHAT_BACKUP_DB = 'echo_chat_backup';
+const CHAT_BACKUP_STORE = 'history';
+let chatBackupDbPromise = null;
+let chatBackupTimer = null;
+
+function openChatBackupDb() {
+  if (!window.indexedDB) return Promise.reject(new Error('no-indexeddb'));
+  if (chatBackupDbPromise) return chatBackupDbPromise;
+  chatBackupDbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(CHAT_BACKUP_DB, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(CHAT_BACKUP_STORE)) {
+        db.createObjectStore(CHAT_BACKUP_STORE, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('backup-db-open-failed'));
+  });
+  return chatBackupDbPromise;
+}
+
+function writeChatHistoryBackup() {
+  if (!window.indexedDB) return;
+  const skipMerge = window.__skipBackupMerge === true;
+  window.__skipBackupMerge = false;
+  openChatBackupDb().then(db => {
+    const tx = db.transaction(CHAT_BACKUP_STORE, 'readwrite');
+    const store = tx.objectStore(CHAT_BACKUP_STORE);
+    const get = store.get('latest');
+    get.onsuccess = () => {
+      const old = get.result;
+      let outgoing = chatHistory;
+      // 旧页面不要用落后的历史覆盖较新的备份；清空/导入/删除除外。
+      if (!skipMerge && old && Array.isArray(old.history) && lastHistoryTime(old.history) > lastHistoryTime(outgoing)) {
+        outgoing = mergeHistoryLists(outgoing, old.history);
+      }
+      store.put({ id: 'latest', history: outgoing, savedAt: Date.now() });
+    };
+  }).catch(() => {});
+}
+
+function scheduleChatHistoryBackup() {
+  if (chatBackupTimer) return;
+  chatBackupTimer = setTimeout(() => {
+    chatBackupTimer = null;
+    writeChatHistoryBackup();
+  }, 1200);
+}
+
+function clearChatHistoryBackup() {
+  if (chatBackupTimer) { clearTimeout(chatBackupTimer); chatBackupTimer = null; }
+  window.__skipBackupMerge = true;
+  if (!window.indexedDB) return;
+  openChatBackupDb().then(db => {
+    const tx = db.transaction(CHAT_BACKUP_STORE, 'readwrite');
+    tx.objectStore(CHAT_BACKUP_STORE).delete('latest');
+  }).catch(() => {});
+}
+
+function restoreChatHistoryBackup() {
+  if (!window.indexedDB) return;
+  openChatBackupDb().then(db => {
+    const tx = db.transaction(CHAT_BACKUP_STORE, 'readonly');
+    const get = tx.objectStore(CHAT_BACKUP_STORE).get('latest');
+    get.onsuccess = () => {
+      const saved = get.result;
+      const list = saved && saved.history;
+      if (!Array.isArray(list) || !list.length) return;
+      if (lastHistoryTime(list) <= lastHistoryTime(chatHistory)) return;
+      chatHistory = mergeHistoryLists(chatHistory, list);
+      saveAllData();
+      if (window.__appRevealed && typeof renderChatHistoryWindow === 'function') {
+        const keep = Math.max(200, chatHistory.length - (typeof chatRenderStart === 'number' ? chatRenderStart : 0));
+        renderChatHistoryWindow(keep);
+      }
+    };
+  }).catch(() => {});
+}
+
+setTimeout(restoreChatHistoryBackup, 900);
 
 window.addEventListener('pagehide', persistAllDataNow);
 window.addEventListener('beforeunload', persistAllDataNow);

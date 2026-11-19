@@ -321,6 +321,24 @@ if (saveSettingsBtn) {
     const soundBox = document.getElementById('setSound');
     if (soundBox) chatSettings.sound = soundBox.checked;
 
+    const readBox = document.getElementById('setReadReceipts');
+    if (readBox) chatSettings.readReceipts = readBox.checked;
+
+    const notifyBox = document.getElementById('setNotifications');
+    if (notifyBox) {
+      chatSettings.notifications = notifyBox.checked;
+      if (notifyBox.checked && typeof requestNotifyPermission === 'function') {
+        requestNotifyPermission().then(ok => {
+          if (!ok) {
+            chatSettings.notifications = false;
+            if (notifyBox) notifyBox.checked = false;
+            saveAllData();
+            showToast('通知权限未开启，手机通知已关闭');
+          }
+        });
+      }
+    }
+
     const moodBox = document.getElementById('setMoodEnabled');
     if (moodBox) chatSettings.moodEnabled = moodBox.checked;
 
@@ -341,6 +359,7 @@ if (saveSettingsBtn) {
     saveAllData();
     if (typeof applyPalette === 'function') applyPalette(chatSettings.palette || 'olive');
     applyChatSettings();
+    if (typeof refreshReadReceiptUI === 'function') refreshReadReceiptUI();
     if (typeof refreshMood === 'function') refreshMood(true);
     settingsDirty = false;
     showToast('保存成功');
@@ -395,6 +414,10 @@ const typingBoxEl = document.getElementById('setShowTyping');
 if (typingBoxEl) typingBoxEl.addEventListener('change', markSettingsDirty);
 const soundBoxEl = document.getElementById('setSound');
 if (soundBoxEl) soundBoxEl.addEventListener('change', markSettingsDirty);
+const readBoxEl = document.getElementById('setReadReceipts');
+if (readBoxEl) readBoxEl.addEventListener('change', markSettingsDirty);
+const notifyBoxEl = document.getElementById('setNotifications');
+if (notifyBoxEl) notifyBoxEl.addEventListener('change', markSettingsDirty);
 const moodBoxEl = document.getElementById('setMoodEnabled');
 if (moodBoxEl) moodBoxEl.addEventListener('change', markSettingsDirty);
 const bootTintBoxEl = document.getElementById('setBootTint');
