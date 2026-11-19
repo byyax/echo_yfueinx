@@ -110,7 +110,7 @@ function renderHistory(filterDate = '') {
       if (msg.type === 'text' || msg.type === 'pat') content = c.val || '';
       else if (msg.type === 'image') content = '[图片]';
       else if (msg.type === 'gift') content = c.name || c.val || '[礼物]';
-      else if (msg.type === 'transfer') content = `[转账 ¥${c.amount || '0.00'}]`;
+      else if (msg.type === 'transfer') content = `[转账 ¥${c.amount || '0.00'}${c.note ? ' ' + c.note : ''}]`;
       else if (msg.type === 'redpacket') content = `[红包 ${c.note || ''}]`;
       else if (msg.type === 'location') content = c.val || '[位置]';
       else if (msg.type === 'interact') content = `[互动 ${c.name || ''}]`;

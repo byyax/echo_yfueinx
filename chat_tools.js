@@ -108,10 +108,27 @@ const REPLY_FALLBACK = {
   '举高高': ['哇——飞起来啦！', '再来一次', '放我下来啦']
 };
 
+function markMyInteractAccepted(msg) {
+  if (!msg || !msg.content) return;
+  msg.content.isOpened = true;
+  saveAllData();
+  const bubble = document.querySelector(`.bubble[data-msg-time="${msg.time}"]`);
+  if (!bubble) return;
+  bubble.classList.add('opened');
+  const icon = bubble.querySelector('.card-icon');
+  const subtitle = bubble.querySelector('.card-info p');
+  const bottom = bubble.querySelector('.card-bottom');
+  if (icon) icon.className = 'card-icon grey';
+  if (subtitle) subtitle.textContent = '已接受';
+  if (bottom) bottom.textContent = '已接受';
+}
+
 function sendInteract(it) {
   sendMessage({ name: it.name, icon: it.icon, val: `想${it.name}`, isOpened: false, interact: true }, 'interact', true);
+  const sent = chatHistory[chatHistory.length - 1];
   // 对方回应：五成抽字卡，五成用动作自己的词库
   setTimeout(() => {
+    markMyInteractAccepted(sent);
     if (Math.random() < HYBRID_INTERACT_CARD_RATE && typeof sendRandomTextCardReply === 'function'
       && sendRandomTextCardReply({ quoteChance: 0.15 })) return;
     const pool = (it.replies && it.replies.length) ? it.replies : REPLY_FALLBACK[it.name];

@@ -271,6 +271,7 @@ const pcToggleBtn = document.getElementById('pcToggleBtn'); if(pcToggleBtn) pcTo
 const backFromData = document.getElementById('backFromData'); if(backFromData) backFromData.onclick = () => switchPage('pageManager');
 
 let otherNetworkMode = 'WiFi';
+const CONNECTION_NOTICE_COOLDOWN = 5000;
 function getOtherNetworkMode() { return otherNetworkMode; }
 
 function notifyConnectionState(force) {
@@ -291,18 +292,56 @@ function notifyConnectionState(force) {
   }
 
   const now = Date.now();
-  if (!force && now - (window.__lastConnectionNoticeAt || 0) < 10000) return;
+  if (!force && now - (window.__lastConnectionNoticeAt || 0) < CONNECTION_NOTICE_COOLDOWN) return;
   window.__lastConnectionNoticeAt = now;
   if (offline) showToast('📴 对方已掉线，消息可能会晚一点');
   else showToast('📶 对方网络不佳，回复可能会慢一点');
 }
 
+function resetSlowNetworkTracking() {
+  window.__slowNetworkStartedAt = 0;
+  window.__slowNetworkHadUserMsg = false;
+}
+
+// 2G 恢复后，如果这段时间我确实发过消息、而且还有没被回复的消息，
+// 就有概率补一句“刚才太卡了”。离线回来走自己的流程，不在这里重复。
+function maybeAnnounceNetworkRecovery(opts) {
+  const startedAt = window.__slowNetworkStartedAt || 0;
+  const hadUserMsg = window.__slowNetworkHadUserMsg === true;
+  resetSlowNetworkTracking();
+  if (!hadUserMsg || (opts && opts.noRecovery)) return;
+  if (!window.__appRevealed) return;
+  if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') return;
+  if (Date.now() - startedAt < NETWORK_RECOVERY_MIN_MS) return;
+
+  const streak = (typeof countMyMessageStreak === 'function') ? countMyMessageStreak() : 0;
+  if (streak <= 0) return;
+  if (typeof moodAfterNetworkRecover === 'function') moodAfterNetworkRecover(streak);
+
+  if (Math.random() >= NETWORK_RECOVERY_CHANCE) return;
+  const now = Date.now();
+  if (now - (window.__lastNetworkRecoveryAt || 0) < NETWORK_RECOVERY_COOLDOWN) return;
+  window.__lastNetworkRecoveryAt = now;
+  setTimeout(() => {
+    if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') return;
+    if (typeof sendNetworkRecoveryLine === 'function') sendNetworkRecoveryLine();
+  }, 1200 + Math.random() * 1800);
+}
+
 function setOtherNetworkMode(mode, opts) {
   if (!mode) return;
-  const changed = otherNetworkMode !== mode;
+  const prevMode = otherNetworkMode;
+  const changed = prevMode !== mode;
   otherNetworkMode = mode;
   const netEl = document.getElementById('networkIcon');
   if (netEl) netEl.textContent = `📶 ${mode}`;
+  if (changed && mode === '2G') {
+    // 新的一段 2G 开始；重复设为 2G 时不要清掉已经记录的消息。
+    window.__slowNetworkStartedAt = Date.now();
+    window.__slowNetworkHadUserMsg = false;
+  } else if (changed && prevMode === '2G') {
+    maybeAnnounceNetworkRecovery(opts);
+  }
   if (changed && (!opts || !opts.silent)) notifyConnectionState(true);
 }
 
@@ -419,7 +458,7 @@ function rollOtherStatus() {
     setOtherNetworkMode('2G', { silent: true });
     notifyConnectionState(true);
   } else if (wasOffline) {
-    setOtherNetworkMode(Math.random() < 0.7 ? 'WiFi' : '5G', { silent: true });
+    setOtherNetworkMode(Math.random() < 0.7 ? 'WiFi' : '5G', { silent: true, noRecovery: true });
   }
   renderOtherStatus();
 }
@@ -430,7 +469,7 @@ function setOtherOnline() {
   otherStatus.main = STATUS_MAIN[0];
   otherStatus.sub = null;
   nextStatusChangeAt = Date.now() + (8 + Math.random() * 17) * 60 * 1000;
-  if (wasOffline) setOtherNetworkMode(Math.random() < 0.7 ? 'WiFi' : '5G', { silent: true });
+  if (wasOffline) setOtherNetworkMode(Math.random() < 0.7 ? 'WiFi' : '5G', { silent: true, noRecovery: true });
   renderOtherStatus();
 }
 

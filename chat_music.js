@@ -156,6 +156,9 @@ let musicLoading = false;
 let musicError = '';
 let audioErrorAt = 0;
 let musicLoadTimer = null;
+// 手机网络/大文件首播常常超过 20 秒。只要还有数据在进来，就重新计时；
+// 完全没有新数据超过 45 秒才判定超时。
+const MUSIC_LOAD_TIMEOUT_MS = 45000;
 
 function clearMusicLoadTimer() {
   if (musicLoadTimer) { clearTimeout(musicLoadTimer); musicLoadTimer = null; }
@@ -170,7 +173,7 @@ function startMusicLoadTimer() {
     try { musicAudio.pause(); } catch (e) {}
     updateMusicBarUI();
     showToast('这首歌加载超时，检查网络或文件是否已上传');
-  }, 20000);
+  }, MUSIC_LOAD_TIMEOUT_MS);
 }
 
 // 播放模式：list 列表循环 / one 单曲循环 / shuffle 随机
@@ -529,6 +532,8 @@ function toggleMusicBarCollapsed() {
 }
 
 function openMusicBar() {
+  // 打开播放器时先把当前歌拉起来，点播放时不用再从零等待。
+  preloadCurrentSong();
   if (musicBarOpen) { setMusicBarCollapsed(false); updateMusicBarUI(); return; }
   musicBarOpen = true;
   if (musicBar) musicBar.classList.add('show');
@@ -616,6 +621,10 @@ musicAudio.addEventListener('waiting', () => {
     startMusicLoadTimer();
     updateMusicBarUI();
   }
+});
+musicAudio.addEventListener('progress', () => {
+  // 数据还在持续到达就不算超时；只是慢，不是坏。
+  if (musicPlaying && musicLoading && musicAudio.readyState < 3) startMusicLoadTimer();
 });
 musicAudio.addEventListener('canplay', () => {
   clearMusicLoadTimer();
@@ -741,7 +750,7 @@ function acceptMyMusicInvite(title) {
     if (icon) { icon.textContent = '🎧'; icon.className = 'card-icon grey'; }
     if (bottom) bottom.textContent = '已接受';
   }
-  if (typeof moodAfterOpen === 'function') moodAfterOpen('musicinvite');
+  if (typeof moodAfterOpen === 'function') moodAfterOpen('musicinvite', msg.content);
 
   let t = title || (msg.content && msg.content.name) || '';
   if (!t && typeof pickRandomSong === 'function') {

@@ -327,18 +327,27 @@ document.getElementById('cancelPay').onclick = () => document.getElementById('pa
 // 大多数是区间内的普通金额；小概率抽到"彩蛋数字"，金额越大权重越低（类似刮彩票）。
 const MONEY_SPECIALS = [
   { v: 6,     w: 8 },
+  { v: 50,    w: 8 },     // 平时买点小东西
   { v: 52,    w: 16 },
   { v: 66,    w: 10 },
   { v: 88,    w: 10 },
+  { v: 99,    w: 7 },
+  { v: 100,   w: 8 },
+  { v: 200,   w: 7 },
+  { v: 500,   w: 5 },
   { v: 520,   w: 12 },
   { v: 521,   w: 7 },
   { v: 666,   w: 5 },
   { v: 710,   w: 3 },     // 小桃的生日 07-10
   { v: 888,   w: 4 },
+  { v: 999,   w: 3 },
+  { v: 1000,  w: 3 },     // 生活费
   { v: 1112,  w: 2.5 },   // 陆昀霏的生日 11-12
   { v: 1314,  w: 2 },
+  { v: 2000,  w: 2 },     // 生活费
   { v: 5200,  w: 1.6 },
   { v: 8888,  w: 0.9 },
+  { v: 9999,  w: 0.8 },
   { v: 13140, w: 0.4 },
   { v: 52000, w: 0.2 }
 ];
@@ -347,22 +356,29 @@ const MONEY_NOTES = {
     '恭喜发财', '拿去买奶茶', '买点好吃的', '爱你', '一点心意，收好',
     '嘿嘿，不许退回来', '今天也要开心', '请你吃夜宵', '偷偷给你', '想你了，收下'
   ],
-  transfer: ['拿去花', '别省着，买点喜欢的', '最近辛苦了', '想买什么就买', '收着，别问']
+  transfer: [
+    '拿去花', '别省着，买点喜欢的', '最近辛苦了', '想买什么就买', '收着，别问',
+    '这个月生活费', '生活费，够不够', '零花钱，收好', '给自己买点好的', '先拿着用'
+  ]
 };
 
 function randomMoneyAmount(kind) {
   if (Math.random() < 0.78) {
-    const n = kind === 'transfer'
-      ? 100 + Math.floor(Math.random() * 1901)   // 100 ~ 2000
-      : 8 + Math.floor(Math.random() * 193);     // 8 ~ 200
-    return n.toFixed(2);
+    if (kind === 'transfer') {
+      // 转账普通金额保持整数
+      return String(100 + Math.floor(Math.random() * 1901)); // 100 ~ 2000
+    }
+    // 红包普通金额：整数和小数各一半
+    const base = 8 + Math.floor(Math.random() * 193); // 8 ~ 200
+    if (Math.random() < 0.5) return base.toFixed(2);
+    return (base + Math.floor(Math.random() * 100) / 100).toFixed(2);
   }
   const total = MONEY_SPECIALS.reduce((s, x) => s + x.w, 0);
   let r = Math.random() * total;
   for (const it of MONEY_SPECIALS) {
-    if ((r -= it.w) <= 0) return it.v.toFixed(2);
+    if ((r -= it.w) <= 0) return kind === 'transfer' ? String(it.v) : it.v.toFixed(2);
   }
-  return MONEY_SPECIALS[0].v.toFixed(2);
+  return kind === 'transfer' ? String(MONEY_SPECIALS[0].v) : MONEY_SPECIALS[0].v.toFixed(2);
 }
 
 function randomMoneyPayload(kind) {

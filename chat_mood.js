@@ -128,6 +128,65 @@ function boostMoodFromCard(card) {
   }
 }
 
+// 点开他推荐的歌播放：正向情绪短暂升高。
+function moodAfterRecommendPlay() {
+  if (chatSettings.moodEnabled === false) return;
+  if (Math.random() < 0.8) {
+    boostMood('happy', 2.3, 4 * 60000);
+    boostMood('intimate', 1.5, 4 * 60000);
+    boostMood('excited', 1.2, 4 * 60000);
+  }
+}
+
+// 位置语义：靠近、忙碌、日常休息会分别影响不同的情绪强度。
+function boostMoodFromLocation(text) {
+  const t = String(text || '');
+  if (!t) return;
+  if (/在你身边|来找你|飞奔|马上到|楼下|门口|接你/.test(t)) {
+    boostMood('intimate', 2.4, 3 * 60000);
+    boostMood('happy', 1.5, 3 * 60000);
+    return;
+  }
+  if (/在忙|工作|加班|开会|外出|出差|赶路/.test(t)) {
+    boostMood('waiting', 1.2, 3 * 60000);
+    boostMood('thoughtful', 1.0, 3 * 60000);
+    return;
+  }
+  if (/在家|休息|睡|吃饭|奶茶|咖啡|超市|散步|公园/.test(t)) {
+    boostMood('calm', 1.3, 2 * 60000);
+    boostMood('happy', 0.9, 2 * 60000);
+    return;
+  }
+  if (Math.random() < 0.35) boostMood('calm', 1.3, 2 * 60000);
+}
+
+// 金额/价位越高，拆开时的正向情绪越强；红包的彩蛋金额再额外加一点。
+const MOOD_LUCKY_AMOUNTS = [
+  5.2, 6.66, 8.88, 9.99, 13.14, 52, 66, 88, 99, 100, 200,
+  520, 521, 666, 710, 888, 999, 1000, 1112, 1314, 2000,
+  5200, 8888, 9999, 13140, 52000
+];
+function moodMoneyStrength(amount) {
+  const v = Math.abs(Number(amount) || 0);
+  if (v < 50) return 1;
+  if (v < 200) return 1.35;
+  if (v < 1000) return 1.8;
+  if (v < 5000) return 2.4;
+  return 3;
+}
+function isLuckyMoodAmount(amount) {
+  const v = Math.abs(Number(amount) || 0);
+  return MOOD_LUCKY_AMOUNTS.some(x => Math.abs(x - v) < 0.01);
+}
+function moodGiftStrength(price) {
+  const v = Math.abs(Number(price) || 0);
+  if (v < 50) return 1;
+  if (v < 300) return 1.5;
+  if (v < 1000) return 2;
+  if (v < 3000) return 2.6;
+  return 3.2;
+}
+
 function applyMoodBoosts(w) {
   const now = Date.now();
   for (const tier in moodBoosts) {
@@ -165,6 +224,22 @@ function unopenedCardFromHim() {
   return null;
 }
 
+// 我发出去、还没被回应的互动 / 一起听 / 选择卡：等待和期待会略升高。
+function pendingCardFromMe() {
+  for (let i = chatHistory.length - 1; i >= 0; i--) {
+    const m = chatHistory[i];
+    if (!m || m.role !== 'me' || !m.content) continue;
+    if (m.type === 'choice') {
+      if (!m.content.chosen || !m.content.chosen.length) return m;
+      continue;
+    }
+    if (m.type === 'interact' || m.type === 'musicinvite') {
+      if (!m.content.isOpened) return m;
+    }
+  }
+  return null;
+}
+
 // ===== 权重：基础权重 + 临时热度 + 衰减 =====
 function moodWeights() {
   const now = Date.now();
@@ -179,6 +254,16 @@ function moodWeights() {
     w.anxious += 5 * pressure;
     w.jealous += 3 * pressure;
     w.calm = Math.max(10, w.calm - 4 * pressure);
+  }
+
+  // 我发出的互动、邀请或选择卡还没被回应：期待/不安轻微上升。
+  const minePending = pendingCardFromMe();
+  const mineWait = minePending ? now - (minePending.time || now) : 0;
+  if (minePending && mineWait < 5 * 60000) {
+    const pressure = mineWait < 15000 ? 0.5 : (mineWait < 45000 ? 0.9 : 1.3);
+    w.waiting += 4 * pressure;
+    w.anxious += 2.5 * pressure;
+    w.calm = Math.max(10, w.calm - 2 * pressure);
   }
 
   const last = lastRealMsg();
@@ -540,6 +625,42 @@ function moodAfterOfflineReturn(count) {
   pushMoodEvent(tier, pair, 4 * 60000, 'return');
 }
 
+// 2G 恢复：如果网络差的时候你连发了好几条，他会从等待/焦急转成抱歉或松一口气。
+function moodAfterNetworkRecover(count) {
+  if (!count || chatSettings.moodEnabled === false) return;
+  let tier = 'calm';
+  let pair;
+  if (count >= 4) {
+    tier = 'anxious';
+    pair = pickFrom([
+      ['焦急', '网络怎么这么差'],
+      ['担心', '你等急了吧'],
+      ['无奈', '卡了半天']
+    ]);
+    boostMood('anxious', 2.6, 7 * 60000);
+    boostMood('waiting', 1.8, 6 * 60000);
+    boostMood('sad', 1.1, 6 * 60000);
+  } else if (count >= 2) {
+    tier = 'waiting';
+    pair = pickFrom([
+      ['抱歉', '让你等这么久'],
+      ['无奈', '刚才一直转圈'],
+      ['心虚', '消息才看到']
+    ]);
+    boostMood('waiting', 2.0, 6 * 60000);
+    boostMood('anxious', 1.4, 6 * 60000);
+  } else {
+    tier = 'calm';
+    pair = pickFrom([
+      ['松口气', '终于不卡了'],
+      ['抱歉', '刚才卡住了'],
+      ['安心', '现在好了']
+    ]);
+    boostMood('calm', 1.5, 5 * 60000);
+  }
+  pushMoodEvent(tier, pair, 3 * 60000, 'network');
+}
+
 // 聊天不是每句都换心情：普通消息按概率轻刷，特殊互动掷中才加权
 function moodAfterMessage(isMe, type, content) {
   const text = (content && content.val != null) ? String(content.val) : '';
@@ -577,7 +698,7 @@ function moodAfterMessage(isMe, type, content) {
     return;
   }
   if (type === 'location') {
-    if (Math.random() < 0.35) boostMood('calm', 1.3, 2 * 60000);
+    boostMoodFromLocation(content && content.val);
     return;
   }
   if (type === 'choice') {
@@ -596,7 +717,7 @@ function moodAfterMessage(isMe, type, content) {
 }
 
 // 拆红包 / 接受互动 / 接受一起听
-function moodAfterOpen(type) {
+function moodAfterOpen(type, content) {
   if (type === 'musicinvite') {
     if (Math.random() < 0.7) { boostMood('intimate', 2, 4 * 60000); boostMood('happy', 1.6, 4 * 60000); }
     return;
@@ -606,7 +727,15 @@ function moodAfterOpen(type) {
     return;
   }
   if (type === 'gift' || type === 'redpacket' || type === 'transfer') {
-    if (Math.random() < 0.5) boostMood('happy', 1.8, 3 * 60000);
+    let strength = 1;
+    if (type === 'gift') strength = moodGiftStrength(content && content.price);
+    else strength = moodMoneyStrength(content && content.amount);
+    if (type === 'redpacket' && isLuckyMoodAmount(content && content.amount)) strength += 0.6;
+    if (Math.random() < 0.65) {
+      boostMood('happy', 1.2 * strength, 3 * 60000);
+      boostMood('excited', 0.9 * strength, 3 * 60000);
+      if (strength >= 1.8) boostMood('intimate', 0.55 * strength, 4 * 60000);
+    }
     return;
   }
   refreshMood(false);
@@ -848,7 +977,7 @@ function refreshMood(force, idle) {
 
   let ev = activeMoodEvent();
   // 红包一直没领的时候，情绪让位给"等待/着急"；久别重逢和通话优先级更高
-  if (ev && ev.kind !== 'call' && ev.kind !== 'return' && ev.kind !== 'late') {
+  if (ev && ev.kind !== 'call' && ev.kind !== 'return' && ev.kind !== 'late' && ev.kind !== 'network') {
     const card = unopenedCardFromHim();
     if (card && Date.now() - (card.time || 0) > 60000) ev = null;
   }

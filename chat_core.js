@@ -2,6 +2,7 @@ const chatEl = document.getElementById('chat');
 const msgInput = document.getElementById('msgInput');
 let currentQuote = null;
 let isTyping = false; // 正在输入状态
+let offlineAutoReplyTimer = null;
 
 function refreshAvatarDOM() {
   document.querySelectorAll('.avatar.other').forEach(av => {
@@ -67,7 +68,7 @@ function getQuoteDisplayText(content, type) {
   if (type === 'redpacket') return '[红包] ' + (content.note || '');
   if (type === 'musicshare') return '[歌曲] ' + (content.name || '');
   if (type === 'musicinvite') return '[一起听歌] ' + (content.name || '');
-  if (type === 'transfer') return '[转账] ¥' + (content.amount || '0.00');
+  if (type === 'transfer') return '[转账] ¥' + (content.amount || '0.00') + (content.note ? ' ' + content.note : '');
   if (type === 'gift') return '[礼物] ' + (content.name || content.val || '');
   if (type === 'interact') return '[互动] ' + (content.name || '');
   if (type === 'location') return '[位置] ' + (content.val || '');
@@ -135,7 +136,7 @@ function autoReceiveMyCard(time) {
   if (!msg || !msg.content || msg.content.isOpened) return;
   msg.content.isOpened = true;
   saveAllData();
-  if (typeof moodAfterOpen === 'function') moodAfterOpen(msg.type);
+  if (typeof moodAfterOpen === 'function') moodAfterOpen(msg.type, msg.content);
   else if (typeof refreshMood === 'function') refreshMood();
 
   const bubble = document.querySelector(`.bubble[data-msg-time="${time}"]`);
@@ -260,7 +261,7 @@ function finishOpenCard(time, type) {
   document.getElementById('giftOpenModal').classList.remove('show');
   const msg = chatHistory.find(m => m.time === time && m.role === 'other');
   if (msg) { msg.content.isOpened = true; saveAllData(); }
-  if (typeof moodAfterOpen === 'function') moodAfterOpen(type);
+  if (typeof moodAfterOpen === 'function') moodAfterOpen(type, msg && msg.content);
   else if (typeof refreshMood === 'function') refreshMood();
   
   const bubble = document.querySelector(`.bubble[data-msg-time="${time}"]`);
@@ -511,8 +512,8 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
       
       bodyDiv.innerHTML = `<div class="card-top"><div class="card-icon ${colorClass}">${icon}</div><div class="card-info"><h4>${title}</h4><p>${subTitle}</p></div></div><div class="card-bottom">${bottomText}</div>`;
 
-      // 推荐歌曲：卡片里带一句他说的话
-      if (type === 'musicshare' && content.note) {
+      // 推荐歌曲 / 转账：卡片里带一句备注
+      if ((type === 'musicshare' || type === 'transfer') && content.note) {
         const noteEl = document.createElement('div');
         noteEl.className = 'card-note';
         noteEl.textContent = content.note;
@@ -543,7 +544,16 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
       }
 
       if (type === 'musicshare') {
-        bodyDiv.onclick = () => { if (typeof playSongByTitle === 'function') playSongByTitle(content.name); };
+        bodyDiv.onclick = () => {
+          if (typeof playSongByTitle === 'function') playSongByTitle(content.name);
+          if (!content.isOpened) {
+            content.isOpened = true;
+            saveAllData();
+            const bottom = bodyDiv.querySelector('.card-bottom');
+            if (bottom) bottom.textContent = '已播放';
+          }
+          if (typeof moodAfterRecommendPlay === 'function') moodAfterRecommendPlay();
+        };
       } else if (type !== 'choice' && !isMe && !content.isOpened && type !== 'location') {
         bodyDiv.onclick = () => openOtherCard(time, type);
       }
@@ -611,8 +621,13 @@ document.getElementById('cancelQuoteBtn').onclick = () => {
 
 function sendMessage(val, type = 'text', isMe = true, customQuote = null) {
   const time = Date.now();
-  // 我发消息时，如果对方仍处于 2G 或离线，每 10 秒提醒一次当前连接状态。
+  // 我发消息时，如果对方仍处于 2G 或离线，每 5 秒提醒一次当前连接状态。
   if (isMe && typeof notifyConnectionState === 'function') notifyConnectionState(false);
+  // 记录这段 2G 期间我确实发过消息；网络恢复时才有必要补一句“刚才太卡了”。
+  if (isMe && typeof getOtherNetworkMode === 'function' && getOtherNetworkMode() === '2G' &&
+      !(typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线')) {
+    window.__slowNetworkHadUserMsg = true;
+  }
   const isObj = val && typeof val === 'object';
   const content = isObj
     ? Object.assign({}, val, { val: val.val !== undefined ? val.val : '', isOpened: !!val.isOpened, quote: customQuote })
@@ -752,6 +767,33 @@ const HYBRID_TEXT_CARD_RATE = 0.7;       // 通用兜底
 const HYBRID_INTERACT_CARD_RATE = 0.5;   // 互动：五五开
 const HYBRID_MUSIC_CARD_RATE = 0.6;      // 推荐歌曲：字卡略多
 
+// 2G 网络：进入文字回复分支后，内置慢网短句与字卡库的混合比例。
+// 55% 说“卡死了”这类话，45% 正常抽字卡；拍一拍、音乐、礼物等事件仍按原概率触发。
+const SLOW_NETWORK_BUILTIN_RATE = 0.55;
+const SLOW_NETWORK_REPLIES = [
+  '卡死了',
+  '卡死了，消息转了半天',
+  '网太差了，刚刚那条才发出去',
+  '我这边卡得不行',
+  '等一下，我网络好慢',
+  '消息一直转圈',
+  '刚发出去，卡死了',
+  '这网慢得我想砸手机'
+];
+
+// 网络从 2G 恢复后，可能补一句“刚才太卡了”。有冷却，避免来回切换时刷屏。
+const NETWORK_RECOVERY_REPLIES = [
+  '刚才太卡了，现在终于好了',
+  '刚刚网络卡死了，现在好了',
+  '终于不卡了',
+  '刚才一直转圈，现在恢复了',
+  '网终于好了，刚才消息都发不出去',
+  '卡了半天，现在能好好说话了'
+];
+const NETWORK_RECOVERY_CHANCE = 0.65;
+const NETWORK_RECOVERY_COOLDOWN = 90000;
+const NETWORK_RECOVERY_MIN_MS = 10000;
+
 // 从自己的字卡里抽一条回复（互动、推荐歌曲的“混合模式”共用）
 // 返回 false 表示字卡库为空，调用方可以退回固定内置回复。
 function sendRandomTextCardReply(opts) {
@@ -776,7 +818,7 @@ function sendRandomTextCardReply(opts) {
   if (emojis.length && Math.random() < 0.3) {
     text += ' ' + emojis[Math.floor(Math.random() * emojis.length)].val;
   }
-  sendMessage(text, 'text', false, quote);
+  sendMessage({ val: text, autoReply: options.autoReply === true }, 'text', false, quote);
   return true;
 }
 
@@ -812,6 +854,24 @@ function hasRecentMusicEvent() {
     if (m.type === 'musicshare' || m.type === 'musicinvite') return true;
   }
   return false;
+}
+
+function sendSlowNetworkBuiltinReply() {
+  let line = SLOW_NETWORK_REPLIES[Math.floor(Math.random() * SLOW_NETWORK_REPLIES.length)];
+  // 慢网已经够烦了，偶尔带一个无奈 emoji。
+  if (Math.random() < 0.3) {
+    line += ' ' + (Math.random() < 0.5 ? '😮‍💨' : '😤');
+  }
+  sendMessage(line, 'text', false);
+}
+
+// 网络从 2G 恢复后调用；是否真的发由 router.js 判断冷却和时长。
+function sendNetworkRecoveryLine() {
+  let line = NETWORK_RECOVERY_REPLIES[Math.floor(Math.random() * NETWORK_RECOVERY_REPLIES.length)];
+  if (Math.random() < 0.35) {
+    line += ' ' + (Math.random() < 0.5 ? '😮‍💨' : '🥺');
+  }
+  sendMessage(line, 'text', false);
 }
 
 function randomReply() {
@@ -879,8 +939,16 @@ function randomReply() {
   }
 
   if (imageCards.length > 0 && Math.random() < RANDOM_IMAGE_CARD_CHANCE) { sendMessage(imageCards[Math.floor(Math.random() * imageCards.length)].val, 'image', false, quote); return; }
+
+  // 2G：文字回复不再全部抽字卡，先按比例说一句“卡死了”这类慢网短句。
+  if (typeof getOtherNetworkMode === 'function' && getOtherNetworkMode() === '2G' &&
+      Math.random() < SLOW_NETWORK_BUILTIN_RATE) {
+    sendSlowNetworkBuiltinReply();
+    return;
+  }
+
   if (textCards.length === 0) { promptEmptyCardLibrary(); return; }
-  
+
   const pickedCard = textCards[Math.floor(Math.random() * textCards.length)];
   // 他抽到带"吃醋/嫉妒"或"亲密"标签的字卡时，接下来一段时间的心情会往那边偏
   if (typeof boostMoodFromCard === 'function') boostMoodFromCard(pickedCard);
@@ -895,10 +963,35 @@ function randomReply() {
   sendMessage(replyText, 'text', false, quote);
 }
 
+// 离线自动回复：80% 内置句，20% 抽字卡库；都带 [自动回复] 标记。
+const OFFLINE_AUTO_REPLIES = [
+  '你要好好吃饭',
+  '喝水了吗？记得多喝水',
+  '睡不够就好好休息',
+  '我马上就会回来了',
+  '正在朝你飞奔而来...',
+  '转人工'
+];
+const OFFLINE_AUTO_REPLY_DELAY = 3000;
+
+function sendOfflineAutoReply() {
+  if (typeof getOtherStatusMain !== 'function' || getOtherStatusMain() !== '离线') return;
+  if (Math.random() < 0.2 && typeof sendRandomTextCardReply === 'function' &&
+      sendRandomTextCardReply({ quoteChance: 0.08, autoReply: true })) return;
+  const line = OFFLINE_AUTO_REPLIES[Math.floor(Math.random() * OFFLINE_AUTO_REPLIES.length)];
+  sendMessage({ val: line, autoReply: true }, 'text', false);
+}
+
 // 处理正在输入的延迟
 function simulateReplyWithDelay() {
-  // 对方离线时：隔一阵才回来，并先回一句离线自动回复
+  // 对方离线时：先固定几秒自动回复，再过一阵才真正回来。
   if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') {
+    if (offlineAutoReplyTimer) clearTimeout(offlineAutoReplyTimer);
+    offlineAutoReplyTimer = setTimeout(() => {
+      offlineAutoReplyTimer = null;
+      sendOfflineAutoReply();
+    }, OFFLINE_AUTO_REPLY_DELAY);
+
     const extra = 90000 + Math.random() * 150000;
     setTimeout(() => {
       // 多条消息可能各排了一个离线回复；第一个定时器回来后就不要再重复“刚上线”。
@@ -908,11 +1001,11 @@ function simulateReplyWithDelay() {
       if (typeof setOtherOnline === 'function') setOtherOnline();
       const lines = (typeof offlineReplyLines !== 'undefined' && offlineReplyLines.length) ? offlineReplyLines : ['刚看到消息！怎么啦'];
       let line = lines[Math.floor(Math.random() * lines.length)];
-      // 离线回来的自动回复，结尾有较高概率带 😭 / 🥺
+      // 真正回来后的回复不带 [自动回复]，结尾有较高概率带 😭 / 🥺
       if (Math.random() < 0.55) {
         line += ' ' + (Math.random() < 0.5 ? '😭' : '🥺');
       }
-      sendMessage({ val: line, autoReply: true }, 'text', false);
+      sendMessage(line, 'text', false);
       setTimeout(randomReply, 1200 + Math.random() * 1500);
     }, extra);
     return;
