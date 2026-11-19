@@ -31,12 +31,12 @@ let signatureLibrary = JSON.parse(localStorage.getItem('signature_library')) || 
 ];
 // 每个互动动作可以配几句不同的回应，发送时随机挑一句
 const INTERACT_REPLIES = {
-  '摸摸头': ['嗯……再摸一会儿也行', '被你摸得都困了', '头只能你摸，别人不行', '乖，换我摸摸你'],
-  '戳戳脸': ['别戳啦，痒~', '你再戳，我可就亲回去了', '戳一下要给钱的', '脸都被你戳软了'],
-  '抱抱': ['（一把抱住你）', '抱紧点，别松手', '你身上好香', '再抱十秒'],
-  '贴贴': ['（凑过来贴贴）', '贴这么近，还让不让人学习了', '行吧，今天格外黏你', '（把下巴搁在你肩上）'],
-  '捏捏脸': ['哎呀脸都要捏红啦', '捏坏了你负责', '再捏我就咬你', '轻点，脸都被你捏变形了'],
-  '举高高': ['哇——飞起来啦！', '再来一次，我还想飞', '举你一点都不费劲', '转一圈？']
+  '摸摸头': ['嗯……再摸一会儿也行', '被你摸得都困了', '头只能你摸，别人不行', '乖，换我摸摸你', '再摸就真困了', '手借你一会儿'],
+  '戳戳脸': ['别戳啦，痒~', '你再戳，我可就亲回去了', '戳一下要给钱的', '脸都被你戳软了', '戳轻点', '再戳脸要红了'],
+  '抱抱': ['（一把抱住你）', '抱紧点，别松手', '你身上好香', '再抱十秒', '先别动，让我抱会儿', '抱一下就好'],
+  '贴贴': ['（凑过来贴贴）', '贴这么近，还让不让人学习了', '行吧，今天格外黏你', '（把下巴搁在你肩上）', '再贴一会儿', '别嫌我黏'],
+  '捏捏脸': ['哎呀脸都要捏红啦', '捏坏了你负责', '再捏我就咬你', '轻点，脸都被你捏变形了', '脸要变形了', '手下留情'],
+  '举高高': ['哇——飞起来啦！', '再来一次，我还想飞', '举你一点都不费劲', '转一圈？', '放我下来啦', '再来一次']
 };
 
 let interactLibrary = JSON.parse(localStorage.getItem('interact_library')) || [
@@ -59,7 +59,10 @@ let offlineReplyLines = [
   '不好意思，我睡着了..',
   '我才忙完回来，我好想你',
   '刚上线，我把你的消息看完了',
-  '立刻朝你飞奔过来'
+  '立刻朝你飞奔过来',
+  '刚才没看到，现在在呢',
+  '我回来了，刚忙完',
+  '手机放远了，刚拿到'
 ];
 
 if (locLibrary.length > 0 && typeof locLibrary[0] === 'string') locLibrary = locLibrary.map((v, i) => ({ id: 'l_'+i, val: v }));
@@ -165,7 +168,13 @@ chatHistory.forEach(msg => {
   if (c.val === undefined || c.val === null) c.val = c.name || c.note || '';
 });
 
-function saveAllData() {
+let saveAllDataTimer = null;
+let saveAllDataPending = false;
+
+function persistAllDataNow() {
+  if (saveAllDataTimer) { clearTimeout(saveAllDataTimer); saveAllDataTimer = null; }
+  if (!saveAllDataPending) return;
+  saveAllDataPending = false;
   localStorage.setItem('chat_tags', JSON.stringify(tags));
   localStorage.setItem('chat_contents', JSON.stringify(contents));
   localStorage.setItem('my_emojis', JSON.stringify(myEmojis));
@@ -176,6 +185,20 @@ function saveAllData() {
   localStorage.setItem('signature_library', JSON.stringify(signatureLibrary));
   localStorage.setItem('interact_library', JSON.stringify(interactLibrary));
 }
+
+// 连续发送/开关卡片时合并写入，避免每次都把整个聊天记录序列化一遍。
+function saveAllData() {
+  saveAllDataPending = true;
+  if (saveAllDataTimer) return;
+  saveAllDataTimer = setTimeout(() => {
+    saveAllDataTimer = null;
+    persistAllDataNow();
+  }, 180);
+}
+
+window.addEventListener('pagehide', persistAllDataNow);
+window.addEventListener('beforeunload', persistAllDataNow);
+document.addEventListener('visibilitychange', () => { if (document.hidden) persistAllDataNow(); });
 
 // 往按钮里放图标字符时，包一层 span，好让"图标色调"滤镜作用到它
 function setIconText(el, glyph) {

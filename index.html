@@ -337,7 +337,7 @@
 
               <h3>1. 顶栏</h3>
               <ul>
-                <li>左侧显示对方昵称，昵称下方是状态气泡、网络和电量信息。</li>
+                <li>左侧显示对方昵称，昵称下方是状态气泡、网络和电量信息。网络可能变成 2G，2G 会轻微拖慢回复，并弹出网络提示。</li>
                 <li>🌙 / ☀️ 用于切换夜间模式和白天模式。夜间模式的按钮和气泡会跟随当前配色，其余界面使用统一的深色方案。</li>
                 <li>🖥️ 用于切换电脑宽屏布局；在手机上通常不需要开启。</li>
                 <li>⋯ 进入后台管理，聊天设置、字卡库、音乐管理、数据管理等都在这里。</li>
@@ -352,6 +352,7 @@
                 <li>双击某条消息可以引用回复；长按消息或点击鼠标右键可以打开操作菜单，进行引用、复制或删除。</li>
                 <li>双击对方头像可以触发一次「拍一拍」。</li>
                 <li>他最新一条消息下方可能出现情绪气泡，表示他此刻的心情；没有显示时，说明当前最后一条消息不是他发的，或情绪尚未刷新。</li>
+                <li>历史记录很长时，首屏只加载最近约 200 条，顶部会显示「加载更早的 N 条消息」按钮，点击继续加载上一批。</li>
               </ul>
 
               <h3>4. 输入栏</h3>
@@ -506,11 +507,12 @@
               <p>气泡最多显示三段，但每次刷新不一定三段都有：可能只有一段、两段或三段。第一段一定是情绪，第二、三段可能是进一步状态、等待/看手机这类通用补充，或另一条情绪。部分情绪会出现「开心 / 开心+ / 开心++」这样的强度标记；第三段也可能以 emoji 收尾。切到另一条情绪时按亲和权重，不是完全平均：委屈更容易接期待，开心更容易接激动，但其他情绪仍保留低概率。待机久了可能升一档，也可能切换情绪。换情绪时整颗气泡会缩放回弹、扫过一道高光并变色；升一档时只有气泡横向长开、新加的那一段弹进来，颜色保持不变，两种效果有明显区别。拍一拍之后，普通情绪会先隐藏，等下一次真实消息再显示。</p>
 
               <h3>熬夜与离线</h3>
-              <p>00:00～05:00 登录，或在深夜长时间停留在界面，会提高担心、不安、焦虑、生气的权重，并可能出现一次熬夜相关的情绪。深夜离线的概率会略高。离线自动回复会带「[自动回复]」标记，回到在线后的新消息不再带这个标记。</p>
+              <p>00:00～05:00 登录，或在深夜长时间停留在界面，会提高担心、不安、焦虑、生气的权重，并可能出现一次熬夜相关的情绪。深夜离线的概率会略高。对方切到 2G 或离线时会弹出「📶 对方网络不佳，回复可能会慢一点」或「📴 对方已掉线，消息可能会晚一点」提示；2G 每次回复约多等 10 秒，离线时一般同步显示 2G。状态持续期间，你每 10 秒后再次发消息还会看到一次提示，直到对方恢复。连续发多条消息会增加等待、焦虑、不安的权重；离线回来时会根据消息数量偏向等待、担心或焦急。离线自动回复会带「[自动回复]」标记，回到在线后的新消息不再带这个标记。</p>
               <table class="manual-table">
                 <tr><th>项目</th><th>规则</th></tr>
                 <tr><td>普通文字回复</td><td>从字卡库随机抽取；约 20% 会引用你最近说过的一句话；约 30% 会在末尾附加一个 Emoji。</td></tr>
-                <tr><td>回复中的额外行为</td><td>约 6% 触发拍一拍；约 5% 分享或邀请一起听歌；约 5% 发送礼物、红包或转账。</td></tr>
+                <tr><td>回复中的额外行为</td><td>约 6% 触发拍一拍；约 3% 分享或邀请一起听歌（其中邀请约 1.05%）；约 5% 发送礼物、红包或转账。</td></tr>
+                <tr><td>音乐事件冷却</td><td>分享歌曲或邀请一起听后，8 分钟内不会再次随机出现音乐事件，避免连续听歌。</td></tr>
                 <tr><td>互动回应</td><td>50% 使用该互动的内置回复，50% 抽取你的字卡；字卡库为空时使用内置回复；延迟约 1.5～3 秒。</td></tr>
                 <tr><td>推荐歌曲的回应</td><td>40% 使用听歌专用回复，60% 抽取你的字卡；字卡库为空时使用内置回复；延迟约 1.5～3.5 秒。</td></tr>
                 <tr><td>通话后的回应</td><td>未接来电 / 对方已挂断 / 已挂断：60% 内置、40% 字卡；通话结束 / 已取消：50% / 50%。字卡库为空时使用内置句子；延迟约 1.4～3.6 秒；内置句子约 42% 末尾带 emoji。</td></tr>
@@ -551,6 +553,7 @@
             <p class="manual-foot">本手册随功能更新同步维护。如需调整具体数值或文案，请参考《代码说明》。</p>
           </div>
         </div>
+        <button class="manual-fab" id="backFromManualFab" type="button" title="返回后台">‹ 返回后台</button>
       </div>
 
       <!-- 数据管理 -->
@@ -919,7 +922,7 @@
           <div id="giftOpenAmount" style="font-size: 32px; font-weight: bold; color: #fa5151; display: none; margin-bottom: 15px;">¥0.00</div>
           <div class="btns" style="margin-top:10px;">
             <button class="btn-cancel" id="closeGiftOpenBtn">暂时不领</button>
-            <button class="btn-save" id="confirmOpenGiftBtn" style="background: #fa5151;">拆开</button>
+            <button class="btn-save" id="confirmOpenGiftBtn">拆开</button>
           </div>
         </div>
       </div>
@@ -1090,7 +1093,7 @@
         // 从"打开页面"开始计时（不是从脚本跑完开始），慢手机不会再多等一段
         var now = function () { return (window.performance && performance.now) ? performance.now() : Date.now(); };
         var shownAt = now();
-        var MIN_SHOW = 1600;   // 至少停留一会儿，别一闪而过
+        var MIN_SHOW = 2000;   // 至少停留一会儿，让像素流星和加载阶段完整出现
         var MAX_WAIT = 15000;  // 兜底：卡住了也先放人进去
         var loadDone = document.readyState === 'complete';
         var appReady = window.__appReady === true;
@@ -1117,8 +1120,15 @@
         // 页面上已有的图片（头像、壁纸、表情）先解码完，避免进聊天页后一张张跳出来
         function waitImages(cb) {
           var imgs = Array.prototype.slice.call(document.images || []);
+          var vh = window.innerHeight || 800;
           var pending = imgs.filter(function (img) {
-            return img.getAttribute('src') && !img.complete;
+            if (!img.getAttribute('src') || img.complete) return false;
+            // 历史图片是 lazy 的：只等首屏附近的，不要把几千条旧图都算进启动等待。
+            if (img.loading === 'lazy') {
+              var r = img.getBoundingClientRect();
+              return r.bottom > 0 && r.top < vh;
+            }
+            return true;
           });
           if (!pending.length) return cb();
           var left = pending.length, done = false;

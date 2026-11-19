@@ -187,29 +187,48 @@ if (musicCheckBtn && musicCheckResult) {
       musicCheckResult.innerHTML = '<div class="bad">请用 https 网址打开后再检查。</div>';
       return;
     }
-    const list = (typeof MUSIC_PLAYLIST !== 'undefined') ? MUSIC_PLAYLIST.filter(s => s.src) : [];
+    // 不只检查有 src 的曲目：内置歌单里没有放音频文件的占位歌也要报出来。
+    const list = (typeof MUSIC_PLAYLIST !== 'undefined')
+      ? MUSIC_PLAYLIST.filter(s => s && (s.kind === 'song' || s.src))
+      : [];
     if (!list.length) {
-      musicCheckResult.textContent = '没有带音频文件的曲目。';
+      musicCheckResult.textContent = '没有可检查的歌曲。';
       return;
     }
     musicCheckBtn.disabled = true;
     musicCheckResult.innerHTML = '<div>正在检查…</div>';
     const bad = [];
     for (const s of list) {
+      if (!s.src) {
+        bad.push({ s, status: '未放入音频文件' });
+        continue;
+      }
       try {
         const isBlob = s.src.indexOf('blob:') === 0;
-        const r = await fetch(s.src, isBlob ? { cache: 'no-store' } : { method: 'HEAD', cache: 'no-store' });
+        // 用 GET + Range 而不是只看 HEAD：有些静态站会把不存在的路径回退成 200 HTML，
+        // 只看状态码会误判为“通过”。这里同时检查 Content-Type。
+        const r = await fetch(s.src, isBlob
+          ? { cache: 'no-store' }
+          : { headers: { Range: 'bytes=0-1' }, cache: 'no-store' });
+        const contentType = (r.headers.get('content-type') || '').toLowerCase();
+        const contentLength = Number(r.headers.get('content-length') || 0);
         if (r.body && r.body.cancel) { try { r.body.cancel(); } catch (e) {} }
-        if (!r.ok) bad.push({ s, status: r.status });
+        if (!r.ok) {
+          bad.push({ s, status: r.status });
+        } else if (!isBlob && (contentType.includes('text/html') || contentType.includes('application/json') || contentType.includes('text/plain'))) {
+          bad.push({ s, status: `返回的是 ${contentType}` });
+        } else if (contentLength === 0) {
+          bad.push({ s, status: '文件为空' });
+        }
       } catch (e) {
         bad.push({ s, status: '网络错误' });
       }
     }
     musicCheckBtn.disabled = false;
     if (!bad.length) {
-      musicCheckResult.innerHTML = `<div class="ok">全部 ${list.length} 首音频都能读取。</div>`;
+      musicCheckResult.innerHTML = `<div class="ok">全部 ${list.length} 首曲目都有音频。</div>`;
     } else {
-      musicCheckResult.innerHTML = bad.map(x => `<div class="bad">${escapeHtml(x.s.title)}：读取失败（${x.status}）</div>`).join('');
+      musicCheckResult.innerHTML = bad.map(x => `<div class="bad">${escapeHtml(x.s.title)}：${escapeHtml(String(x.status))}</div>`).join('');
     }
   };
 }
@@ -234,7 +253,8 @@ function renderMusicManageList() {
   list.forEach((s, i) => {
     const hasLyric = (typeof lyricsFor === 'function') && lyricsFor(s).length > 0;
     const lyricTag = (typeof lyricBadge === 'function') ? lyricBadge(s) : (hasLyric ? ' · 有词' : '');
-    const badge = s.trackId ? '本地' : (s.kind === 'book' ? '听书' : '歌单');
+    const badge = (s.kind === 'song' && !s.src) ? '无音频'
+      : (s.trackId ? '本地' : (s.kind === 'book' ? '听书' : '歌单'));
     const row = document.createElement('div');
     row.className = 'mm-row' + (i === cur ? ' active' : '') + (musicBatchMode ? ' batch' : '');
 

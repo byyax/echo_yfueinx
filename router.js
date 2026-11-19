@@ -182,11 +182,17 @@ const menuManual = document.getElementById('menuManual');
 if (menuManual) menuManual.onclick = () => switchPage('pageManual');
 const backFromManual = document.getElementById('backFromManual');
 if (backFromManual) backFromManual.onclick = () => switchPage('pageManager');
+const backFromManualFab = document.getElementById('backFromManualFab');
+if (backFromManualFab) backFromManualFab.onclick = () => switchPage('pageManager');
+const manualScrollEl = document.querySelector('#pageManual .manual-scroll');
 document.querySelectorAll('.manual-toc a').forEach(a => {
   a.onclick = (e) => {
     e.preventDefault();
     const target = document.querySelector(a.getAttribute('href'));
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!target || !manualScrollEl) return;
+    // 只滚动手册内部容器，避免把外层页面/导航栏一起卷走。
+    const top = target.getBoundingClientRect().top - manualScrollEl.getBoundingClientRect().top + manualScrollEl.scrollTop - 12;
+    manualScrollEl.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   };
 });
 
@@ -264,10 +270,51 @@ const openTagManagerBtn = document.getElementById('openTagManagerBtn'); if(openT
 const pcToggleBtn = document.getElementById('pcToggleBtn'); if(pcToggleBtn) pcToggleBtn.onclick = () => document.getElementById('appContainer').classList.toggle('pc-mode');
 const backFromData = document.getElementById('backFromData'); if(backFromData) backFromData.onclick = () => switchPage('pageManager');
 
+let otherNetworkMode = 'WiFi';
+function getOtherNetworkMode() { return otherNetworkMode; }
+
+function notifyConnectionState(force) {
+  const offline = typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线';
+  const slow = otherNetworkMode === '2G';
+  if (!offline && !slow) return;
+
+  // 启动页还没退场时先挂起，等进入聊天页再提示，避免被启动页挡住。
+  if (!window.__appRevealed) {
+    if (!window.__connectionNoticeQueued) {
+      window.__connectionNoticeQueued = true;
+      window.addEventListener('app-revealed', () => {
+        window.__connectionNoticeQueued = false;
+        notifyConnectionState(true);
+      }, { once: true });
+    }
+    return;
+  }
+
+  const now = Date.now();
+  if (!force && now - (window.__lastConnectionNoticeAt || 0) < 10000) return;
+  window.__lastConnectionNoticeAt = now;
+  if (offline) showToast('📴 对方已掉线，消息可能会晚一点');
+  else showToast('📶 对方网络不佳，回复可能会慢一点');
+}
+
+function setOtherNetworkMode(mode, opts) {
+  if (!mode) return;
+  const changed = otherNetworkMode !== mode;
+  otherNetworkMode = mode;
+  const netEl = document.getElementById('networkIcon');
+  if (netEl) netEl.textContent = `📶 ${mode}`;
+  if (changed && (!opts || !opts.silent)) notifyConnectionState(true);
+}
+
 function initStatusBar() {
-  const netEl = document.getElementById('networkIcon'); const batEl = document.getElementById('batteryIcon');
+  const batEl = document.getElementById('batteryIcon');
   let isWifi = Math.random() < 0.7; let is5G = !isWifi && Math.random() < 0.8;
-  if(netEl) netEl.textContent = isWifi ? '📶 WiFi' : (is5G ? '📶 5G' : '📶 2G');
+  let initialMode = isWifi ? 'WiFi' : (is5G ? '5G' : '2G');
+  // 离线状态优先同步成 2G，避免“已离线但显示 WiFi”的矛盾画面。
+  if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') initialMode = '2G';
+  setOtherNetworkMode(initialMode, { silent: true });
+  if (initialMode === '2G') notifyConnectionState(true);
+
   let battery = Math.floor(Math.random() * 80) + 20; let isCharging = false;
   function updateBat() {
     if(!batEl) return;
@@ -276,16 +323,22 @@ function initStatusBar() {
   }
   updateBat();
   setInterval(() => {
-    if (Math.random() < 0.2) { let r = Math.random(); if(netEl) netEl.textContent = r < 0.5 ? '📶 WiFi' : (r < 0.9 ? '📶 5G' : '📶 2G'); }
-    if (isCharging) { battery += Math.floor(Math.random() * 2) + 1; if (battery >= 100) { battery = 100; isCharging = false; } } 
+    const offline = typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线';
+    if (offline) {
+      setOtherNetworkMode('2G', { silent: true });
+    } else if (Math.random() < 0.2) {
+      let r = Math.random();
+      setOtherNetworkMode(r < 0.5 ? 'WiFi' : (r < 0.9 ? '5G' : '2G'));
+    }
+    if (isCharging) { battery += Math.floor(Math.random() * 2) + 1; if (battery >= 100) { battery = 100; isCharging = false; } }
     else { battery -= Math.floor(Math.random() * 2); if (battery <= 10) { isCharging = true; battery = 10; } }
     if (battery < 0) battery = 0; updateBat();
   }, 10000);
 }
 
 if(chatEl) {
-  chatEl.innerHTML = '<div class="sys">你已添加对方为好友，现在可以开始聊天了</div>';
-  chatHistory.forEach(msg => addMessageDOM(msg.content, msg.role === 'me', msg.role === 'system' ? 'sys' : msg.type, msg.time));
+  // 首屏只画最近 200 条；加载更早的消息时每次再补 200 条。
+  renderChatHistoryWindow(CHAT_RENDER_INITIAL);
 }
 // ===== 仿微信状态引擎 =====
 const STATUS_MAIN = [
@@ -352,6 +405,7 @@ function renderOtherStatus() {
 }
 
 function rollOtherStatus() {
+  const wasOffline = otherStatus.main && otherStatus.main.id === 'offline';
   const list = STATUS_MAIN.map(s => (
     s.id === 'offline' && isLateNightHour()
       ? Object.assign({}, s, { weight: s.weight * 2.5 })
@@ -360,14 +414,23 @@ function rollOtherStatus() {
   otherStatus.main = pickWeighted(list);
   otherStatus.sub = (Math.random() < 0.45) ? pickWeighted(STATUS_SUB) : null;
   nextStatusChangeAt = Date.now() + (8 + Math.random() * 17) * 60 * 1000;
+  const nowOffline = otherStatus.main.id === 'offline';
+  if (nowOffline) {
+    setOtherNetworkMode('2G', { silent: true });
+    notifyConnectionState(true);
+  } else if (wasOffline) {
+    setOtherNetworkMode(Math.random() < 0.7 ? 'WiFi' : '5G', { silent: true });
+  }
   renderOtherStatus();
 }
 
 function getOtherStatusMain() { return otherStatus.main ? otherStatus.main.label : '在线'; }
 function setOtherOnline() {
+  const wasOffline = otherStatus.main && otherStatus.main.id === 'offline';
   otherStatus.main = STATUS_MAIN[0];
   otherStatus.sub = null;
   nextStatusChangeAt = Date.now() + (8 + Math.random() * 17) * 60 * 1000;
+  if (wasOffline) setOtherNetworkMode(Math.random() < 0.7 ? 'WiFi' : '5G', { silent: true });
   renderOtherStatus();
 }
 

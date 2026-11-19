@@ -181,7 +181,10 @@ function openOtherCard(time, type) {
   const closeBtn = document.getElementById('closeGiftOpenBtn');
   
   mAmount.style.display = 'none';
-  mTitle.style.color = (type === 'redpacket' || type === 'transfer') ? '#fa5151' : 'var(--primary-dark)';
+  const isMoney = (type === 'redpacket' || type === 'transfer');
+  mTitle.style.color = isMoney ? '#fa5151' : 'var(--primary-dark)';
+  // 红包/转账保留红色；礼物、互动、一起听等按钮跟随主题色。
+  btn.classList.toggle('danger', isMoney);
   btn.textContent = '拆开';
   closeBtn.style.display = 'block';
   closeBtn.textContent = '暂时不领';
@@ -310,6 +313,46 @@ function playVoice(el, src) {
   if (p && p.catch) p.catch(() => { if (icon) icon.textContent = '▶'; });
 }
 
+// 首屏只渲染最近一部分消息；向上加载时每次多补一批，避免手机一次性创建几千条 DOM。
+const CHAT_RENDER_INITIAL = 200;
+const CHAT_RENDER_STEP = 200;
+let chatRenderStart = 0;
+
+function renderChatHistoryWindow(limit, opts) {
+  if (!chatEl || typeof chatHistory === 'undefined') return;
+  const preserveScroll = !!(opts && opts.preserveScroll);
+  const oldHeight = chatEl.scrollHeight;
+  const oldTop = chatEl.scrollTop;
+  const total = chatHistory.length;
+  const size = Math.max(0, Math.min(total, limit || CHAT_RENDER_INITIAL));
+  const start = Math.max(0, total - size);
+  chatRenderStart = start;
+
+  chatEl.innerHTML = '<div class="sys">你已添加对方为好友，现在可以开始聊天了</div>';
+  if (start > 0) {
+    const earlier = document.createElement('button');
+    earlier.type = 'button';
+    earlier.className = 'load-earlier';
+    earlier.textContent = `加载更早的 ${start} 条消息`;
+    earlier.onclick = () => {
+      const visibleCount = chatHistory.length - chatRenderStart;
+      renderChatHistoryWindow(visibleCount + CHAT_RENDER_STEP, { preserveScroll: true });
+    };
+    chatEl.appendChild(earlier);
+  }
+
+  window.__deferChatScroll = true;
+  try {
+    chatHistory.slice(start).forEach(msg => {
+      addMessageDOM(msg.content, msg.role === 'me', msg.role === 'system' ? 'sys' : msg.type, msg.time);
+    });
+  } finally {
+    window.__deferChatScroll = false;
+    if (preserveScroll) chatEl.scrollTop = oldTop + (chatEl.scrollHeight - oldHeight);
+    else chatEl.scrollTop = chatEl.scrollHeight;
+  }
+}
+
 function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
   try {
     if(!chatEl) return;
@@ -319,7 +362,7 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
       sys.className = 'sys';
       sys.textContent = (content && content.val != null) ? content.val : '';
       chatEl.appendChild(sys);
-      chatEl.scrollTop = chatEl.scrollHeight;
+      if (!window.__deferChatScroll) chatEl.scrollTop = chatEl.scrollHeight;
       return;
     }
     const row = document.createElement('div'); row.className = 'row' + (isMe ? ' me' : '');
@@ -365,7 +408,11 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
     const bodyDiv = document.createElement('div');
     if (type === 'image') {
       bubble.classList.add('img-bubble');
-      const img = document.createElement('img'); img.src = content.val;
+      const img = document.createElement('img');
+      // 历史里的图片先不全部解码：手机上几十张 base64 图片同时解码会卡住首屏。
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.src = content.val;
       img.onclick = () => { document.getElementById('previewImg').src = content.val; document.getElementById('imagePreviewModal').classList.add('show'); };
       bodyDiv.appendChild(img);
     } else if (type === 'audio') {
@@ -545,7 +592,8 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
     const timeStr = document.createElement('div'); timeStr.className = 'bubble-time'; timeStr.textContent = getTimeStr(time);
     wrap.appendChild(bubble); wrap.appendChild(timeStr);
     row.appendChild(avatar); row.appendChild(wrap); chatEl.appendChild(row);
-    chatEl.scrollTop = chatEl.scrollHeight;
+    // 批量重绘历史时先不逐条滚动，否则每条消息都会强制一次布局，手机端会明显卡顿。
+    if (!window.__deferChatScroll) chatEl.scrollTop = chatEl.scrollHeight;
   } catch (err) { console.error("渲染错误", err); }
 }
 
@@ -563,6 +611,8 @@ document.getElementById('cancelQuoteBtn').onclick = () => {
 
 function sendMessage(val, type = 'text', isMe = true, customQuote = null) {
   const time = Date.now();
+  // 我发消息时，如果对方仍处于 2G 或离线，每 10 秒提醒一次当前连接状态。
+  if (isMe && typeof notifyConnectionState === 'function') notifyConnectionState(false);
   const isObj = val && typeof val === 'object';
   const content = isObj
     ? Object.assign({}, val, { val: val.val !== undefined ? val.val : '', isOpened: !!val.isOpened, quote: customQuote })
@@ -649,7 +699,25 @@ function triggerPat(isMePatting) {
   }
 }
 
-function getRandomDelay() { return Math.floor(Math.random() * ((chatSettings.replyDelay || 1) * 60 * 1000)); }
+function getRandomDelay() {
+  let delay = Math.floor(Math.random() * ((chatSettings.replyDelay || 1) * 60 * 1000));
+  // 2G 在用户设置的随机延迟基础上额外加 10 秒，只做轻微拖慢。
+  if (typeof getOtherNetworkMode === 'function' && getOtherNetworkMode() === '2G') delay += 10000;
+  return delay;
+}
+
+// 当前这条消息之前（含当前）连续由我发出的消息数，用来判断“发了很多条”。
+function countMyMessageStreak() {
+  let count = 0;
+  for (let i = chatHistory.length - 1; i >= 0; i--) {
+    const m = chatHistory[i];
+    if (!m || !m.role) continue;
+    if (m.role === 'system') continue;
+    if (m.role === 'me') count++;
+    else break;
+  }
+  return count;
+}
 
 function showTypingIndicator(labelText) {
   if(!chatEl) return;
@@ -727,18 +795,37 @@ function promptEmptyCardLibrary() {
   }
 }
 
+// 随机回复里的特殊事件概率。音乐总概率低于其他互动，且邀请只占其中约 1/3。
+const RANDOM_PAT_CHANCE = 0.06;
+const RANDOM_MUSIC_CHANCE = 0.03;
+const RANDOM_MUSIC_INVITE_RATIO = 0.35; // 音乐事件中 35% 是邀请，约 1.05%
+const RANDOM_MONEY_CHANCE = 0.05;
+const RANDOM_IMAGE_CARD_CHANCE = 0.12;
+const MUSIC_EVENT_COOLDOWN = 8 * 60 * 1000;
+
+function hasRecentMusicEvent() {
+  const cutoff = Date.now() - MUSIC_EVENT_COOLDOWN;
+  for (let i = chatHistory.length - 1; i >= 0; i--) {
+    const m = chatHistory[i];
+    if (!m || !m.time) continue;
+    if (m.time < cutoff) break;
+    if (m.type === 'musicshare' || m.type === 'musicinvite') return true;
+  }
+  return false;
+}
+
 function randomReply() {
   // 偶尔拍一拍（约每 17 条回复一次）
-  if (Math.random() < 0.06) {
+  if (Math.random() < RANDOM_PAT_CHANCE) {
     triggerPat(false);
     return;
   }
 
-  // 偶尔分享一首歌，或者邀请你一起听（约每 20 条一次）
-  if (Math.random() < 0.05 && typeof pickRandomSong === 'function') {
+  // 偶尔分享一首歌，或者邀请你一起听；8 分钟内只出现一次音乐事件，避免连续听歌
+  if (Math.random() < RANDOM_MUSIC_CHANCE && !hasRecentMusicEvent() && typeof pickRandomSong === 'function') {
     const song = pickRandomSong();
     if (song) {
-      if (Math.random() < 0.5) {
+      if (Math.random() >= RANDOM_MUSIC_INVITE_RATIO) {
         const notes = ['这首好听，听听看', '今天的单曲循环', '歌词写得很像我们', '心情不好就听这个', '突然想到你，就发你了'];
         sendMessage({
           name: song.title,
@@ -756,7 +843,7 @@ function randomReply() {
   }
 
   const r = Math.random();
-  if (r < 0.05) {
+  if (r < RANDOM_MONEY_CHANCE) {
     // 送礼 55% / 红包 30% / 转账 15%：礼物最常见，转账最少
     const tr = Math.random();
     const t = tr < 0.55 ? 'gift' : (tr < 0.85 ? 'redpacket' : 'transfer');
@@ -791,7 +878,7 @@ function randomReply() {
     }
   }
 
-  if (imageCards.length > 0 && Math.random() < 0.12) { sendMessage(imageCards[Math.floor(Math.random() * imageCards.length)].val, 'image', false, quote); return; }
+  if (imageCards.length > 0 && Math.random() < RANDOM_IMAGE_CARD_CHANCE) { sendMessage(imageCards[Math.floor(Math.random() * imageCards.length)].val, 'image', false, quote); return; }
   if (textCards.length === 0) { promptEmptyCardLibrary(); return; }
   
   const pickedCard = textCards[Math.floor(Math.random() * textCards.length)];
@@ -814,6 +901,10 @@ function simulateReplyWithDelay() {
   if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线') {
     const extra = 90000 + Math.random() * 150000;
     setTimeout(() => {
+      // 多条消息可能各排了一个离线回复；第一个定时器回来后就不要再重复“刚上线”。
+      if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() !== '离线') return;
+      const streak = (typeof countMyMessageStreak === 'function') ? countMyMessageStreak() : 0;
+      if (typeof moodAfterOfflineReturn === 'function') moodAfterOfflineReturn(streak);
       if (typeof setOtherOnline === 'function') setOtherOnline();
       const lines = (typeof offlineReplyLines !== 'undefined' && offlineReplyLines.length) ? offlineReplyLines : ['刚看到消息！怎么啦'];
       let line = lines[Math.floor(Math.random() * lines.length)];

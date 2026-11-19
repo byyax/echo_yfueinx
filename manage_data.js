@@ -91,8 +91,11 @@ if (clearMediaBtn) {
     showConfirm('只清理图片/语音', `会移除 ${count} 条图片或语音（约 ${formatSize(saved)}），文字消息都保留。确定吗？`, () => {
       chatHistory = stripMedia(chatHistory);
       saveAllData();
-      chatEl.innerHTML = '<div class="sys">你已添加对方为好友，现在可以开始聊天了</div>';
-      chatHistory.forEach(msg => addMessageDOM(msg.content, msg.role === 'me', msg.role === 'system' ? 'sys' : msg.type, msg.time));
+      if (typeof renderChatHistoryWindow === 'function') renderChatHistoryWindow(CHAT_RENDER_INITIAL);
+      else {
+        chatEl.innerHTML = '<div class="sys">你已添加对方为好友，现在可以开始聊天了</div>';
+        chatHistory.forEach(msg => addMessageDOM(msg.content, msg.role === 'me', msg.role === 'system' ? 'sys' : msg.type, msg.time));
+      }
       if (document.getElementById('dataSize')) menuData.onclick();
       showToast(`已清理，腾出约 ${formatSize(saved)}`);
     });
@@ -108,6 +111,7 @@ document.getElementById('clearHistoryBtn').onclick = () => {
 };
 document.getElementById('clearAllBtn').onclick = () => {
   showConfirm('清空全部', '💥 警告：确定清空所有数据吗？此操作不可逆！', () => {
+    if (typeof persistAllDataNow === 'function') persistAllDataNow();
     localStorage.clear(); location.reload();
   });
 };
@@ -290,8 +294,11 @@ function processImportedData(data) {
     setTimeout(() => {
       refreshAfterImport();
       if (chatEl && typeof chatHistory !== 'undefined') {
-        chatEl.innerHTML = '<div class="sys">你已添加对方为好友，现在可以开始聊天了</div>';
-        chatHistory.forEach(msg => addMessageDOM(msg.content, msg.role === 'me', msg.role === 'system' ? 'sys' : msg.type, msg.time));
+        if (typeof renderChatHistoryWindow === 'function') renderChatHistoryWindow(CHAT_RENDER_INITIAL);
+        else {
+          chatEl.innerHTML = '<div class="sys">你已添加对方为好友，现在可以开始聊天了</div>';
+          chatHistory.forEach(msg => addMessageDOM(msg.content, msg.role === 'me', msg.role === 'system' ? 'sys' : msg.type, msg.time));
+        }
       }
       switchPage('pageManager');
     }, 500);

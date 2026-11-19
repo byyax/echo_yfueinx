@@ -491,10 +491,65 @@ function moodEmojiOnly(text) {
   } catch (e) { return false; }
 }
 
+// 网络差/离线时连发消息：等待和焦虑会随着消息数量上升。
+function noteBadConnectionMessages() {
+  const offline = typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线';
+  const slow = typeof getOtherNetworkMode === 'function' && getOtherNetworkMode() === '2G';
+  if (!offline && !slow) return;
+  const n = (typeof countMyMessageStreak === 'function') ? countMyMessageStreak() : 0;
+  if (!n) return;
+  window.__badConnectionMoodPending = true;
+  const base = offline ? 1.1 : 0.7;
+  boostMood('anxious', Math.min(6, base + n * 0.72), 10 * 60000);
+  boostMood('waiting', Math.min(5, 0.4 + n * 0.58), 10 * 60000);
+  if (n >= 4) boostMood('sad', Math.min(2.6, 0.8 + n * 0.18), 8 * 60000);
+  if (offline && n >= 3) boostMood('restrained', 1.15, 7 * 60000);
+}
+
+// 离线回来：连着发了几条，决定他回来时更偏等待、担心还是慌。
+function moodAfterOfflineReturn(count) {
+  if (!count || chatSettings.moodEnabled === false) return;
+  let tier = 'waiting';
+  let pair;
+  if (count >= 5) {
+    tier = 'anxious';
+    pair = pickFrom([
+      ['焦急', '怎么发了这么多'],
+      ['担心', '是不是出什么事了'],
+      ['慌', '我刚刚没看到']
+    ]);
+    boostMood('anxious', 3.4, 10 * 60000);
+    boostMood('waiting', 2.2, 8 * 60000);
+    boostMood('sad', 1.5, 8 * 60000);
+  } else if (count >= 2) {
+    tier = 'waiting';
+    pair = pickFrom([
+      ['担心', '等很久了吧'],
+      ['不安', '怎么突然发这么多'],
+      ['心虚', '刚看到']
+    ]);
+    boostMood('waiting', 2.4, 8 * 60000);
+    boostMood('anxious', 2.0, 8 * 60000);
+  } else {
+    pair = pickFrom([
+      ['抱歉', '刚看到'],
+      ['心虚', '没及时回你']
+    ]);
+    boostMood('waiting', 1.4, 6 * 60000);
+  }
+  pushMoodEvent(tier, pair, 4 * 60000, 'return');
+}
+
 // 聊天不是每句都换心情：普通消息按概率轻刷，特殊互动掷中才加权
 function moodAfterMessage(isMe, type, content) {
   const text = (content && content.val != null) ? String(content.val) : '';
 
+  if (isMe) noteBadConnectionMessages();
+  else if (window.__badConnectionMoodPending) {
+    // 2G/离线期间连发后，他终于回复时把等待/焦虑的情绪显示出来。
+    window.__badConnectionMoodPending = false;
+    refreshMood(true);
+  }
   if (type === 'text') analyzeMoodFromText(text, isMe);
 
   if (type === 'gift' || type === 'redpacket' || type === 'transfer') {

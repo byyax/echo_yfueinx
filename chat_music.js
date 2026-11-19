@@ -669,7 +669,11 @@ function playSongByTitle(title) {
 }
 function pickRandomSong() {
   if (!MUSIC_PLAYLIST.length) return null;
-  return MUSIC_PLAYLIST[Math.floor(Math.random() * MUSIC_PLAYLIST.length)];
+  // 优先挑真正能播放的歌，避免邀请/分享到没有音频文件的占位曲目。
+  const playable = MUSIC_PLAYLIST.filter(s => s && s.kind !== 'book' && s.src);
+  const pool = playable.length ? playable : MUSIC_PLAYLIST.filter(s => s && (s.src || s.lines));
+  const list = pool.length ? pool : MUSIC_PLAYLIST;
+  return list[Math.floor(Math.random() * list.length)];
 }
 // 推荐歌曲之后，他的回应（像互动一样有固定词库，不是每次都抽字卡）
 const MUSIC_SHARE_REPLIES = [
@@ -682,6 +686,15 @@ const MUSIC_SHARE_REPLIES = [
   '这首我要存进「想你」歌单。',
   '前奏一响就想到你了。',
   '你推荐的我都听。'
+];
+// 对方接受「一起听」时的内置回应
+const MUSIC_INVITE_ACCEPTS = [
+  '好呀，一起听。',
+  '行，耳机分你一半。',
+  '来吧，我正好也想听。',
+  '好，点播放吧。',
+  '一起听会儿。',
+  '嗯，我在。'
 ];
 function scheduleMusicShareReply(song) {
   const delay = 1500 + Math.random() * 2000;
@@ -755,7 +768,8 @@ function inviteTogether(i) {
   showToast('邀请已发出');
   const wait = 1600 + Math.random() * 1400;
   setTimeout(() => {
-    sendMessage('好呀，一起听。', 'text', false);
+    const line = MUSIC_INVITE_ACCEPTS[Math.floor(Math.random() * MUSIC_INVITE_ACCEPTS.length)];
+    sendMessage(line, 'text', false);
     acceptMyMusicInvite(s.title);
   }, wait);
 }

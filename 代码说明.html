@@ -111,6 +111,9 @@
 <li>如果是你发的红包/转账/礼物/互动，2–5 秒后自动“对方已收”。</li>
 </ol>
 <p>关键点：<strong>屏幕上的气泡和历史记录是两回事</strong>。 <code>addMessageDOM</code> 只负责画；真正的数据在 <code>chatHistory</code>，刷新后靠它重新画。</p>
+<p><strong>手机端首屏优化</strong>：聊天图片使用 <code>loading="lazy"</code> 和 <code>decoding="async"</code>；初始化批量渲染时设置 <code>window.__deferChatScroll = true</code>，避免每条消息都强制滚动布局，最后只滚一次到底部；启动页的 <code>waitImages()</code> 只等待首屏附近的图片。</p>
+<p><code>renderChatHistoryWindow()</code> 首屏只渲染最近 <code>CHAT_RENDER_INITIAL = 200</code> 条，聊天顶部出现「加载更早」按钮，每次再补 <code>CHAT_RENDER_STEP = 200</code> 条；加载更早时保留当前滚动位置。</p>
+<p><code>saveAllData()</code> 改成 180ms 合并保存：连续发消息/操作时只保留最后一次写入，<code>pagehide</code>、<code>beforeunload</code> 和页面隐藏时会同步刷盘，避免手机卡顿时反复序列化整份历史。</p>
 <h3>5. 他的随机回复怎么来的</h3>
 <p>你发完消息后，<code>simulateReplyWithDelay()</code> 会：</p>
 <ol start="1">
@@ -121,7 +124,7 @@
 <p><code>randomReply()</code> 依次抽：</p>
 <ol start="1">
 <li>6% 拍一拍；</li>
-<li>5% 分享/邀请听歌；</li>
+<li>3% 分享/邀请听歌（分享约 1.95%、邀请约 1.05%；8 分钟内有音乐事件时跳过）；</li>
 <li>5% 礼物/红包/转账；</li>
 <li>20% 引用你的话；</li>
 <li>12% 回图片；</li>
@@ -155,7 +158,7 @@
 <li>浏览器先显示 <code>#bootScreen</code>（写在 <code>index.html</code> 里）；</li>
 <li>所有 js 执行，<code>router.js</code> 最后渲染聊天记录、配色、状态栏；</li>
 <li><code>router.js</code> 最后一行的 <code>window.__appReady = true</code> 告诉启动画面“画完了”；</li>
-<li>启动画面再等字体、至少 1.5 秒，然后淡出；15 秒兜底；</li>
+<li>启动画面再等字体、至少 2 秒，然后淡出；15 秒兜底；</li>
 <li>淡出结束、<code>display:none</code> 之后，设置 <code>window.__appRevealed = true</code> 并派发 <code>app-revealed</code>；</li>
 <li><code>chat_mood.js</code> 在此之前用 <code>moodBootReady</code> 拦截情绪刷新，收到事件后才首次绘制情绪气泡，让出现动画完整可见。</li>
 </ol>
@@ -330,7 +333,7 @@ if (!chatSettings.signature) chatSettings.signature = '我喜欢夏天和你淋�
 <li>播放条顶部的小拉条由 <code>#musicHandle</code> + <code>setMusicBarCollapsed()</code> / <code>toggleMusicBarCollapsed()</code> 控制：给 <code>.music-bar</code> 加/去 <code>.collapsed</code>，内部 <code>.music-bar-inner</code> 淡出并让高度收为 0；不会暂停歌曲，也不会清掉 <code>musicBarOpen</code>；</li>
 <li>我发出的「一起听」被接受时，<code>acceptMyMusicInvite()</code> 先把卡片改成「已接受」；如果邀请的歌正好在播，只打开播放器、不重播，否则才 <code>playSongByTitle()</code>；对方发来的邀请在 <code>openOtherCard()</code> 的 <code>musicinvite</code> 分支里做同样判断；</li>
 <li><code>shareSongToChat()</code> 发出推荐卡片后会调用 <code>scheduleMusicShareReply()</code>：三成从 <code>MUSIC_SHARE_REPLIES</code> 挑一句，七成用 <code>sendRandomTextCardReply()</code> 抽字卡；内置回复会小幅提升开心/亲密；</li>
-<li>音乐管理「批量管理」行里的「检测」用 <code>fetch</code> 逐个检查 <code>src</code>，结果显示在工具栏下方。</li>
+<li>音乐管理「批量管理」行里的「检测」会检查所有内置歌：没 <code>src</code> 的直接报「未放入音频文件」；有 <code>src</code> 的用带 <code>Range</code> 的 <code>fetch</code> 同时检查状态码和 <code>Content-Type</code>，避免静态站把缺失文件回退成 200 HTML 时误报通过。结果显示在工具栏下方。</li>
 </ul>
 <p><strong>注意</strong>：<code>.ncm</code> 不能播；文件名有空格/中文时 <code>src</code> 必须完全一致；mp3 太大传不上 GitHub。</p>
 <h3>6.10 情绪池</h3>
@@ -690,7 +693,7 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 <li>页面 <code>load</code>；</li>
 <li><code>window.__appReady === true</code>（<code>router.js</code> 最后一行置位）；</li>
 <li>字体加载完（<code>document.fonts.ready</code>，最多多等 3 秒）；</li>
-<li>启动画面至少显示 <strong>1.5 秒</strong>（从打开页面开始算）。</li>
+<li>启动画面至少显示 <strong>2 秒</strong>（从打开页面开始算）。</li>
 </ol>
 <p>之后连等两帧再淡出；后台标签页 rAF 被暂停时，450ms 计时器兜底；15 秒强制作废。淡出结束并设置 <code>display:none</code> 后，才会设置 <code>window.__appRevealed = true</code> 并派发 <code>app-revealed</code>；<code>chat_mood.js</code> 收到这个事件后才首次绘制情绪气泡。</p>
 <h3>4. 想改的话</h3>
@@ -699,7 +702,7 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 <li>爱心大小：<code>#bootLogo</code> 的 <code>width/height</code>（精灵表单帧也要跟着改）；</li>
 <li>转速：<code>1.6s</code>；</li>
 <li>弹跳幅度：<code>@keyframes bootBounce</code> 的 <code>translateY</code>；</li>
-<li>最短停留：<code>MIN_SHOW = 1600</code>；</li>
+<li>最短停留：<code>MIN_SHOW = 2000</code>；</li>
 <li>最长兜底：<code>MAX_WAIT = 15000</code>；</li>
 <li>背景：<code>#bootScreen</code> 的 <code>radial-gradient</code>；</li>
 <li>想加进度条：在 <code>#bootScreen</code> 里加一个元素，脚本里按需改宽度。</li>
@@ -725,7 +728,7 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 <table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>网络</td><td>WiFi 70%；不是 WiFi 时，5G 80%（总 24%）、2G 20%（总 6%）</td></tr><tr><td>电量</td><td>随机 20–99%</td></tr><tr><td>充电</td><td>初始不充电</td></tr></tbody></table>
 <p><strong>之后每 10 秒</strong></p>
 <table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>网络变化</td><td>20% 概率刷新；刷新时 WiFi 50%、5G 40%、2G 10%</td></tr><tr><td>不充电</td><td>电量减 0 或 1（各 50%）</td></tr><tr><td>低于 10%</td><td>自动变成充电状态，电量固定在 10%</td></tr><tr><td>充电中</td><td>每 10 秒加 1 或 2（各 50%），到 100% 停止充电</td></tr><tr><td>颜色</td><td>≤10% 红色，≤20% 橙色，其余绿色</td></tr></tbody></table>
-<p>它只是装饰，不影响聊天逻辑。想改快慢就改 <code>initStatusBar()</code> 里的 <code>10000</code> 和那几个数字。注意：不要在控制台反复调用 <code>initStatusBar()</code>，它每次都会再开一个定时器。</p>
+<p>网络不再只是装饰：切到 2G 时会提示「📶 对方网络不佳，回复可能会慢一点」，<code>getRandomDelay()</code> 会在正常延迟上额外加 10 秒；状态恢复后不再提示。想改快慢就改 <code>initStatusBar()</code> 里的 <code>10000</code> 和那几个数字；想改 2G 惩罚，改 <code>getRandomDelay()</code> 里的 <code>10000</code>。注意：不要在控制台反复调用 <code>initStatusBar()</code>，它每次都会再开一个定时器。</p>
 <h3>10.2 他的名字下面的在线状态（<code>router.js</code>）</h3>
 <p>名字右边有两个小气泡：左边是主状态，右边是副状态。</p>
 <p><strong>主状态权重</strong>（总权重 109）</p>
@@ -734,14 +737,15 @@ if (toolDiary) toolDiary.onclick = () =&gt; {
 <p>攀岩 7 · 健身 7 · 奶茶 7 · 听歌 7 · 打球 6 · 干饭 6 · 滑雪 5 · 冲浪 5 · 发呆 5 · 吸猫 5 · 游戏 5 · 睡觉 4 · 自拍 4 · 追剧 4 · 咖啡 4 · 出差 3 · 作业 3 · 洗头 3 · 超市 3 · 遛狗 3 · 修图 3 · 放空 3</p>
 <p><strong>什么时候变</strong></p>
 <table><thead><tr><th>时机</th><th>规则</th></tr></thead><tbody><tr><td>进站</td><td>30% 概率立刻随机一次；70% 先显示「在线」</td></tr><tr><td>进站时副状态</td><td>没触发随机主状态时，30% 概率随机一个副状态；触发随机主状态时按 45% 规则</td></tr><tr><td>平时</td><td>每 60 秒检查一次，到时间就换</td></tr><tr><td>下一次换的时间</td><td>8–25 分钟随机</td></tr><tr><td>随机换主状态</td><td>按上面的权重抽</td></tr><tr><td>随机换副状态</td><td>45% 概率出现，再按权重抽；否则没有副状态</td></tr><tr><td>他从离线回来</td><td>主状态变成「在线」，副状态清空，下次 8–25 分钟后</td></tr></tbody></table>
-<p><strong>离线状态的影响</strong>：主状态抽到「离线」时，你发消息后他会延迟 90–240 秒才“回来”，先发一句离线回复，再等 1.2–2.7 秒正常回复。</p>
+<p><strong>离线状态的影响</strong>：主状态抽到「离线」时，会同步把网络设为 2G，并弹出「📴 对方已掉线，消息可能会晚一点」提示；你发消息后他会延迟 90–240 秒才“回来”，先发一句离线回复，再等 1.2–2.7 秒正常回复。离线期间你每 10 秒后再次发消息，会再看到一次连接状态提示；恢复在线后网络回到 WiFi/5G，不再提示。</p>
+<p><strong>连续消息与离线回来</strong>：<code>noteBadConnectionMessages()</code> 会在 2G/离线期间按当前连续发给他的消息数提升等待、焦虑（离线时还有不安/隐忍）的临时权重；<code>moodAfterOfflineReturn()</code> 会按离线期间积累的消息数选择回来的情绪：1 条偏等待/抱歉，2–4 条偏担心/不安，5 条以上偏焦急/慌。相关权重会持续一段时间的衰减。</p>
 <blockquote>这里的「在线状态」和聊天气泡下面的「情绪」是两套系统：状态是装饰，情绪由 <code>chat_mood.js</code> 单独计算。</blockquote>
 <h3>10.3 消息、回复节奏</h3>
-<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>他回你的延迟</td><td>0 到设置里的「回复延迟」之间随机，均匀分布；默认 0–30 秒</td></tr><tr><td>正在输入</td><td>延迟大于 2 秒才显示；在延迟的一半（最多 1 秒）时出现</td></tr><tr><td>回复条数</td><td>默认 1 条；设置页可改</td></tr><tr><td>定时回复</td><td>每 5 秒检查一次；你超过设定分钟没说话，他主动发</td></tr><tr><td>定时回复条数</td><td><code>autoReplyCount</code>，每条间隔 1.5 秒</td></tr><tr><td>💌 让他主动</td><td>按回复条数发；每条延迟累加随机回复时间 + 1 秒</td></tr><tr><td>离线延迟</td><td>90–240 秒，然后先发一句离线回复</td></tr><tr><td>离线回复后的正式回复</td><td>1.2–2.7 秒后</td></tr><tr><td>拍一拍反应</td><td>1 秒后回一句</td></tr><tr><td>你发红包/转账/礼物/互动</td><td>2–5 秒后自动“对方已收”</td></tr><tr><td>互动回应</td><td>1.5–3 秒后</td></tr><tr><td>邀请一起听的回应</td><td>1.6–3 秒后</td></tr></tbody></table>
+<table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody><tr><td>他回你的延迟</td><td>0 到设置里的「回复延迟」之间随机，均匀分布；默认 0–30 秒</td></tr><tr><td>正在输入</td><td>延迟大于 2 秒才显示；在延迟的一半（最多 1 秒）时出现</td></tr><tr><td>回复条数</td><td>默认 1 条；设置页可改</td></tr><tr><td>2G 附加延迟</td><td>在正常随机延迟上再加约 10 秒</td></tr><tr><td>定时回复</td><td>每 5 秒检查一次；你超过设定分钟没说话，他主动发</td></tr><tr><td>定时回复条数</td><td><code>autoReplyCount</code>，每条间隔 1.5 秒</td></tr><tr><td>💌 让他主动</td><td>按回复条数发；每条延迟累加随机回复时间 + 1 秒</td></tr><tr><td>离线延迟</td><td>90–240 秒，然后先发一句离线回复</td></tr><tr><td>离线回复后的正式回复</td><td>1.2–2.7 秒后</td></tr><tr><td>拍一拍反应</td><td>1 秒后回一句</td></tr><tr><td>你发红包/转账/礼物/互动</td><td>2–5 秒后自动“对方已收”</td></tr><tr><td>互动回应</td><td>1.5–3 秒后</td></tr><tr><td>邀请一起听的回应</td><td>1.6–3 秒后</td></tr></tbody></table>
 <h3>10.4 他随机回什么（<code>chat_core.js</code> → <code>randomReply()</code>）</h3>
 <p>依次判定，前面的命中就不再往后走：</p>
-<table><thead><tr><th>顺序</th><th>内容</th><th>概率</th></tr></thead><tbody><tr><td>1</td><td>拍一拍</td><td>6%</td></tr><tr><td>2</td><td>分享/邀请听歌</td><td>5%；其中分享 50%、邀请 50%</td></tr><tr><td>3</td><td>礼物/红包/转账</td><td>5%</td></tr><tr><td>4</td><td>引用你最近的话</td><td>20%</td></tr><tr><td>5</td><td>回图片</td><td>12%（图库非空时）</td></tr><tr><td>6</td><td>从字卡抽一条文字</td><td>剩余概率</td></tr><tr><td>7</td><td>文字后附带 Emoji</td><td>30%（有 Emoji 库时）</td></tr></tbody></table>
-<p>邀请一起听时，50% 指定一首歌、50% 只发“一起听”不指定。引用是从最近 20 条你的文字里随机挑一条。字卡为空时，普通聊天会弹出提示并可跳转「自定义回复」。</p>
+<table><thead><tr><th>顺序</th><th>内容</th><th>概率</th></tr></thead><tbody><tr><td>1</td><td>拍一拍</td><td>6%</td></tr><tr><td>2</td><td>分享/邀请听歌</td><td>3%；分享约 1.95%、邀请约 1.05%；8 分钟冷却</td></tr><tr><td>3</td><td>礼物/红包/转账</td><td>5%</td></tr><tr><td>4</td><td>引用你最近的话</td><td>20%</td></tr><tr><td>5</td><td>回图片</td><td>12%（图库非空时）</td></tr><tr><td>6</td><td>从字卡抽一条文字</td><td>剩余概率</td></tr><tr><td>7</td><td>文字后附带 Emoji</td><td>30%（有 Emoji 库时）</td></tr></tbody></table>
+<p>音乐事件有 8 分钟冷却，避免连续听歌；随机分享/邀请只会挑选有音频文件的歌。邀请一起听时，50% 指定一首歌、50% 只发“一起听”不指定。引用是从最近 20 条你的文字里随机挑一条。字卡为空时，普通聊天会弹出提示并可跳转「自定义回复」。</p>
 <h3>10.5 红包、转账、礼物</h3>
 <p><strong>触发</strong>：每条回复 5% 概率进入金钱事件。</p>
 <table><thead><tr><th>类型</th><th>占金钱事件</th></tr></thead><tbody><tr><td>礼物</td><td>55%</td></tr><tr><td>红包</td><td>30%</td></tr><tr><td>转账</td><td>15%</td></tr></tbody></table>
@@ -853,7 +857,7 @@ applyPalette('aurora');</code></pre>
 <li><b>一起听不重播</b>：<code>acceptMyMusicInvite()</code> 发现邀请的歌正好在播时，只打开播放器，不调用 <code>playSongByTitle()</code>。</li>
 <li><b>推荐歌曲的回应</b>：<code>shareSongToChat()</code> 发出推荐卡后调用 <code>scheduleMusicShareReply()</code>；40% 内置听歌回复，60% 抽字卡。</li>
 <li><b>互动的混合回复</b>：<code>sendInteract()</code> 50% 用互动词库，50% 抽字卡；字卡库为空时 100% 内置。</li>
-<li><b>后台使用手册</b>：<code>index.html</code> 新增 <code>#pageManual</code>，<code>router.js</code> 绑定入口，样式在 <code>style.css</code> 的 <code>.manual-*</code>。</li>
+<li><b>后台使用手册</b>：<code>index.html</code> 新增 <code>#pageManual</code>，<code>router.js</code> 绑定入口，样式在 <code>style.css</code> 的 <code>.manual-*</code>；右下角固定「返回后台」按钮，目录只滚动手册内部容器。</li>
 <li><b>微信 / 其他配色</b>：微信改为「我绿、对方白、灰底」；新增 social 分组：Telegram、QQ、LINE、WhatsApp、iMessage。</li>
 <li><b>像素爱心默认头像</b>：对方未上传头像时用 <code>icons/icon-heart-192.png</code>，<code>--icon-filter</code> 跟随配色。</li>
 <li><b>混合比例</b>：互动 <code>HYBRID_INTERACT_CARD_RATE</code> 0.5，推荐歌曲 <code>HYBRID_MUSIC_CARD_RATE</code> 0.6，通话后 <code>CALL_REPLY_CARD_RATE</code> 0.4/0.5。</li>
@@ -894,14 +898,14 @@ applyPalette('aurora');</code></pre>
 <h3>2. 互动内置回复（<code>data.js</code> 的 <code>INTERACT_REPLIES</code>）</h3>
 <table>
 <tr><th>动作</th><th>内置回复</th></tr>
-<tr><td>摸摸头</td><td>嗯……再摸一会儿也行 / 被你摸得都困了 / 头只能你摸，别人不行 / 乖，换我摸摸你</td></tr>
-<tr><td>戳戳脸</td><td>别戳啦，痒~ / 你再戳，我可就亲回去了 / 戳一下要给钱的 / 脸都被你戳软了</td></tr>
-<tr><td>抱抱</td><td>（一把抱住你） / 抱紧点，别松手 / 你身上好香 / 再抱十秒</td></tr>
-<tr><td>贴贴</td><td>（凑过来贴贴） / 贴这么近，还让不让人学习了 / 行吧，今天格外黏你 / （把下巴搁在你肩上）</td></tr>
-<tr><td>捏捏脸</td><td>哎呀脸都要捏红啦 / 捏坏了你负责 / 再捏我就咬你 / 轻点，脸都被你捏变形了</td></tr>
-<tr><td>举高高</td><td>哇——飞起来啦！ / 再来一次，我还想飞 / 你举我一点都不费劲 / 转一圈？</td></tr>
+<tr><td>摸摸头</td><td>嗯……再摸一会儿也行 / 被你摸得都困了 / 头只能你摸，别人不行 / 乖，换我摸摸你 / 再摸就真困了 / 手借你一会儿</td></tr>
+<tr><td>戳戳脸</td><td>别戳啦，痒~ / 你再戳，我可就亲回去了 / 戳一下要给钱的 / 脸都被你戳软了 / 戳轻点 / 再戳脸要红了</td></tr>
+<tr><td>抱抱</td><td>（一把抱住你） / 抱紧点，别松手 / 你身上好香 / 再抱十秒 / 先别动，让我抱会儿 / 抱一下就好</td></tr>
+<tr><td>贴贴</td><td>（凑过来贴贴） / 贴这么近，还让不让人学习了 / 行吧，今天格外黏你 / （把下巴搁在你肩上） / 再贴一会儿 / 别嫌我黏</td></tr>
+<tr><td>捏捏脸</td><td>哎呀脸都要捏红啦 / 捏坏了你负责 / 再捏我就咬你 / 轻点，脸都被你捏变形了 / 脸要变形了 / 手下留情</td></tr>
+<tr><td>举高高</td><td>哇——飞起来啦！ / 再来一次，我还想飞 / 你举我一点都不费劲 / 转一圈？ / 放我下来啦 / 再来一次</td></tr>
 </table>
-<p>没有 <code>replies</code> 时的兜底（<code>chat_tools.js</code> 的 <code>REPLY_FALLBACK</code>）：摸摸头“嘿嘿，被你摸到啦~”；戳戳脸“别戳啦，痒~”；抱抱“（一把抱住你）”；贴贴“（凑过来贴贴）”；捏捏脸“哎呀脸都要捏红啦”；举高高“哇——飞起来啦！”。</p>
+<p>没有 <code>replies</code> 时的兜底（<code>chat_tools.js</code> 的 <code>REPLY_FALLBACK</code>）：摸摸头“嘿嘿，被你摸到啦~ / 再摸一会儿 / 头交给你了”；戳戳脸“别戳啦，痒~ / 轻一点啦 / 脸都被你戳软了”；抱抱“（一把抱住你） / 抱紧点 / 再抱一会儿”；贴贴“（凑过来贴贴） / 再贴一会儿 / 别嫌我黏”；捏捏脸“哎呀脸都要捏红啦 / 手下留情 / 再捏就变形了”；举高高“哇——飞起来啦！ / 再来一次 / 放我下来啦”。</p>
 
 <h3>3. 推荐歌曲的回复（<code>chat_music.js</code> 的 <code>MUSIC_SHARE_REPLIES</code>）</h3>
 <table>
@@ -933,8 +937,8 @@ applyPalette('aurora');</code></pre>
 <h3>4. 其他固定文案</h3>
 <table>
 <tr><th>场景</th><th>文案</th><th>位置</th></tr>
-<tr><td>我邀请一起听，对方接受</td><td>好呀，一起听。</td><td><code>chat_music.js</code> 的 <code>inviteTogether()</code></td></tr>
-<tr><td>对方离线后回来</td><td>刚刚没看手机，怎么啦？ / 不好意思，我睡着了.. / 我才忙完回来，我好想你 / 刚上线，我把你的消息看完了 / 立刻朝你飞奔过来</td><td><code>data.js</code> 的 <code>offlineReplyLines</code></td></tr>
+<tr><td>我邀请一起听，对方接受</td><td>好呀，一起听。 / 行，耳机分你一半。 / 来吧，我正好也想听。 / 好，点播放吧。 / 一起听会儿。 / 嗯，我在。</td><td><code>chat_music.js</code> 的 <code>MUSIC_INVITE_ACCEPTS</code></td></tr>
+<tr><td>对方离线后回来</td><td>刚刚没看手机，怎么啦？ / 不好意思，我睡着了.. / 我才忙完回来，我好想你 / 刚上线，我把你的消息看完了 / 立刻朝你飞奔过来 / 刚才没看到，现在在呢 / 我回来了，刚忙完 / 手机放远了，刚拿到</td><td><code>data.js</code> 的 <code>offlineReplyLines</code></td></tr>
 <tr><td>字卡库为空</td><td>弹出提示，可直接跳转「自定义回复」</td><td><code>chat_core.js</code> 的 <code>promptEmptyCardLibrary()</code></td></tr>
 </table>
 
