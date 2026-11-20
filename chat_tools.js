@@ -64,9 +64,12 @@ if (toolCamera && cameraInput) {
 }
 
 const toolLoc = document.getElementById('toolLoc');
-if(toolLoc) toolLoc.onclick = () => { 
+if(toolLoc) toolLoc.onclick = () => {
   closePanels(); if(locLibrary.length === 0) return showToast('位置库是空的');
   sendMessage('你在哪呀？', 'text', true);
+  // 问位置是在线时的即时互动，不等设置里的长时间随机回复；2G 只额外慢一点。
+  let locationDelay = 900 + Math.random() * 1800;
+  if (typeof getOtherNetworkMode === 'function' && getOtherNetworkMode() === '2G') locationDelay += 1200;
   setTimeout(() => {
     const sendLocation = () => {
       const loc = locLibrary[Math.floor(Math.random() * locLibrary.length)];
@@ -78,7 +81,7 @@ if(toolLoc) toolLoc.onclick = () => {
     }
     const waitOnline = (typeof whenOtherOnline === 'function') ? whenOtherOnline : (cb => cb());
     waitOnline(sendLocation);
-  }, getRandomDelay());
+  }, locationDelay);
 };
 
 // 双击头像仍是原来的拍一拍；这里加号面板的“互动”弹出肢体互动选择

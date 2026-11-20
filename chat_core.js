@@ -137,6 +137,42 @@ function getGiftIcon(content) {
   return (content && content.custom) ? '🎀' : '🎁';
 }
 
+// 气泡“复制”：文字消息复制原文，其他卡片复制可读的占位描述。
+function getCopyText(content, type) {
+  if (!content) return '';
+  if (type === 'text' || type === 'pat') {
+    return content.val === undefined || content.val === null ? '' : String(content.val);
+  }
+  return getQuoteDisplayText(content, type);
+}
+
+function legacyCopyToClipboard(value) {
+  return new Promise((resolve, reject) => {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = value;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      ok ? resolve() : reject(new Error('copy-failed'));
+    } catch (e) { reject(e); }
+  });
+}
+
+function copyTextToClipboard(text) {
+  const value = String(text == null ? '' : text);
+  if (!value) return Promise.reject(new Error('empty'));
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(value).catch(() => legacyCopyToClipboard(value));
+  }
+  return legacyCopyToClipboard(value);
+}
+
 function showBubbleMenu(x, y, content, isMe, type, time, rowEl) {
   bubbleMenuCtx = { content, isMe, type, time, rowEl };
   const menu = document.getElementById('bubbleMenu');
@@ -1372,6 +1408,7 @@ document.addEventListener('click', (e) => {
 
 (function bindBubbleMenu() {
   const quoteBtn = document.getElementById('bubbleQuoteBtn');
+  const copyBtn = document.getElementById('bubbleCopyBtn');
   const delBtn = document.getElementById('bubbleDeleteBtn');
   const cancelDel = document.getElementById('cancelDeleteBubble');
   const confirmDel = document.getElementById('confirmDeleteBubble');
@@ -1381,6 +1418,18 @@ document.addEventListener('click', (e) => {
     const ctx = bubbleMenuCtx;
     if (!ctx) return;
     startQuote(ctx.content, ctx.isMe ? chatSettings.myName : chatSettings.otherName, getQuoteDisplayText(ctx.content, ctx.type), ctx.time);
+    hideBubbleMenu();
+  };
+
+  if (copyBtn) copyBtn.onclick = (e) => {
+    e.stopPropagation();
+    const ctx = bubbleMenuCtx;
+    if (!ctx) return;
+    copyTextToClipboard(getCopyText(ctx.content, ctx.type)).then(() => {
+      showToast('已复制');
+    }).catch(() => {
+      showToast('复制失败，请长按文字手动复制');
+    });
     hideBubbleMenu();
   };
 

@@ -246,8 +246,29 @@ button:active, .icon-btn:active, .text-btn:active { transform: scale(0.92) !impo
 .sticker-nav-btn.active { color: var(--primary-dark); border-bottom-color: var(--primary); }
 .sticker-content { flex: 1; overflow-y: auto; display: none; padding: 12px; }
 .sticker-content.active { display: block; }
-.emoji-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-.emoji-grid span { font-size: 24px; cursor: pointer; padding: 6px; border-radius: 8px; }
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 42px);
+  gap: 7px;
+  justify-content: center;
+  justify-items: center;
+  align-content: start;
+}
+.emoji-grid span {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 10px;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+}
 .emoji-grid span:hover { background: var(--border-color); }
 .sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .sticker-item { width: 100%; aspect-ratio: 1; border-radius: 12px; background: var(--card-bg); object-fit: cover; cursor: pointer; border: 1px solid var(--border-color); position: relative; }
