@@ -3,85 +3,38 @@
 // 歌词：内置曲目自带时间轴；本地歌可以导入 .lrc，跟音频逐句对齐。
 
 const MUSIC_LIBRARY = [
-  // —— 听书/节选：有正文，可以当"朗读"来听 ——
-  {
-    kind: 'book', title: '小王子 · 如果你驯养了我', artist: '圣埃克苏佩里',
-    lines: [
-      { t: 1, text: '对我而言，你只是一个小男孩' },
-      { t: 7, text: '和成千上万个小男孩一样' },
-      { t: 13, text: '我不需要你，你也不需要我' },
-      { t: 19, text: '但如果你驯养了我' },
-      { t: 25, text: '我们就会彼此需要' },
-      { t: 31, text: '你就是我的独一无二' }
-    ]
-  },
-  {
-    kind: 'book', title: '小王子 · 会笑的星星', artist: '圣埃克苏佩里',
-    lines: [
-      { t: 1, text: '夜里你抬头看星星的时候' },
-      { t: 8, text: '因为我住在其中一颗上面' },
-      { t: 15, text: '因为我在那颗星星上笑' },
-      { t: 22, text: '所以对你来说，就像所有星星都在笑' },
-      { t: 30, text: '你就会拥有会笑的星星' }
-    ]
-  },
-  {
-    kind: 'book', title: '莎士比亚 · 十四行诗', artist: '第 18 首',
-    lines: [
-      { t: 1, text: '我能否把你比作夏天' },
-      { t: 7, text: '你比夏天更可爱，也更温婉' },
-      { t: 13, text: '狂风会摇落五月的花蕾' },
-      { t: 19, text: '夏天的期限又总是太短' },
-      { t: 25, text: '只要人还能呼吸，眼睛还能看见' },
-      { t: 32, text: '这首诗就让你与时间同在' }
-    ]
-  },
-  {
-    kind: 'book', title: '哈姆雷特 · 生存还是毁灭', artist: '莎士比亚',
-    lines: [
-      { t: 1, text: '生存还是毁灭' },
-      { t: 6, text: '这是一个值得考虑的问题' },
-      { t: 12, text: '是默默忍受命运的暴虐' },
-      { t: 18, text: '还是挺身反抗无边的苦恼' }
-    ]
-  },
-  {
-    kind: 'book', title: '飞鸟集 · 生如夏花', artist: '泰戈尔',
-    lines: [
-      { t: 1, text: '生如夏花之绚烂' },
-      { t: 6, text: '死如秋叶之静美' },
-      { t: 11, text: '世界以痛吻我' },
-      { t: 16, text: '我要它报之以歌' },
-      { t: 22, text: '如果你因错过太阳而流泪' },
-      { t: 28, text: '那么你也将错过群星' }
-    ]
-  },
-
-  // —— 歌单（src 指向 music/ 里的真实文件；lrc 为可选的外挂歌词）——
+  // —— 内置歌单（顺序按指定图）——
   { kind: 'song', title: "글쎄 (I Don't Know)", artist: 'SEVENTEEN', src: 'music/SEVENTEEN - 글쎄.mp3', lrc: 'music/SEVENTEEN - 글쎄.lrc' },
-  { kind: 'song', title: '雪化作泪滴 (Old Tape)', artist: 'Cheeze / Trazzy / 雾明', src: 'music/Cheeze,Trazzy,雾明 - 雪化作泪滴 (Old Tape).mp3', lrc: 'music/Cheeze,Trazzy,雾明 - 雪化作泪滴 (Old Tape).lrc' },
-  { kind: 'song', title: 'My Lady (Chinese Ver.)', artist: 'EXO', src: 'music/EXO - My Lady (Chinese Ver.).mp3', lrc: 'music/EXO - My Lady (Chinese Ver.).lrc' },
   { kind: 'song', title: '달빛 (月光)', artist: 'GOT7', src: 'music/GOT7 - 달빛.mp3', lrc: 'music/GOT7 - 달빛.lrc' },
+  { kind: 'song', title: 'ANSWER', artist: '극한데뷔 야생돌', src: 'music/극한데뷔 야생돌 - ANSWER.mp3', lrc: 'music/극한데뷔 야생돌 - ANSWER.lrc' },
+  { kind: 'song', title: 'I NEED U', artist: 'BTS (防弹少年团)', src: 'music/BTS (防弹少年团) - I NEED U.mp3', lrc: 'music/BTS (防弹少年团) - I NEED U.lrc' },
   { kind: 'song', title: 'Mr. "Broken Heart"（"心碎"先生）', artist: '松下優也', src: 'music/松下優也 - Mr. Broken Heart.mp3', lrc: 'music/松下優也 - Mr. Broken Heart.lrc' },
   { kind: 'song', title: '明知故犯', artist: 'Max李玄', src: 'music/Max李玄 - 明知故犯.mp3', lrc: 'music/Max李玄 - 明知故犯.lrc' },
-  { kind: 'song', title: '无意', artist: '加木 / Demxntia' },
+  { kind: 'song', title: 'My Lady (Chinese Ver.)', artist: 'EXO', src: 'music/EXO - My Lady (Chinese Ver.).mp3', lrc: 'music/EXO - My Lady (Chinese Ver.).lrc' },
   { kind: 'song', title: '茉莉', artist: 'JBcob林泽贤 / 张泳浩', src: 'music/JBcob林泽贤,张泳浩 - 茉莉.mp3', lrc: 'music/JBcob林泽贤,张泳浩 - 茉莉.lrc' },
+  { kind: 'song', title: '雪化作泪滴 (Old Tape)', artist: 'Cheeze / Trazzy / 雾明', src: 'music/Cheeze,Trazzy,雾明 - 雪化作泪滴 (Old Tape).mp3', lrc: 'music/Cheeze,Trazzy,雾明 - 雪化作泪滴 (Old Tape).lrc' },
+  { kind: 'song', title: 'My Love', artist: 'Dok2 / 朴宰范', src: 'music/Dok2,朴宰范 - My Love.mp3', lrc: 'music/Dok2,朴宰范 - My Love.lrc' },
   { kind: 'song', title: 'Boy In Luv', artist: 'BTS (防弹少年团)', src: 'music/BTS (防弹少年团) - Boy In Luv.mp3', lrc: 'music/BTS (防弹少年团) - Boy In Luv.lrc' },
-  { kind: 'song', title: 'I NEED U', artist: 'BTS (防弹少年团)', src: 'music/BTS (防弹少年团) - I NEED U.mp3', lrc: 'music/BTS (防弹少年团) - I NEED U.lrc' },
-  { kind: 'song', title: 'ANSWER', artist: '극한데뷔 야생돌', src: 'music/극한데뷔 야생돌 - ANSWER.mp3', lrc: 'music/극한데뷔 야생돌 - ANSWER.lrc' },
   { kind: 'song', title: "Don't Go Back Tonight", artist: 'TizzyT', src: "music/TizzyT - Don't Go Back Tonight.mp3", lrc: "music/TizzyT - Don't Go Back Tonight.lrc" },
-  { kind: 'song', title: '都市问题', artist: 'Capper / LEGGO' },
+
+  // —— 白噪音 ——
+  { kind: 'song', title: '白噪音_雨声', artist: '白噪音', src: 'music/白噪音_雨声.wav' },
+  { kind: 'song', title: '白噪音_壁炉', artist: '白噪音', src: 'music/白噪音_壁炉.wav' },
+  { kind: 'song', title: '白噪音_沸腾', artist: '白噪音', src: 'music/白噪音_沸腾.wav' },
+
+  // —— music 文件夹里还没有音频文件的歌，放最后 ——
+  { kind: 'song', title: '无意', artist: '加木 / Demxntia' },
   { kind: 'song', title: 'Bedroom Trip', artist: 'Luke Christopher' },
   { kind: 'song', title: 'Too Late', artist: 'After 7' },
-  { kind: 'song', title: 'My Love', artist: 'Dok2 / 朴宰范', src: 'music/Dok2,朴宰范 - My Love.mp3', lrc: 'music/Dok2,朴宰范 - My Love.lrc' },
-  { kind: 'song', title: '121', artist: 'ICE杨长青 / 邹沛沛' }
+  { kind: 'song', title: '121', artist: 'ICE杨长青 / 邹沛沛' },
+  { kind: 'song', title: '都市问题', artist: 'Capper / LEGGO' }
 ];
 
 // 运行时歌单：内置在前，本地导入追加在后
 const MUSIC_PLAYLIST = MUSIC_LIBRARY.map(s => Object.assign({}, s));
 
 // ===== 曲库排序 / 隐藏（后台批量管理用） =====
-const MUSIC_ORDER_KEY = 'echo_music_order';
+const MUSIC_ORDER_KEY = 'echo_music_order_v2';
 const MUSIC_HIDDEN_KEY = 'echo_music_hidden';
 
 function musicKey(s) {
