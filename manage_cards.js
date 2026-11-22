@@ -290,6 +290,10 @@ function openEditModal(item) {
   
   const addTagRow = document.getElementById('addTagRow');
   if (addTagRow) addTagRow.style.display = (currentLib === 'text') ? 'flex' : 'none';
+  if (currentLib === 'text') {
+    const tagSelect = document.getElementById('contentTagSelect');
+    if (tagSelect) tagSelect.value = item.tagId || 'unclassified';
+  }
   updateAddModalHint();
   document.getElementById('addModal').classList.add('show');
 }

@@ -611,7 +611,10 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
 
       let bottomText = '';
       if (type === 'location') bottomText = '位置信息';
-      else if (type === 'choice') bottomText = content.chosen ? '已选择 · 点击展开' : (isMe ? '等待对方选择 · 点击展开' : '点击展开');
+      else if (type === 'choice') {
+        const hasChoice = Array.isArray(content.chosen) && content.chosen.length > 0;
+        bottomText = hasChoice ? '已选择 · 点击展开' : (isMe ? '等待对方选择 · 点击展开' : '点击展开');
+      }
       else if (type === 'musicshare') bottomText = content.isOpened ? '已播放' : '点击播放';
       else if (type === 'musicinvite') bottomText = content.isOpened ? '已接受' : (isMe ? '等待对方回应' : '点击接受');
       else if (type === 'transfer') bottomText = content.isOpened ? '已收款' : '未收款';
@@ -655,7 +658,18 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
         });
         const bottomEl = bodyDiv.querySelector('.card-bottom');
         if (bottomEl) bodyDiv.insertBefore(optsBox, bottomEl); else bodyDiv.appendChild(optsBox);
-        bodyDiv.onclick = () => bubble.classList.toggle('expanded');
+        const refreshChoiceBottom = () => {
+          if (!bottomEl) return;
+          const hasChoice = Array.isArray(content.chosen) && content.chosen.length > 0;
+          const expanded = bubble.classList.contains('expanded');
+          const base = hasChoice ? '已选择' : (isMe ? '等待对方选择' : '');
+          bottomEl.textContent = (base ? base + ' · ' : '') + (expanded ? '点击收起' : '点击展开');
+        };
+        bodyDiv.onclick = () => {
+          bubble.classList.toggle('expanded');
+          refreshChoiceBottom();
+        };
+        refreshChoiceBottom();
       }
 
       if (type === 'musicshare') {
@@ -912,7 +926,10 @@ function triggerPat(isMePatting) {
       if (typeof scheduleOfflineReturn === 'function') scheduleOfflineReturn();
       if (typeof whenOtherOnline === 'function') whenOtherOnline(react);
     } else {
-      setTimeout(react, 1000);
+      // 2G 下不能秒回：模拟网络慢时“拍一拍”的回应也要等一会儿。
+      const slow = typeof getOtherNetworkMode === 'function' && getOtherNetworkMode() === '2G';
+      const delay = slow ? 8000 + Math.random() * 4000 : 1000;
+      setTimeout(react, delay);
     }
   }
 }

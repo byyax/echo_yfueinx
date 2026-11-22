@@ -1,6 +1,7 @@
 // ===== 选择：写几个选项发过去，让他选一个或几个 =====
 const CHOICE_MIN = 2;
 const CHOICE_MAX = 10;
+const scheduledChoiceReplies = new Set();
 
 const choiceModal = document.getElementById('choiceModal');
 const choiceOptionsEl = document.getElementById('choiceOptions');
@@ -120,7 +121,9 @@ function applyChoiceChosen(msg, chosen) {
   const bubble = document.querySelector(`.bubble[data-msg-time="${msg.time}"]`);
   if (!bubble) return;
   const bottom = bubble.querySelector('.card-bottom');
-  if (bottom) bottom.textContent = '已选择 · 点击展开';
+  if (bottom) {
+    bottom.textContent = '已选择 · ' + (bubble.classList.contains('expanded') ? '点击收起' : '点击展开');
+  }
   const chosenTexts = msg.content.chosen;
   bubble.querySelectorAll('.choice-opt').forEach((row, i) => {
     const txtEl = row.querySelector('span:last-child');
@@ -130,8 +133,11 @@ function applyChoiceChosen(msg, chosen) {
 }
 
 function scheduleChoiceReply(time, delay) {
+  if (scheduledChoiceReplies.has(time)) return;
+  scheduledChoiceReplies.add(time);
   const wait = Math.max(700, delay || 1500);
   setTimeout(() => {
+    scheduledChoiceReplies.delete(time);
     const msg = chatHistory.find(m => m.time === time && m.role === 'me' && m.type === 'choice');
     if (!msg || !msg.content || (msg.content.chosen && msg.content.chosen.length)) return;
     const think = () => {
@@ -163,14 +169,25 @@ function scheduleChoiceReply(time, delay) {
   }, wait);
 }
 
-// 页面重开后，如果上一条选择卡还没被选，过一会儿补上，别让它一直悬着
-setTimeout(() => {
+// 页面重开后，如果上一条选择卡还没被选，补上回复，别让它一直悬着。
+// 不设 30 秒门槛：刚发完就刷新也必须在本次打开时继续处理。
+function recoverPendingChoiceReply() {
+  let target = null;
   for (let i = chatHistory.length - 1; i >= 0; i--) {
     const m = chatHistory[i];
     if (!m || m.role !== 'me' || m.type !== 'choice') continue;
-    if (m.content && (!m.content.chosen || !m.content.chosen.length) && Date.now() - (m.time || 0) > 30000) {
-      scheduleChoiceReply(m.time, 1500);
-    }
+    if (!m.content || !Array.isArray(m.content.chosen) || m.content.chosen.length === 0) target = m;
     break;
   }
-}, 1200);
+  if (!target) return;
+  const age = Date.now() - (target.time || 0);
+  const delay = age > 30000 ? 1500 : Math.max(1200, 3000 - Math.max(0, age));
+  scheduleChoiceReply(target.time, delay);
+}
+
+// 不能在 IndexedDB 还没读完时检查，否则会误以为没有待处理选择。
+function scheduleChoiceRecovery() {
+  if (window.__chatDataReady) setTimeout(recoverPendingChoiceReply, 1200);
+  else window.addEventListener('chat-data-ready', () => setTimeout(recoverPendingChoiceReply, 1200), { once: true });
+}
+scheduleChoiceRecovery();
