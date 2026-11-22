@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">城市夜景</title>
+  <desc id="desc">深蓝色夜空下，城市楼群的窗灯亮起，江面上映着灯光和月光。</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#091426"/>
+      <stop offset=".55" stop-color="#172C4A"/>
+      <stop offset="1" stop-color="#3C496A"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#111E33"/>
+      <stop offset="1" stop-color="#070D19"/>
+    </linearGradient>
+    <linearGradient id="city" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B2940"/>
+      <stop offset="1" stop-color="#0D1728"/>
+    </linearGradient>
+    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#F8F0CE" stop-opacity=".85"/>
+      <stop offset=".4" stop-color="#E6E4C7" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#E6E4C7" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="moon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFBE8"/>
+      <stop offset="1" stop-color="#D9D5B9"/>
+    </linearGradient>
+    <radialGradient id="haze" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#89B6DB" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#89B6DB" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".18"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#sky)"/>
+
+  <!-- 星星 -->
+  <g fill="#E8F0FF">
+    <circle cx="94" cy="72" r="1.7" opacity=".7"/><circle cx="148" cy="119" r="1.2" opacity=".55"/>
+    <circle cx="218" cy="58" r="1.4" opacity=".55"/><circle cx="281" cy="96" r="1.8" opacity=".65"/>
+    <circle cx="338" cy="46" r="1.1" opacity=".5"/><circle cx="404" cy="112" r="1.3" opacity=".55"/>
+    <circle cx="472" cy="68" r="1.5" opacity=".6"/><circle cx="536" cy="118" r="1.1" opacity=".5"/>
+    <circle cx="611" cy="64" r="1.7" opacity=".65"/><circle cx="706" cy="126" r="1.2" opacity=".5"/>
+    <circle cx="752" cy="48" r="1.3" opacity=".55"/><circle cx="36" cy="154" r="1" opacity=".45"/>
+    <circle cx="261" cy="166" r="1" opacity=".4"/><circle cx="684" cy="190" r="1.2" opacity=".45"/>
+  </g>
+
+  <!-- 月亮 -->
+  <circle cx="648" cy="118" r="108" fill="url(#moonGlow)"/>
+  <circle cx="648" cy="118" r="43" fill="url(#moon)"/>
+  <g fill="#C7C4AA" opacity=".35">
+    <circle cx="634" cy="107" r="8"/><circle cx="660" cy="130" r="6"/><circle cx="664" cy="102" r="4"/>
+  </g>
+  <path d="M612 92c14-14 38-18 56-8" fill="none" stroke="#FFFFFF" stroke-width="4" opacity=".35" filter="url(#soft)"/>
+
+  <!-- 夜空薄雾 -->
+  <ellipse cx="372" cy="260" rx="340" ry="120" fill="url(#haze)"/>
+  <g fill="#7EA3C8" opacity=".08">
+    <path d="M0 220c100-35 210-30 305 0s185 31 281 2 145-24 214-10v38c-78-14-124 8-211 17-99 11-185-10-283-20-102-9-188 3-306 25z"/>
+  </g>
+
+  <!-- 远处楼群 -->
+  <g fill="#162439" opacity=".85">
+    <path d="M0 356h31v-52h22v52h18v-91h40v91h24v-38h26v38h20v-72h35v72h25v-48h20v48h24v-104h39v104h22v-41h28v41h18v-64h34v64h31v-34h24v34h20v-78h36v78h22v-52h30v52h19v-96h34v96h24v-43h26v43h21v-67h37v67h22v-35h25v35h18v-82h33v82h26v-49h20v49h24v-70h31v70h24v-36h21v36z"/>
+  </g>
+  <g fill="#F4C878" opacity=".7">
+    <rect x="59" y="305" width="5" height="7"/><rect x="69" y="305" width="5" height="7"/><rect x="59" y="318" width="5" height="7"/>
+    <rect x="121" y="276" width="5" height="7"/><rect x="133" y="276" width="5" height="7"/><rect x="121" y="290" width="5" height="7"/>
+    <rect x="201" y="305" width="5" height="6"/><rect x="213" y="305" width="5" height="6"/><rect x="201" y="317" width="5" height="6"/>
+    <rect x="281" y="285" width="5" height="7"/><rect x="293" y="285" width="5" height="7"/><rect x="281" y="299" width="5" height="7"/>
+    <rect x="355" y="265" width="5" height="6"/><rect x="367" y="265" width="5" height="6"/><rect x="355" y="279" width="5" height="6"/>
+    <rect x="431" y="292" width="5" height="7"/><rect x="443" y="292" width="5" height="7"/><rect x="431" y="306" width="5" height="7"/>
+    <rect x="503" y="304" width="5" height="6"/><rect x="515" y="304" width="5" height="6"/><rect x="503" y="317" width="5" height="6"/>
+    <rect x="566" y="319" width="5" height="7"/><rect x="578" y="319" width="5" height="7"/>
+    <rect x="641" y="334" width="5" height="6"/><rect x="653" y="334" width="5" height="6"/><rect x="641" y="346" width="5" height="6"/>
+    <rect x="711" y="320" width="5" height="7"/><rect x="723" y="320" width="5" height="7"/><rect x="711" y="334" width="5" height="7"/>
+  </g>
+
+  <!-- 城市灯光雾 -->
+  <ellipse cx="400" cy="360" rx="390" ry="45" fill="#F7C87A" opacity=".08" filter="url(#soft)"/>
+
+  <!-- 江水 -->
+  <rect y="408" width="800" height="192" fill="url(#water)"/>
+  <path d="M0 420c135-14 242-13 363 0 119 13 239 14 437-2v24c-163 16-292 14-420 0-139-15-255-10-380 2z" fill="#7EB3D2" opacity=".12"/>
+  <g stroke="#F6CA7D" stroke-width="3" opacity=".25">
+    <path d="M90 446h57M112 459h69M152 474h58M214 458h82M320 448h55M346 469h74M470 452h62M505 477h70M596 462h51M636 486h64M703 449h58M682 510h54"/>
+  </g>
+  <g stroke="#CFE1EF" stroke-width="2" opacity=".14">
+    <path d="M60 522h152M260 542h194M480 522h180M620 558h128M100 570h210M360 580h260"/>
+  </g>
+
+  <!-- 前景栏杆 -->
+  <g>
+    <path d="M0 560h800v40H0z" fill="#080C14" opacity=".92"/>
+    <path d="M0 552h800" stroke="#0A0F18" stroke-width="9"/>
+    <path d="M44 552V420M184 552V420M324 552V420M464 552V420M604 552V420M744 552V420" stroke="#080C12" stroke-width="8"/>
+    <path d="M18 418h764v14H18z" fill="#0A0F18"/>
+    <path d="M20 423h760" stroke="#5E7188" stroke-width="2" opacity=".25"/>
+  </g>
+
+  <!-- 月亮倒影 -->
+  <g stroke="#F7EDC8" stroke-width="3" opacity=".18">
+    <path d="M616 438h62M604 451h84M626 466h45M612 481h72M632 498h41M618 515h69M640 533h38"/>
+  </g>
+
+  <rect width="800" height="600" filter="url(#grain)" opacity=".17" style="mix-blend-mode:soft-light"/>
+  <rect width="800" height="600" fill="#060B14" opacity=".12"/>
+</svg>

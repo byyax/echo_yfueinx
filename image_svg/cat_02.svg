@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">窗边睡着的狸花猫</title>
+  <desc id="desc">一只狸花猫蜷在奶油色毯子上睡觉，棕灰色毛上有深色虎斑，胸口和爪子是白的。</desc>
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F3E8D4"/>
+      <stop offset="1" stop-color="#E2D0B6"/>
+    </linearGradient>
+    <linearGradient id="blanket" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBF4E6"/>
+      <stop offset="1" stop-color="#DCCBB4"/>
+    </linearGradient>
+    <radialGradient id="fur" cx="38%" cy="30%" r="75%">
+      <stop offset="0" stop-color="#D9C3A4"/>
+      <stop offset=".65" stop-color="#B49572"/>
+      <stop offset="1" stop-color="#87684A"/>
+    </radialGradient>
+    <linearGradient id="light" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BFD7DF"/>
+      <stop offset="1" stop-color="#F2D2A2"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFE7B8" stop-opacity=".6"/>
+      <stop offset="1" stop-color="#FFE7B8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#wall)"/>
+
+  <!-- 窗户 -->
+  <g>
+    <rect x="42" y="74" width="188" height="184" rx="4" fill="#5F3D27"/>
+    <rect x="52" y="84" width="168" height="164" fill="url(#light)"/>
+    <g fill="#D9E4E6" opacity=".8">
+      <ellipse cx="118" cy="126" rx="42" ry="14"/>
+      <ellipse cx="166" cy="146" rx="30" ry="10"/>
+    </g>
+    <g stroke="#5F3D27" stroke-width="6">
+      <rect x="42" y="74" width="188" height="184" rx="4" fill="none"/>
+      <path d="M136 74v184M42 166h188"/>
+    </g>
+    <path d="M52 248h168l94 122H0z" fill="#FFE4B8" opacity=".1"/>
+  </g>
+
+  <!-- 毯子 -->
+  <path d="M-20 360C120 306 270 312 400 330c140 20 280 8 420 44v246H-20Z" fill="url(#blanket)"/>
+  <g fill="none" stroke="#D9CBB6" stroke-width="4" opacity=".65">
+    <path d="M40 400c80-20 170-20 250-4M300 390c80-14 180-12 260 6M110 480c90-18 190-18 280-2M430 486c90-12 180-10 270 6M20 550c100-10 200-8 300 4M390 556c100-10 200-8 300 4"/>
+  </g>
+
+  <!-- 猫身体 -->
+  <g>
+    <g transform="translate(0,30)">
+      <!-- 前爪 -->
+      <ellipse cx="340" cy="458" rx="38" ry="22" fill="#F7E7CE"/>
+      <ellipse cx="388" cy="476" rx="36" ry="20" fill="#F7E7CE"/>
+      <g fill="none" stroke="#C9A57F" stroke-width="2" opacity=".45">
+        <path d="M334 468v8M346 468v8M358 468v8M384 486v8M396 486v8"/>
+      </g>
+    </g>
+
+    <ellipse cx="452" cy="398" rx="198" ry="126" fill="#2E1D12" opacity=".2" filter="url(#soft)"/>
+    <path d="M266 386c18-86 96-142 190-140 104 2 180 68 188 152 6 70-56 118-146 122-108 4-222-38-232-134z" fill="url(#fur)"/>
+    <!-- 狸花虎斑：顺着椭圆身体绕的竖向弧纹，不完全对称 -->
+    <g fill="none" stroke="#4A3528" stroke-linecap="round" opacity=".58">
+      <path d="M330 302C320 350 318 420 325 486" stroke-width="9"/>
+      <path d="M375 286C365 350 365 440 380 505" stroke-width="10"/>
+      <path d="M425 276C415 350 415 450 428 512" stroke-width="8"/>
+      <path d="M475 274C470 350 470 455 478 512" stroke-width="11"/>
+      <path d="M525 282C530 350 525 450 515 505" stroke-width="8"/>
+      <path d="M575 302C585 360 575 430 555 485" stroke-width="9"/>
+      <path d="M615 332C625 380 610 430 590 465" stroke-width="7"/>
+      <!-- 不等距、粗细不一的补纹 -->
+      <path d="M352 310C347 362 347 424 358 478" stroke-width="5" opacity=".75"/>
+      <path d="M402 280C397 350 399 444 410 508" stroke-width="6" opacity=".7"/>
+      <path d="M450 276C446 356 448 454 456 512" stroke-width="4" opacity=".8"/>
+      <path d="M500 278C502 350 500 452 494 508" stroke-width="6" opacity=".7"/>
+      <path d="M550 292C556 356 550 432 535 490" stroke-width="5" opacity=".7"/>
+      <path d="M600 316C610 370 600 432 580 474" stroke-width="4" opacity=".75"/>
+    </g>
+    <!-- 白胸口 -->
+    <path d="M302 414c18-22 48-24 70-4 16 14 16 38-2 50-22 14-52 8-66-8-10-12-10-26-2-38z" fill="#F7E7CE" opacity=".95"/>
+  </g>
+
+  <!-- 猫头 -->
+  <g>
+    <path d="M238 316l22-68 52 38c22-10 48-10 70 0l52-38 22 70c18 24 20 60 2 84-24 34-70 48-110 44-44 4-88-14-108-48-14-24-12-58-2-82z" fill="url(#fur)"/>
+    <!-- 耳朵内侧 -->
+    <path d="M250 295 l12-38 32 24z" fill="#E9A08C"/>
+    <path d="M435 295 l-2-38-32 24z" fill="#E9A08C"/>
+    
+    <g transform="translate(0,20)">
+    <!-- 狸花额头 M 纹和脸颊纹 -->
+    <g fill="none" stroke="#4A3528" stroke-width="7" stroke-linecap="round" opacity=".72">
+      <path d="M298 280 l-10 35 M320 272 v35 M344 272 v35 M366 280 l10 35"/> <!-- M 纹 -->
+      <g transform="translate(0,0)"> <!-- 脸颊纹 -->
+      <path d="M240 330 c10 2 18 6 24 12 M240 355c12 2 22 6 30 12 M434 330c-10 2-18 6-24 12M440 356c-12 2-22 6-30 12"/>
+      </g>
+    </g>
+    <path d="M326 304c6-6 14-6 20 0" fill="none" stroke="#F7E7CE" stroke-width="4" opacity=".75" stroke-linecap="round"/>
+    </g>
+    
+    <!-- 胡须 -->
+    <g transform="translate(0,45)" stroke="#F7E7CE" stroke-width="2.5" opacity=".9">
+      <path d="M286 352 l-46 4 M288 362 l-42 14 M380 352 l46 4 M378 362 l42 14"/>
+    </g>
+
+    <!-- 白色口鼻和下巴：收成干净的椭圆 -->
+    <g>
+      <ellipse cx="334" cy="396" rx="31" ry="21" fill="#F7E7CE" opacity=".96"/>
+      <ellipse cx="334" cy="414" rx="19" ry="9" fill="#F7E7CE" opacity=".9"/>
+    </g>
+   
+    <!-- 眼睛闭着 -->
+    <path d="M260 360 c12 10 26 10 38 0 M370 360 c12 10 26 10 38 0" fill="none" stroke="#5A3A26" stroke-width="5" stroke-linecap="round"/>
+    <!-- 鼻子和嘴 -->
+    <g transform="translate(0,40)">
+    <path d="M326 348l8-6 8 6-8 8z" fill="#C86E62"/>
+    <path d="M334 356c-8 8-18 8-24 2M334 356c8 8 18 8 24 2" fill="none" stroke="#5A3A26" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </g>
+
+    <!-- 尾巴绕到前面 -->
+    <path d="M622 426c22 44-8 88-62 98-62 12-150-6-198-46-22-18-20-44 6-54 26-10 58 8 96 18 54 14 110 10 130-14 8-10 18-12 28-2z" fill="#B49572"/>
+    <g fill="none" stroke="#4A3528" stroke-linecap="round" opacity=".55">
+      <path d="M606 438c10 30-12 60-52 70-52 12-120-4-160-34" stroke-width="10"/>
+      <path d="M548 492c-8 12-18 20-32 26M490 496c-8 6-18 10-28 12" stroke-width="10"/>
+      <path d="M610 450c10 10 15 21 16 33" stroke-width="7"/>
+      <path d="M576 468c12 6 21 16 25 27" stroke-width="8"/>
+      <path d="M532 484c11 4 20 11 26 20" stroke-width="7"/>
+      <path d="M486 492c9 2 17 7 23 13" stroke-width="6"/>
+    </g>
+    <path d="M322 462h34M368 480h32" stroke="#C9A57F" stroke-width="2" opacity=".6"/>
+ 
+  <!-- 小玩具 -->
+  <g>
+    <ellipse cx="628" cy="506" rx="20" ry="12" fill="#A54835" transform="rotate(-12 628 506)"/>
+    <path d="M612 500l-18 4M646 510l16 8" stroke="#A54835" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- 光与颗粒 -->
+  <ellipse cx="170" cy="220" rx="220" ry="180" fill="url(#sun)" opacity=".55"/>
+  <path d="M52 248h168l120 190H0z" fill="#FFE4B8" opacity=".06"/>
+  <rect width="800" height="600" filter="url(#grain)" opacity=".14" style="mix-blend-mode:soft-light"/>
+  <rect width="800" height="600" fill="#3A2416" opacity=".05"/>
+</svg>

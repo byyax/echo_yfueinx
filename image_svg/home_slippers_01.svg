@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">门口的两双拖鞋</title>
+  <desc id="desc">玄关木地板上并排摆着两双拖鞋，一双深灰色大拖鞋，一双浅粉色小拖鞋，下面是一块编织门垫。</desc>
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4ECDE"/>
+      <stop offset="1" stop-color="#E7D9C5"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C79A6C"/>
+      <stop offset="1" stop-color="#9A6C45"/>
+    </linearGradient>
+    <linearGradient id="mat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D8C3A0"/>
+      <stop offset="1" stop-color="#B89A72"/>
+    </linearGradient>
+    <radialGradient id="light" cx="50%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#FFF4D8" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#FFF4D8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#wall)"/>
+  <rect y="322" width="800" height="278" fill="url(#floor)"/>
+  <g stroke="#8B5F3C" stroke-width="3" opacity=".28">
+    <path d="M0 380h800M0 470h800M0 558h800"/>
+    <path d="M150 322v278M390 322v278M626 322v278"/>
+  </g>
+  <path d="M0 310h800v24H0z" fill="#D8C6AE"/>
+  <path d="M0 334h800v12H0z" fill="#B89E7E" opacity=".55"/>
+  <rect width="800" height="600" fill="url(#light)"/>
+
+  <!-- 门垫 -->
+  <g>
+    <ellipse cx="402" cy="520" rx="255" ry="44" fill="#5D3D26" opacity=".28" filter="url(#soft)"/>
+    <rect x="190" y="390" width="420" height="150" rx="10" fill="url(#mat)"/>
+    <rect x="198" y="398" width="404" height="134" rx="8" fill="none" stroke="#A98961" stroke-width="4"/>
+    <g stroke="#A98961" stroke-width="2" opacity=".42">
+      <path d="M214 420h372M214 444h372M214 468h372M214 492h372M214 516h372"/>
+      <path d="M246 410v110M292 410v110M338 410v110M384 410v110M430 410v110M476 410v110M522 410v110M568 410v110"/>
+    </g>
+    <g stroke="#C9AD82" stroke-width="3" opacity=".8">
+      <path d="M190 392l-14 12M190 416l-14 12M190 440l-14 12M190 464l-14 12M190 488l-14 12M190 512l-14 12M190 536l-14 12"/>
+      <path d="M610 392l14 12M610 416l14 12M610 440l14 12M610 464l14 12M610 488l14 12M610 512l14 12M610 536l14 12"/>
+    </g>
+  </g>
+
+  <!-- 大拖鞋 -->
+  <g>
+    <ellipse cx="350" cy="470" rx="160" ry="30" fill="#4E3422" opacity=".22" filter="url(#soft)"/>
+    <g transform="translate(280 458) rotate(-11)">
+      <path d="M-72 4q0-31 37-38q31-6 60 3q39 13 39 35q0 28-39 35q-36 6-63-3q-34-9-34-32z" fill="#2F2B28"/>
+      <path d="M-65 0q0-27 35-34q29-5 55 3q35 12 35 31q0 24-35 30q-32 5-58-3q-32-9-32-27z" fill="#9C9284"/>
+      <path d="M-54 -12Q0 -42 54 -12L48 7Q0 -17 -48 7Z" fill="#3B3733"/>
+      <path d="M-54 -12Q0 -42 54 -12" fill="none" stroke="#625B52" stroke-width="3" opacity=".8"/>
+      <path d="M-34 24q34 10 68 0" fill="none" stroke="#C1B7A7" stroke-width="3" opacity=".45"/>
+      <ellipse cx="0" cy="26" rx="22" ry="6" fill="#AEA394" opacity=".25"/>
+    </g>
+    <g transform="translate(420 458) rotate(7)">
+      <path d="M-72 4q0-31 37-38q31-6 60 3q39 13 39 35q0 28-39 35q-36 6-63-3q-34-9-34-32z" fill="#2F2B28"/>
+      <path d="M-65 0q0-27 35-34q29-5 55 3q35 12 35 31q0 24-35 30q-32 5-58-3q-32-9-32-27z" fill="#9C9284"/>
+      <path d="M-54 -12Q0 -42 54 -12L48 7Q0 -17 -48 7Z" fill="#3B3733"/>
+      <path d="M-54 -12Q0 -42 54 -12" fill="none" stroke="#625B52" stroke-width="3" opacity=".8"/>
+      <path d="M-34 24q34 10 68 0" fill="none" stroke="#C1B7A7" stroke-width="3" opacity=".45"/>
+      <ellipse cx="0" cy="26" rx="22" ry="6" fill="#AEA394" opacity=".25"/>
+    </g>
+  </g>
+
+  <!-- 小拖鞋 -->
+  <g>
+    <ellipse cx="410" cy="520" rx="132" ry="24" fill="#4E3422" opacity=".2" filter="url(#soft)"/>
+    <g transform="translate(350 512) rotate(-7)">
+      <path d="M-56 3q0-24 29-30q24-5 47 3q31 10 31 27q0 22-31 27q-28 5-50-3q-26-7-26-24z" fill="#A8736C"/>
+      <path d="M-50 0q0-21 27-26q22-4 43 3q27 9 27 24q0 19-27 24q-25 4-45-3q-25-7-25-22z" fill="#F0D6D0"/>
+      <path d="M-41 -9Q0 -32 41 -9L36 7Q0 -12 -36 7Z" fill="#D5A29B"/>
+      <path d="M-41 -9Q0 -32 41 -9" fill="none" stroke="#B77C76" stroke-width="2.5" opacity=".7"/>
+      <path d="M-26 19q26 8 52 0" fill="none" stroke="#FFF0EC" stroke-width="2.5" opacity=".65"/>
+    </g>
+    <g transform="translate(455 512) rotate(5)">
+      <path d="M-56 3q0-24 29-30q24-5 47 3q31 10 31 27q0 22-31 27q-28 5-50-3q-26-7-26-24z" fill="#A8736C"/>
+      <path d="M-50 0q0-21 27-26q22-4 43 3q27 9 27 24q0 19-27 24q-25 4-45-3q-25-7-25-22z" fill="#F0D6D0"/>
+      <path d="M-41 -9Q0 -32 41 -9L36 7Q0 -12 -36 7Z" fill="#D5A29B"/>
+      <path d="M-41 -9Q0 -32 41 -9" fill="none" stroke="#B77C76" stroke-width="2.5" opacity=".7"/>
+      <path d="M-26 19q26 8 52 0" fill="none" stroke="#FFF0EC" stroke-width="2.5" opacity=".65"/>
+    </g>
+  </g>
+
+  <rect width="800" height="600" filter="url(#grain)" opacity=".12" style="mix-blend-mode:soft-light"/>
+</svg>

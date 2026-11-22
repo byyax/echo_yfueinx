@@ -1,0 +1,77 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">阴天</title>
+  <desc id="desc">从窗户看出去的阴天，天空被一层层灰云压住，光线很平，没有太阳。</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A7B0B4"/>
+      <stop offset=".65" stop-color="#C9D0D2"/>
+      <stop offset="1" stop-color="#E2E6E6"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7C8E63"/>
+      <stop offset="1" stop-color="#556A4C"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFFBE0" stop-opacity=".95"/>
+      <stop offset=".45" stop-color="#FFE9A8" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#FFE9A8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F1E9DA"/>
+      <stop offset="1" stop-color="#D8C7AE"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".88" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".13"/></feComponentTransfer>
+    </filter>
+    <clipPath id="view"><rect x="72" y="58" width="656" height="426" rx="10"/></clipPath>
+  </defs>
+
+  <rect width="800" height="600" fill="#EDE1CC"/>
+  <rect x="46" y="34" width="708" height="480" rx="12" fill="url(#frame)"/>
+  <g clip-path="url(#view)">
+    <rect x="72" y="58" width="656" height="426" fill="url(#sky)"/>
+    <ellipse cx="610" cy="142" rx="180" ry="54" fill="#C2C9CC" opacity=".55"/>
+    <ellipse cx="580" cy="126" rx="94" ry="27" fill="#D3D8DA" opacity=".7"/>
+    <g fill="#C2C9CC" opacity=".9">
+      <ellipse cx="224" cy="140" rx="78" ry="24"/><ellipse cx="286" cy="128" rx="52" ry="18"/>
+      <ellipse cx="472" cy="196" rx="62" ry="19"/><ellipse cx="520" cy="188" rx="40" ry="14"/>
+    </g>
+    <g fill="#6E8A50" opacity=".75">
+      <path d="M72 360c54-42 112-46 162-14 44-30 104-22 142 14 52-22 110-8 140 28H72z"/>
+    </g>
+    <g fill="#526B70" opacity=".8">
+      <rect x="92" y="304" width="38" height="70"/><rect x="138" y="282" width="30" height="92"/>
+      <rect x="176" y="314" width="46" height="60"/><rect x="560" y="292" width="36" height="82"/>
+      <rect x="604" y="316" width="44" height="58"/><rect x="656" y="286" width="30" height="88"/>
+    </g>
+    <g fill="#F2C878" opacity=".5">
+      <rect x="100" y="314" width="6" height="8"/><rect x="146" y="294" width="6" height="8"/>
+      <rect x="186" y="326" width="6" height="8"/><rect x="570" y="302" width="6" height="8"/>
+      <rect x="614" y="326" width="6" height="8"/><rect x="664" y="296" width="6" height="8"/>
+    </g>
+    <path d="M72 398c130-16 250-14 370 4 100 14 190 10 286-8v90H72z" fill="url(#ground)"/>
+    <g fill="#5C7B45" opacity=".75">
+      <circle cx="150" cy="418" r="18"/><circle cx="184" cy="410" r="14"/><circle cx="238" cy="426" r="20"/>
+      <circle cx="576" cy="418" r="16"/><circle cx="610" cy="410" r="12"/>
+    </g>
+    <g fill="none" stroke="#3F5A3D" stroke-width="2" opacity=".55">
+      <path d="M330 132c6-6 12-6 18 0M366 114c5-4 10-4 15 0M402 140c5-4 10-4 15 0"/>
+    </g>
+    <g fill="#B9C1C4" opacity=".72">
+      <ellipse cx="180" cy="102" rx="96" ry="28"/><ellipse cx="256" cy="92" rx="62" ry="20"/>
+      <ellipse cx="420" cy="126" rx="86" ry="25"/><ellipse cx="486" cy="118" rx="54" ry="18"/>
+      <ellipse cx="660" cy="106" rx="92" ry="26"/><ellipse cx="722" cy="96" rx="58" ry="18"/>
+    </g>
+    <rect x="72" y="58" width="656" height="426" fill="#4B5A63" opacity=".04"/>
+  </g>
+  <rect x="72" y="58" width="656" height="426" rx="10" fill="none" stroke="#5F4A38" stroke-width="7"/>
+  <rect x="28" y="484" width="744" height="30" rx="4" fill="#D9CBB6"/>
+  <path d="M28 484h744" stroke="#F7F1E4" stroke-width="4" opacity=".7"/>
+  <rect width="800" height="600" filter="url(#grain)" opacity=".14" style="mix-blend-mode:soft-light"/>
+</svg>
+

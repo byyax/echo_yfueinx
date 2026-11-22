@@ -1,0 +1,125 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">水果组合</title>
+  <desc id="desc">俯视的奶油色格纹桌布上，一大盘水果：苹果、香蕉、菠萝、芒果、葡萄和桃子。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5EBD9"/>
+      <stop offset="1" stop-color="#E4D2B8"/>
+    </linearGradient>
+    <linearGradient id="table" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8A6246"/>
+      <stop offset="1" stop-color="#5E3F2B"/>
+    </linearGradient>
+    <radialGradient id="apple" cx="35%" cy="30%" r="75%">
+      <stop offset="0" stop-color="#E86A58"/>
+      <stop offset=".7" stop-color="#C84434"/>
+      <stop offset="1" stop-color="#9A2F26"/>
+    </radialGradient>
+    <linearGradient id="pineapple" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E8C94E"/>
+      <stop offset="1" stop-color="#C99A2E"/>
+    </linearGradient>
+    <radialGradient id="peach" cx="35%" cy="30%" r="75%">
+      <stop offset="0" stop-color="#F6C0A0"/>
+      <stop offset=".65" stop-color="#E89A78"/>
+      <stop offset="1" stop-color="#C96E58"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <!-- 俯视：整块奶油色格纹桌布 -->
+  <rect width="800" height="600" fill="#EFE4D0"/>
+  <g stroke="#C9D6BE" stroke-width="12" opacity=".35">
+    <path d="M0 90H800M0 220H800M0 350H800M0 480H800"/>
+    <path d="M120 0V600M300 0V600M480 0V600M660 0V600"/>
+  </g>
+  <g stroke="#E3B7A3" stroke-width="2" opacity=".35">
+    <path d="M60 0V600M210 0V600M390 0V600M570 0V600M750 0V600"/>
+    <path d="M0 155H800M0 285H800M0 415H800M0 545H800"/>
+  </g>
+
+  <!-- 木盘 -->
+  <ellipse cx="400" cy="360" rx="300" ry="170" fill="#2B1A10" opacity=".2" filter="url(#soft)"/>
+  <ellipse cx="400" cy="348" rx="300" ry="170" fill="#B98F68"/>
+  <ellipse cx="400" cy="344" rx="274" ry="150" fill="#C9A57F"/>
+  <ellipse cx="400" cy="344" rx="240" ry="126" fill="none" stroke="#A97852" stroke-width="3" opacity=".6"/>
+
+  <g transform="translate(400 344) scale(1.22) translate(-400 -344)">
+  <!-- 香蕉 -->
+  <g transform="rotate(-12 560 280)">
+    <path d="M468 248c58-40 132-34 172 18 20 26 18 60-6 74-10 6-22-2-22-14 0-34-28-62-66-70-26-6-50-4-72 2-8 2-12-4-6-10z" fill="#E8C94E"/>
+    <path d="M468 248c58-40 132-34 172 18" fill="none" stroke="#C99A2E" stroke-width="4" opacity=".55"/>
+    <path d="M476 250c38-20 86-18 120 10" fill="none" stroke="#F7E38C" stroke-width="4" opacity=".6"/>
+  </g>
+
+  <!-- 菠萝 -->
+  <g>
+    <ellipse cx="470" cy="310" rx="70" ry="92" fill="url(#pineapple)"/>
+    <g stroke="#A9782E" stroke-width="3" opacity=".65">
+      <path d="M416 274l108 72M416 310l108 72M416 346l108 72M448 220l44 180M492 218l-24 184"/>
+    </g>
+    <g fill="#4D7145">
+      <path d="M470 224c-30-34-20-58 0-76 16 24 22 48 0 76z"/>
+      <path d="M448 230c-30-18-42-38-36-58 22 10 36 30 36 58z"/>
+      <path d="M492 230c30-18 42-38 36-58-22 10-36 30-36 58z"/>
+    </g>
+    <ellipse cx="470" cy="310" rx="70" ry="92" fill="none" stroke="#B9822F" stroke-width="3" opacity=".5"/>
+  </g>
+
+  <!-- 苹果 -->
+  <g>
+    <circle cx="238" cy="304" r="66" fill="url(#apple)"/>
+    <path d="M238 240c-4-18 6-30 18-34 2 14-4 26-18 34z" fill="#4D7145"/>
+    <path d="M238 244c-2-14 2-24 8-30" stroke="#5A3A26" stroke-width="5" stroke-linecap="round"/>
+    <path d="M212 288c8-18 26-28 44-24" fill="none" stroke="#F2A090" stroke-width="5" opacity=".5" stroke-linecap="round"/>
+  </g>
+
+  <!-- 芒果 -->
+  <g transform="rotate(18 330 400)">
+    <ellipse cx="330" cy="400" rx="72" ry="54" fill="#E8A03E"/>
+    <path d="M284 380c18-26 54-36 84-22 10 4 16 14 10 24-12 18-44 28-70 20-18-6-30-12-24-22z" fill="#E86A58" opacity=".55"/>
+    <path d="M300 370c14-12 34-16 50-10" fill="none" stroke="#F7D28C" stroke-width="4" opacity=".6" stroke-linecap="round"/>
+  </g>
+
+  <!-- 葡萄 -->
+  <g>
+    <path d="M250 390c-10 32 16 62 54 64 38 2 66-24 62-56" fill="none" stroke="#4D7145" stroke-width="5"/>
+    <g fill="#7A4A6A">
+      <circle cx="278" cy="400" r="16"/><circle cx="306" cy="390" r="16"/><circle cx="334" cy="398" r="16"/>
+      <circle cx="288" cy="424" r="16"/><circle cx="316" cy="418" r="16"/><circle cx="344" cy="426" r="16"/>
+      <circle cx="302" cy="448" r="16"/><circle cx="330" cy="448" r="16"/><circle cx="356" cy="450" r="15"/>
+    </g>
+    <g fill="#A87A9A" opacity=".6">
+      <circle cx="272" cy="394" r="4"/><circle cx="300" cy="384" r="4"/><circle cx="328" cy="392" r="4"/>
+      <circle cx="282" cy="418" r="4"/><circle cx="310" cy="412" r="4"/><circle cx="338" cy="420" r="4"/>
+    </g>
+  </g>
+
+  <!-- 桃子 -->
+  <g>
+    <circle cx="560" cy="410" r="60" fill="url(#peach)"/>
+    <path d="M560 352c-8-12-2-22 8-26 4 10 0 20-8 26z" fill="#4D7145"/>
+    <path d="M560 410c-2-24 18-44 40-40" fill="none" stroke="#F7D3C0" stroke-width="5" opacity=".6"/>
+    <path d="M560 410c2-20-10-36-26-42" fill="none" stroke="#C96E58" stroke-width="4" opacity=".5"/>
+  </g>
+
+  <!-- 散落的葡萄和叶子 -->
+  <g>
+    <circle cx="610" cy="470" r="12" fill="#7A4A6A"/>
+    <circle cx="632" cy="462" r="12" fill="#8A5A7A"/>
+    <circle cx="650" cy="472" r="11" fill="#6A3F5A"/>
+    <path d="M620 440c10-14 26-18 40-10-10 12-24 16-40 10z" fill="#5E8B50"/>
+  </g>
+  </g>
+
+  <rect width="800" height="600" filter="url(#grain)" opacity=".14" style="mix-blend-mode:soft-light"/>
+  <rect width="800" height="600" fill="#3A2416" opacity=".05"/>
+</svg>
+

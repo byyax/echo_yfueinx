@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">一杯水</title>
+  <desc id="desc">木桌上放着一杯加了冰块和柠檬片的水，杯壁有冷凝水。</desc>
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5EAD6"/>
+      <stop offset="1" stop-color="#E4D3B9"/>
+    </linearGradient>
+    <linearGradient id="table" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8A6246"/>
+      <stop offset="1" stop-color="#5E3F2B"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#DDF3F7"/>
+      <stop offset="1" stop-color="#9BD3E0"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFE6B0" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#FFE6B0" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#wall)"/>
+  <rect y="422" width="800" height="178" fill="url(#table)"/>
+  <path d="M0 422h800" stroke="#A87A56" stroke-width="4" opacity=".65"/>
+  <g stroke="#4A3021" stroke-width="2" opacity=".28">
+    <path d="M0 480H800M0 540H800M110 600L230 422M340 600L370 422M570 600L540 422M730 600L680 422"/>
+  </g>
+
+  <ellipse cx="420" cy="516" rx="170" ry="32" fill="#2B1A10" opacity=".3" filter="url(#soft)"/>
+  <ellipse cx="420" cy="508" rx="150" ry="26" fill="#C9A57F" opacity=".3"/>
+
+  <!-- 玻璃杯 -->
+  <g>
+    <path d="M330 190h180l-16 300c-2 18-26 26-74 26s-72-8-74-26z" fill="#EAF7FA" opacity=".35"/>
+    <path d="M342 226h156l-13 262c-2 13-20 18-65 18s-63-5-65-18z" fill="url(#water)" opacity=".85"/>
+    <ellipse cx="420" cy="226" rx="78" ry="15" fill="#F7FDFF"/>
+    <ellipse cx="420" cy="226" rx="64" ry="10" fill="#DDF3F7"/>
+    <path d="M350 244c-4 82-2 166 4 236" fill="none" stroke="#FFFFFF" stroke-width="8" opacity=".7" stroke-linecap="round"/>
+    <path d="M490 250c4 76 2 154-4 214" fill="none" stroke="#7FB7C8" stroke-width="4" opacity=".4" stroke-linecap="round"/>
+    <!-- 冰块 -->
+    <g fill="#FFFFFF" opacity=".38" stroke="#FFFFFF" stroke-width="2">
+      <rect x="364" y="260" width="42" height="36" rx="8" transform="rotate(-10 385 278)"/>
+      <rect x="430" y="286" width="38" height="32" rx="7" transform="rotate(8 449 302)"/>
+      <rect x="382" y="326" width="34" height="28" rx="7" transform="rotate(5 399 340)"/>
+    </g>
+    <!-- 柠檬片 -->
+    <g transform="rotate(-14 452 246)">
+      <circle cx="452" cy="246" r="24" fill="#E8C94E"/>
+      <circle cx="452" cy="246" r="19" fill="#F2DD86"/>
+      <g stroke="#D9A94E" stroke-width="2">
+        <path d="M452 228v36M434 246h36M439 233l26 26M465 233l-26 26"/>
+      </g>
+    </g>
+    <!-- 冷凝水 -->
+    <g fill="#FFFFFF" opacity=".55">
+      <circle cx="362" cy="340" r="4"/><circle cx="368" cy="370" r="3"/><circle cx="356" cy="404" r="5"/>
+      <circle cx="486" cy="352" r="4"/><circle cx="490" cy="390" r="3"/><circle cx="482" cy="428" r="4"/>
+    </g>
+  </g>
+
+  <!-- 杯垫 -->
+  <ellipse cx="420" cy="508" rx="96" ry="22" fill="#B98F68" opacity=".45"/>
+
+  <!-- 光与颗粒 -->
+  <ellipse cx="250" cy="220" rx="240" ry="190" fill="url(#sun)" opacity=".5"/>
+  <rect width="800" height="600" filter="url(#grain)" opacity=".14" style="mix-blend-mode:soft-light"/>
+  <rect width="800" height="600" fill="#3A2416" opacity=".05"/>
+</svg>

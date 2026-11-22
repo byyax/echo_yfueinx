@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">午后的天空</title>
+  <desc id="desc">明亮的蓝天里飘着大朵白云，阳光从右上角照下来，远处有屋顶和树。</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#79BDE8"/>
+      <stop offset=".45" stop-color="#B6DDF1"/>
+      <stop offset=".8" stop-color="#E7F2F2"/>
+      <stop offset="1" stop-color="#F8EDD6"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFFDF0" stop-opacity="1"/>
+      <stop offset=".35" stop-color="#FFF1BD" stop-opacity=".68"/>
+      <stop offset="1" stop-color="#FFF1BD" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cloud" cx="38%" cy="32%" r="72%">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset=".72" stop-color="#F3F7F8"/>
+      <stop offset="1" stop-color="#D7E6ED"/>
+    </radialGradient>
+    <radialGradient id="cloudShade" cx="52%" cy="38%" r="70%">
+      <stop offset="0" stop-color="#F9FCFD"/>
+      <stop offset="1" stop-color="#C9DDE7"/>
+    </radialGradient>
+    <linearGradient id="trees" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5D7D5D"/>
+      <stop offset="1" stop-color="#354B3A"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#sky)"/>
+  <circle cx="668" cy="104" r="155" fill="url(#sunGlow)"/>
+  <circle cx="668" cy="104" r="43" fill="#FFFBE5" opacity=".82"/>
+
+  <!-- 飞机云 -->
+  <g fill="none" stroke="#FFFFFF" stroke-linecap="round">
+    <path d="M70 145c91 9 173 4 250-13" stroke-width="7" opacity=".3"/>
+    <path d="M74 153c95 8 168 4 241-10" stroke-width="3" opacity=".22"/>
+    <path d="M476 79c82-13 153-16 208-9" stroke-width="4" opacity=".18"/>
+  </g>
+
+  <!-- 云 -->
+  <g>
+    <ellipse cx="224" cy="176" rx="113" ry="39" fill="#D8E6EC" opacity=".5" filter="url(#soft)"/>
+    <path d="M84 221c-20-22-13-56 11-71 9-25 39-38 66-26 17-25 57-28 76-5 17-12 44-7 53 12 28-4 54 17 48 44 29 9 31 51 2 61H111c-10 0-20-6-27-15z" fill="url(#cloud)"/>
+    <path d="M102 213c38-17 99-21 164-12 17 2 33 6 48 11" fill="none" stroke="#C9DDE7" stroke-width="3" opacity=".55"/>
+    <path d="M353 239c-12-20 0-41 22-46 4-23 31-38 52-25 14-17 43-16 54 2 20-5 40 8 39 29 24 1 36 24 26 43-6 10-18 15-31 15H382c-13 0-23-7-29-18z" fill="url(#cloudShade)" opacity=".95"/>
+    <path d="M562 167c-9-17 1-34 19-38 5-19 26-29 43-18 12-13 35-10 42 7 18-2 32 12 29 29 17 3 25 20 18 34-5 9-15 13-25 13h-99c-11 0-21-6-27-15z" fill="url(#cloud)" opacity=".92"/>
+    <path d="M636 293c-11-18-1-39 19-45 5-18 27-27 43-16 12-12 33-8 39 8 17-3 29 12 25 28 16 5 22 22 14 35-5 8-14 12-23 12h-92c-10 0-19-5-25-13z" fill="url(#cloud)" opacity=".68"/>
+  </g>
+
+  <!-- 飞鸟 -->
+  <g fill="none" stroke="#56748A" stroke-width="3" stroke-linecap="round" opacity=".72">
+    <path d="M186 341q9-8 18 0 9-8 18 0"/>
+    <path d="M238 318q7-6 14 0 7-6 14 0"/>
+    <path d="M133 306q6-6 12 0 6-6 12 0"/>
+    <path d="M466 287q6-5 12 0 6-5 12 0" opacity=".55"/>
+  </g>
+
+  <!-- 远处屋顶和树 -->
+  <g>
+    <path d="M0 503c48-18 101-20 147-7 56-15 116-13 169 5 46-21 105-24 157-7 54-13 111-10 158 7 57-17 116-18 169-3v102H0z" fill="#B8C9C4" opacity=".55"/>
+    <path d="M0 533c86-17 172-13 259 8 75-22 150-22 229-4 80-17 158-17 237 2 23-7 49-9 75-6v67H0z" fill="url(#trees)" opacity=".82"/>
+    <g fill="#446248" opacity=".95">
+      <path d="M70 542c-18-33 4-68 35-68 10-25 50-24 59 2 26-5 44 15 41 38-3 20-18 31-41 31H98c-13 0-23-1-28-3z"/>
+      <path d="M598 536c-13-26 4-54 28-55 10-19 40-16 46 5 22-3 36 14 31 34-4 18-18 27-37 27h-50c-9 0-15-4-18-11z"/>
+      <path d="M310 548c-9-24 7-47 28-47 8-17 34-14 39 5 18-1 28 14 24 31-4 15-16 22-31 22h-43c-8 0-15-5-17-11z"/>
+    </g>
+    <g fill="#D5E1DE" opacity=".45">
+      <path d="M420 548c36-12 78-12 112 0 28-13 62-13 89 0 26-10 53-10 78-1v24H420z"/>
+    </g>
+    <path d="M0 565c80-15 160-13 238 4 78-18 160-17 240-3 78-12 160-10 238 4 28-4 56-4 84-1v31H0z" fill="#314433"/>
+    <path d="M0 583h800v17H0z" fill="#26382A"/>
+  </g>
+
+  <rect width="800" height="600" fill="#FFFFFF" opacity=".04"/>
+  <rect width="800" height="600" filter="url(#grain)" opacity=".13" style="mix-blend-mode:soft-light"/>
+</svg>

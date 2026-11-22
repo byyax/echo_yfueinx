@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">床的一角</title>
+  <desc id="desc">灰蓝色床单配浅色条纹被子，四个枕头里有一个锈红色做点缀，床尾搭着黑白几何毯，床上放着耳机和书。</desc>
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F3E8D4"/>
+      <stop offset="1" stop-color="#E4D2B8"/>
+    </linearGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A97852"/>
+      <stop offset="1" stop-color="#7A543A"/>
+    </linearGradient>
+    <linearGradient id="sheet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B9C8D4"/>
+      <stop offset="1" stop-color="#8FA3B4"/>
+    </linearGradient>
+    <linearGradient id="navy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8F2E6"/>
+      <stop offset="1" stop-color="#D9CDB9"/>
+    </linearGradient>
+    <linearGradient id="pillow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF9EE"/>
+      <stop offset="1" stop-color="#D9CBB6"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFE6B0" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#FFE6B0" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".16"/></feComponentTransfer>
+    </filter>
+    <clipPath id="throwClip">
+      <path d="M30 468C150 450 260 454 390 476L420 600H0Z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#wall)"/>
+
+  <!-- 墙上贴纸 -->
+  <g>
+    <path d="M86 24l6 12 13 2-9 9 2 13-12-6-12 6 2-13-9-9 13-2z" fill="#E8C94E" opacity=".95"/>
+    <path d="M172 34c10-10 24-8 30 2-8 6-20 8-30-2z" fill="#6F8CA8" opacity=".9"/>
+    <path d="M208 18l6 10-6 10-6-10z" fill="#E8A0A0" opacity=".9"/>
+    <path d="M700 28l8 14-8 14-8-14z" fill="#A54835" opacity=".85"/>
+    <circle cx="742" cy="42" r="7" fill="#D9A94E" opacity=".9"/>
+    <circle cx="762" cy="22" r="3" fill="#6F8CA8" opacity=".8"/>
+    <path d="M620 34l7 12-7 12-7-12z" fill="#5E7F5A" opacity=".85"/>
+  </g>
+
+  <!-- 床头板 -->
+  <rect x="-30" y="72" width="860" height="148" rx="14" fill="url(#wood)"/>
+  <g stroke="#6E4A32" stroke-width="2" opacity=".35">
+    <path d="M20 80v132M90 80v132M160 80v132M230 80v132M300 80v132M370 80v132M440 80v132M510 80v132M580 80v132M650 80v132M720 80v132M790 80v132"/>
+  </g>
+  <path d="M-30 72H830" stroke="#C9A57F" stroke-width="4" opacity=".7"/>
+
+  <!-- 床垫和灰蓝床单：直接铺满画布，看不到左右边缘 -->
+  <path d="M-40 206H840L900 600H-100Z" fill="url(#sheet)"/>
+  <path d="M-40 206H840" stroke="#D9E4EA" stroke-width="5" opacity=".6"/>
+
+  <!-- 三个大枕头：两个条纹，一个锈红做点缀 -->
+  <g transform="rotate(-3 210 260)">
+    <path d="M112 204c20-46 160-46 180 0l-10 118c-38 18-120 18-160 0z" fill="url(#pillow)"/>
+    <g stroke="#B9B2A2" stroke-width="2" opacity=".4">
+      <path d="M142 196v134M166 190v142M190 188v144M214 190v142M238 196v134M262 204v122"/>
+    </g>
+    <path d="M144 224c26-18 82-18 108 0" fill="none" stroke="#C9BBA4" stroke-width="4" opacity=".55"/>
+    <path d="M132 272c36 16 94 16 130 0" fill="none" stroke="#D9CBB6" stroke-width="4" opacity=".75"/>
+  </g>
+  <g transform="rotate(4 394 250)">
+    <path d="M310 200c18-42 150-42 168 0l-8 112c-34 18-110 18-144 0z" fill="#C97A4E"/>
+    <g stroke="#A65B36" stroke-width="2" opacity=".4">
+      <path d="M338 194v124M362 188v132M386 186v134M410 188v132M434 194v124M458 202v116"/>
+    </g>
+    <path d="M338 216c24-16 74-16 98 0" fill="none" stroke="#E3A078" stroke-width="4" opacity=".55"/>
+    <path d="M328 262c32 14 84 14 116 0" fill="none" stroke="#8E4A2A" stroke-width="4" opacity=".35"/>
+  </g>
+  <g transform="rotate(-4 562 250)">
+    <path d="M488 204c16-38 134-38 150 0l-8 104c-32 14-100 14-132 0z" fill="url(#pillow)"/>
+    <g stroke="#B9B2A2" stroke-width="2" opacity=".35">
+      <path d="M516 196v120M540 190v126M564 188v128M588 190v126M612 196v120"/>
+    </g>
+    <path d="M512 220c22-14 68-14 90 0" fill="none" stroke="#C9BBA4" stroke-width="3" opacity=".55"/>
+  </g>
+  <g transform="rotate(7 378 310)">
+    <path d="M330 286c20-18 76-18 96 0l-6 46c-20 10-64 10-84 0z" fill="#D9D2C4"/>
+    <g stroke="#4A4A46" stroke-width="2" opacity=".45">
+      <path d="M340 292v40M360 288v44M380 286v46M400 288v44M420 292v40"/>
+    </g>
+  </g>
+
+  <!-- 浅色条纹被子，褶皱明显 -->
+  <path d="M-20 326C150 296 300 310 430 322c120 10 250-6 390 28v250H-20Z" fill="url(#navy)"/>
+  <path d="M-20 326C150 296 300 310 430 322c120 10 250-6 390 28" fill="none" stroke="#B9B2A2" stroke-width="5" opacity=".45"/>
+  <g stroke="#C9C2B2" stroke-width="4" opacity=".5">
+    <path d="M20 352h760M20 378h760M20 404h760M20 430h760M20 456h760M20 482h760M20 508h760M20 534h760M20 560h760"/>
+  </g>
+  <g fill="none" stroke="#AFA898" stroke-width="3" opacity=".6">
+    <path d="M60 372c70-18 140-18 210-2M310 368c90-14 180-14 270 2M120 430c90-20 180-20 270-4M430 446c80-14 160-12 240 4M40 500c80-18 170-18 250-4M320 530c90-16 190-14 280 4"/>
+    <path d="M190 336c-20 74-26 160-14 264M470 330c10 84 16 170 10 270M660 338c-8 80-4 170 8 262"/>
+  </g>
+
+  <!-- 黑白几何毯 -->
+  <g>
+    <path d="M30 468C150 450 260 454 390 476L420 600H0Z" fill="#E8DFC8"/>
+    <g clip-path="url(#throwClip)">
+      <g stroke="#252525" stroke-width="28" opacity=".82">
+        <path d="M14 474L104 600M104 462L214 600M196 456L318 600M286 454L420 600"/>
+      </g>
+      <g stroke="#9A9A96" stroke-width="3" opacity=".6">
+        <path d="M0 520L160 500M0 560L210 536M40 600L260 570"/>
+      </g>
+    </g>
+    <path d="M30 468C150 450 260 454 390 476L420 600H0Z" fill="none" stroke="#B9B2A2" stroke-width="3" opacity=".6"/>
+  </g>
+
+  <!-- 床上的耳机 -->
+  <g transform="rotate(8 618 432)">
+    <path d="M580 424c0-46 58-46 58 0" fill="none" stroke="#1B2024" stroke-width="9"/>
+    <path d="M586 420c2-34 44-34 46 0" fill="none" stroke="#3A444C" stroke-width="3" opacity=".6"/>
+    <rect x="568" y="414" width="24" height="42" rx="9" fill="#1B2024"/>
+    <rect x="624" y="414" width="24" height="42" rx="9" fill="#1B2024"/>
+    <rect x="574" y="422" width="12" height="26" rx="5" fill="#C9BFA8"/>
+    <rect x="630" y="422" width="12" height="26" rx="5" fill="#C9BFA8"/>
+    <path d="M636 454c18 10 22 26 20 44" fill="none" stroke="#1B2024" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- 床上的书 -->
+  <g transform="rotate(-8 628 506)">
+    <rect x="584" y="486" width="92" height="54" rx="4" fill="#A54835"/>
+    <rect x="590" y="492" width="80" height="42" rx="2" fill="#E8DFC8"/>
+    <path d="M630 492v42" stroke="#B9A68C" stroke-width="2" opacity=".7"/>
+    <path d="M598 502h24M598 510h20M638 502h24M638 510h20" stroke="#B9A68C" stroke-width="2" opacity=".55"/>
+  </g>
+
+  <!-- 阳光和阴影 -->
+  <ellipse cx="170" cy="190" rx="220" ry="180" fill="url(#sun)" opacity=".7"/>
+  <path d="M0 260L250 206L430 600H0Z" fill="#FFE4B8" opacity=".08"/>
+  <ellipse cx="400" cy="590" rx="390" ry="40" fill="#2B1A10" opacity=".12" filter="url(#soft)"/>
+
+  <rect width="800" height="600" filter="url(#grain)" opacity=".16" style="mix-blend-mode:soft-light"/>
+  <rect width="800" height="600" fill="#3A2416" opacity=".06"/>
+</svg>

@@ -1,0 +1,505 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">白天的浴室</title>
+  <desc id="desc">白天的浴室里，百叶窗外是明亮天空和云，室内是清透的日光，浴缸里漂着细小的泡泡。</desc>
+
+  <!-- 白天版：同一构图，窗外不放太阳，室内使用偏冷的日光。 -->
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F9F6EF"/>
+      <stop offset=".62" stop-color="#EEE8DC"/>
+      <stop offset="1" stop-color="#DDD4C6"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D2A778"/>
+      <stop offset="1" stop-color="#956A4A"/>
+    </linearGradient>
+    <linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8CC8E9"/>
+      <stop offset=".42" stop-color="#B9DDF1"/>
+      <stop offset=".72" stop-color="#E6F2F4"/>
+      <stop offset="1" stop-color="#F8EFD8"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".55"/>
+      <stop offset=".5" stop-color="#FFFFFF" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="roomLight" cx="78%" cy="6%" r="88%">
+      <stop offset="0" stop-color="#EAF7FF" stop-opacity=".24"/>
+      <stop offset=".5" stop-color="#F7FBF7" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#F7FBF7" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="windowGlow" cx="64%" cy="28%" r="54%">
+      <stop offset="0" stop-color="#FFE0AB" stop-opacity=".42"/>
+      <stop offset=".5" stop-color="#FFD49B" stop-opacity=".14"/>
+      <stop offset="1" stop-color="#FFD49B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD79E" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#FFD79E" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="tubOuter" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF8EA"/>
+      <stop offset=".62" stop-color="#F0E2CE"/>
+      <stop offset="1" stop-color="#D5C1A7"/>
+    </linearGradient>
+    <linearGradient id="tubInner" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F6EEDF"/>
+      <stop offset="1" stop-color="#D7C7B0"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#AED7D3"/>
+      <stop offset="1" stop-color="#79B6B3"/>
+    </linearGradient>
+    <radialGradient id="bubble" cx="34%" cy="27%" r="72%">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".68"/>
+      <stop offset=".55" stop-color="#F4FCFB" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#CFE9E6" stop-opacity=".1"/>
+    </radialGradient>
+    <linearGradient id="chrome" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F7FBFB"/>
+      <stop offset=".33" stop-color="#BCC7C8"/>
+      <stop offset=".68" stop-color="#EEF4F3"/>
+      <stop offset="1" stop-color="#899698"/>
+    </linearGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9D704F"/>
+      <stop offset="1" stop-color="#5E3D2A"/>
+    </linearGradient>
+    <linearGradient id="towel" x1="0" y1="0" x2="1" y2=".85">
+      <stop offset="0" stop-color="#c0a57f"/>
+      <stop offset="1" stop-color="#dbbfa2"/>
+    </linearGradient>
+    <linearGradient id="towelShade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#bea684"/>
+      <stop offset="1" stop-color="#dec0a4"/>
+    </linearGradient>
+    <linearGradient id="candleBody" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#C9AE83"/>
+      <stop offset=".5" stop-color="#DDC9A7"/>
+      <stop offset="1" stop-color="#E8D6B4"/>
+    </linearGradient>
+    <linearGradient id="bottleWater" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#de9da7"/>
+    <stop offset="1" stop-color="#46d394"/>
+    </linearGradient>
+
+    <linearGradient id="towelGreen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#CFE3C4"/>
+      <stop offset="1" stop-color="#A3C49A"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#314C3A"/>
+      <stop offset=".55" stop-color="#58764F"/>
+      <stop offset="1" stop-color="#9AB66D"/>
+    </linearGradient>
+    <linearGradient id="leafLight" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#314B39" stop-opacity=".9"/>
+      <stop offset=".62" stop-color="#6F8C59" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#B8C985" stop-opacity=".95"/>
+    </linearGradient>
+    <linearGradient id="pot" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EADDCB"/>
+      <stop offset=".6" stop-color="#D4C0A7"/>
+      <stop offset="1" stop-color="#AF9578"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#DBA060"/>
+      <stop offset=".55" stop-color="#B96F35"/>
+      <stop offset="1" stop-color="#7F431F"/>
+    </linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#A8BCCB"/>
+      <stop offset=".55" stop-color="#5E7F93"/>
+      <stop offset="1" stop-color="#344F63"/>
+    </linearGradient>
+    <linearGradient id="flame" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#FFF6C5"/>
+      <stop offset=".52" stop-color="#FFD25E"/>
+      <stop offset="1" stop-color="#FF9A4F"/>
+    </linearGradient>
+    <linearGradient id="mat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D7E8CC"/>
+      <stop offset="1" stop-color="#A4C397"/>
+    </linearGradient>
+    <linearGradient id="stoolCream" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F0E2CC"/>
+      <stop offset="1" stop-color="#C7AB89"/>
+    </linearGradient>
+    <pattern id="wallTiles" width="160" height="80" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#CBB79F" stroke-width="2" opacity=".62">
+        <path d="M0 0h160M0 40h160M0 80h160"/>
+        <path d="M0 0v40M80 0v40M160 0v40"/>
+        <path d="M40 40v40M120 40v40"/>
+      </g>
+      <g stroke="#FFF9EE" stroke-width="1" opacity=".24">
+        <path d="M0 3h160M0 43h160"/>
+      </g>
+    </pattern>
+    <pattern id="matWeave" width="22" height="18" patternUnits="userSpaceOnUse">
+      <path d="M0 6q5.5 7 11 0t11 0" fill="none" stroke="#F8FFF4" stroke-width="2.2" opacity=".55"/>
+      <path d="M0 14q5.5 6 11 0t11 0" fill="none" stroke="#6F8B63" stroke-width="1.8" opacity=".3"/>
+      <circle cx="6" cy="2" r="1.1" fill="#FFFFFF" opacity=".35"/>
+    </pattern>
+    <radialGradient id="candleGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFE5A6" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#FFE5A6" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="steamBlur" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".16"/></feComponentTransfer>
+    </filter>
+    <clipPath id="windowClip">
+      <rect x="312" y="60" width="396" height="294"/>
+    </clipPath>
+    <clipPath id="frameClip">
+      <rect width="800" height="600" rx="24"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#frameClip)">
+    <!-- 墙面和木地板 -->
+    <rect width="800" height="470" fill="url(#wall)"/>
+    <rect width="800" height="470" fill="url(#wallTiles)"/>
+    <rect width="800" height="470" fill="#EAF6FB" opacity=".04"/>
+    <rect y="470" width="800" height="130" fill="url(#floor)"/>
+
+    <g stroke="#6D452C" stroke-width="2" opacity=".28">
+      <path d="M0 500h800M0 530h800M0 560h800M0 590h800"/>
+      <path d="M142 470v30M332 470v30M522 470v30M712 470v30"/>
+      <path d="M242 500v30M432 500v30M622 500v30M790 500v30"/>
+      <path d="M132 530v30M322 530v30M512 530v30M702 530v30"/>
+      <path d="M232 560v30M422 560v30M612 560v30"/>
+    </g>
+    <g stroke="#E3B98B" stroke-width="1" opacity=".22">
+      <path d="M0 501h800M0 531h800M0 561h800M0 591h800"/>
+      <path d="M146 470v30M336 470v30M526 470v30M716 470v30"/>
+    </g>
+
+    <!-- 窗外日景和大百叶窗 -->
+    <g>
+      <rect x="300" y="48" width="420" height="318" rx="16" fill="#71826A"/>
+      <g clip-path="url(#windowClip)">
+        <rect x="312" y="60" width="396" height="294" fill="url(#dusk)"/>
+
+        <g fill="#FFFFFF" opacity=".58">
+          <ellipse cx="424" cy="157" rx="87" ry="17"/>
+          <ellipse cx="390" cy="148" rx="43" ry="14"/>
+          <ellipse cx="462" cy="146" rx="48" ry="15"/>
+          <ellipse cx="625" cy="214" rx="88" ry="16" opacity=".72"/>
+          <ellipse cx="596" cy="205" rx="45" ry="13"/>
+          <ellipse cx="664" cy="204" rx="48" ry="12"/>
+        </g>
+        <g fill="#FFFFFF" opacity=".24">
+          <ellipse cx="535" cy="121" rx="70" ry="13"/>
+          <ellipse cx="356" cy="220" rx="56" ry="11"/>
+        </g>
+
+        <g fill="#7D8B80" opacity=".55">
+          <path d="M312 300h57v-24h29v24h23v-48h36v48h24v-33h28v33h22v-58h37v58h25v-36h30v36h23v-52h35v52h28v-28h28v52H312z"/>
+        </g>
+        <g fill="#DDE9E8" opacity=".58">
+          <rect x="371" y="280" width="5" height="6"/>
+          <rect x="381" y="280" width="5" height="6"/>
+          <rect x="390" y="280" width="5" height="6"/>
+          <rect x="441.26" y="256.36" width="5" height="6"/>
+          <rect x="449.22" y="256.41" width="5" height="6"/>
+          <rect x="486.51" y="277.95" width="5" height="6"/>
+          <rect x="495" y="278" width="5" height="6"/>
+          <rect x="557" y="270" width="5" height="6"/>
+          <rect x="569" y="270" width="5" height="6"/>
+          <rect x="655.66" y="281.19" width="5" height="6"/>
+          <rect x="647" y="281" width="5" height="6"/>
+        </g>
+
+        <!-- 城市底座延伸到窗框底部 -->
+        <rect x="312" y="300" width="396" height="54" fill="#7D8B80" opacity=".55"/>
+
+        <!-- 百叶 -->
+        <g>
+          <rect x="313" y="60" width="394" height="294" fill="#3C2D24" opacity=".08"/>
+          <g fill="#E8D4B5" opacity=".62">
+            <rect x="312" y="79" width="396" height="9" rx="2"/>
+            <rect x="312" y="106" width="396" height="9" rx="2"/>
+            <rect x="312" y="133" width="396" height="9" rx="2"/>
+            <rect x="312" y="160" width="396" height="9" rx="2"/>
+            <rect x="312" y="187" width="396" height="9" rx="2"/>
+            <rect x="312" y="214" width="396" height="9" rx="2"/>
+            <rect x="312" y="241" width="396" height="9" rx="2"/>
+            <rect x="312" y="268" width="396" height="9" rx="2"/>
+            <rect x="312" y="295" width="396" height="9" rx="2"/>
+            <rect x="312" y="322" width="396" height="9" rx="2"/>
+          </g>
+          <g stroke="#5A3D2C" stroke-width="2" opacity=".3">
+            <path d="M312 88h396M312 115h396M312 142h396M312 169h396M312 196h396M312 223h396M312 250h396M312 277h396M312 304h396M312 331h396"/>
+          </g>
+          <path d="M482 60v294M684 60v294" stroke="#EADBC4" stroke-width="3" opacity=".65"/>
+          <path d="M482 60v294M684 60v294" stroke="#7A5039" stroke-width="1" opacity=".4"/>
+        </g>
+      </g>
+
+      <rect x="300" y="48" width="420" height="318" rx="16" fill="none" stroke="#5C6D55" stroke-width="7"/>
+      <path d="M312 60h396v294H312z" fill="none" stroke="#2D211B" stroke-width="3" opacity=".2"/>
+      <path d="M300 351h420v15H300z" fill="#7D8D72"/>
+      <path d="M300 366h420" stroke="#4F5D48" stroke-width="3" opacity=".55"/>
+    </g>
+
+    <!-- 墙上装饰画：奶油色风景，和房间配色统一 -->
+    <g>
+      <rect x="72" y="74" width="138" height="94" rx="6" fill="#7C6A55"/>
+      <rect x="79" y="81" width="124" height="80" rx="2" fill="#F2E8D8"/>
+      <rect x="86" y="88" width="110" height="66" fill="#DDE6D4"/>
+      <circle cx="151" cy="108" r="10" fill="#D9B26A"/>
+      <path d="M86 140l27-20 23 13 27-18 33 25v14H86z" fill="#94A783"/>
+      <path d="M86 148l33-14 31 12 46-17v25H86z" fill="#738865"/>
+      <path d="M86 153h110v1H86z" fill="#5E7355"/>
+      <path d="M101 128c4-10 13-15 21-16-3 9-10 15-21 16z" fill="#B7C59D" opacity=".75"/>
+      <rect x="86" y="88" width="110" height="66" fill="none" stroke="#E8DAC5" stroke-width="2"/>
+    </g>
+
+    <!-- 右侧墙面毛巾环 -->
+    <g>
+      <circle cx="764" cy="300" r="16" fill="none" stroke="url(#chrome)" stroke-width="5"/>
+      <path d="M754 306l-2 34c0 6 8 8 12 8s12-2 12-8l-2-34" fill="url(#towelGreen)"/>
+      <path d="M754 306l-2 34c0 6 8 8 12 8s12-2 12-8l-2-34" fill="none" stroke="#8FAD83" stroke-width="1.5"/>
+    </g>
+
+    <!-- 左侧架子：先画物品，再画支架，最后用木板压在最前面 -->
+    <g>
+      <ellipse cx="150" cy="258" rx="107" ry="14" fill="#584438" opacity=".18" filter="url(#soft)"/>
+
+      <!-- 两层毛巾，底端与架面上沿对齐 -->
+      <g>
+        <rect x="68" y="209" width="84" height="13" rx="6" fill="url(#towel)"/>
+        <rect x="73.33" y="196.02" width="74" height="13" rx="6" fill="url(#towelShade)"/>
+        <path d="M73.27 210.1h74" stroke="#9B7D60" stroke-width="2" opacity=".55"/>
+        <path d="M77.28 202.5c17 3 34 3 65.96.65M72 216c18 3 38 3 76.49-.04" fill="none" stroke="#EADBC6" stroke-width="2" opacity=".55"/>
+      </g>
+
+      <!-- 左上角玻璃瓶-->
+      <g transform = "translate(-5 0)">
+       <rect x="169" y="179" width="34" height="43" rx="8" fill="#e4e9e3" opacity=".42"/>
+       <rect x="172" y="185" width="5" height="28" rx="2.5" fill="#fff" opacity=".25"/>
+       <rect x="172" y="198" width="28" height="21" rx="6" fill="url(#bottleWater)" opacity=".4"/>
+       <rect x="178.87" y="172.27" width="14" height="9" rx="3" fill="#6d5b4a"/>
+      </g>
+
+      <!-- 左上角蜡烛 -->
+      <g>
+        <ellipse cx="226" cy="181" rx="19" ry="23" fill="url(#candleGlow)" opacity=".85"/>
+        <rect x="212" y="188" width="28" height="34" rx="5" fill="url(#candleBody)"/>
+        <ellipse cx="226" cy="191" rx="14" ry="5" fill="#F8EBD5"/>
+        <path d="M226 190v-5" stroke="#6A4B32" stroke-width="2" stroke-linecap="round"/>
+        <path d="M226 187c-6-11 6-17 1-28 12 9 8 19-1 28z" fill="url(#flame)"/>
+        <path d="M226 184c-3-6 4-10 1-16 6 5 4 11-1 16z" fill="#FFF1B0" opacity=".85"/>
+      </g>
+
+     <g>  <!-- 左上角木支架 -->
+        <!-- 左上角木支架脚 -->
+        <g>
+          <path d="M73 237h31l-31 39z" fill="#684732"/>
+          <path d="M87 237h17l-17 22z" fill="#523728" opacity=".8"/>
+          <path d="M206 237h31l-31 39z" fill="#684732"/>
+          <path d="M218 237h19l-19 24z" fill="#523728" opacity=".8"/>
+        </g>
+
+        <!-- 左上角木支架 -->
+        <g>
+          <rect x="52" y="222" width="206" height="16" rx="5" fill="url(#wood)"/>
+          <path d="M60.8 230.5c48-5 132-5 190.5.1" fill="none" stroke="#C99B72" stroke-width="3" opacity=".55"/>
+          <path d="M52 234h206" stroke="#4A2F20" stroke-width="3" opacity=".45"/>
+        </g>
+      </g>
+    </g>
+
+        <!-- 浴缸前的梯形防滑地垫：上端短、下端长 -->
+    <g>
+      <ellipse cx="370" cy="590" rx="190" ry="11" fill="#806D5B" opacity=".14" filter="url(#soft)"/>
+      <path d="M246 524H494Q502 524 504 532L526 578Q530 588 518 588H222Q210 588 214 578L236 532Q238 524 246 524Z" fill="url(#mat)" stroke="#78966C" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M246 524H494Q502 524 504 532L526 578Q530 588 518 588H222Q210 588 214 578L236 532Q238 524 246 524Z" fill="url(#matWeave)"/>
+      <path d="M246 524H494Q502 524 504 532L526 578Q530 588 518 588H222Q210 588 214 578L236 532Q238 524 246 524Z" fill="none" stroke="#F5FFF0" stroke-width="3" stroke-dasharray="1 8" stroke-linecap="round" opacity=".55"/>
+      <path d="M252 530H488Q494 530 496 537L513 575Q516 582 508 582H232Q224 582 226 575L243 537Q245 530 252 530Z" fill="none" stroke="#6F8B63" stroke-width="1.5" opacity=".32"/>
+      <path d="M250 532H490" fill="none" stroke="#FFFFFF" stroke-width="2" opacity=".2"/>
+    </g>
+
+    <!-- 浴缸接触阴影 -->
+    <ellipse cx="370" cy="514" rx="250" ry="13" fill="#4B382B" opacity=".22" filter="url(#soft)"/>
+    <!-- 右下角的架子的阴影-->
+    <ellipse cx="696" cy="514" rx="92" ry="19" fill="#4A372A" opacity=".3" filter="url(#soft)"/>
+   
+
+    <!-- 浴缸整体：回到 bath_01 的纵向位置 -->
+    <g>
+      <!-- 浴缸：薄边、较浅的缸身 -->
+      <g>
+        <ellipse cx="370" cy="384" rx="265" ry="70" fill="#FFF8EA"/>
+        <path d="M105 380 q0 112 62 134 h406 q62-22 62-134 z" fill="url(#tubOuter)"/>
+        <ellipse cx="370" cy="380" rx="249" ry="62" fill="url(#tubInner)"/>
+        <ellipse cx="370" cy="388" rx="228" ry="46" fill="url(#water)"/>
+        <ellipse cx="370" cy="388" rx="198" ry="39" fill="#40aaf1" opacity=".09"/>
+      </g>
+
+      <!-- 浴缸上的弧形出水口：随扁椭圆一起下移 -->
+      <g transform = "translate(5,7)">
+        <g transform = "translate(4,2)">
+        <ellipse cx="557" cy="327.5" rx="14" ry="4" fill="#5B4A3E" opacity=".18" filter="url(#soft)"/>
+        <ellipse cx="557" cy="325.8" rx="10" ry="3.6" fill="#F4F6F1" stroke="#CBD5CF" stroke-width="1.5"/>
+        <ellipse cx="557" cy="325.5" rx="8.5" ry="3" fill="#E8EDE7"/>
+        </g>
+        <ellipse cx="557" cy="325.2" rx="6.5" ry="2.4" fill="url(#chrome)"/>
+        <path d="M561 322 v-66q0-24-24-30l-29.3-5.1" fill="none" stroke="url(#chrome)" stroke-width="13" stroke-linecap="round"/>
+        <ellipse cx="509" cy="225" rx="8" ry="4" fill="#6D7A7B" transform="rotate(10 504 224)"/>
+        <ellipse cx="509" cy="227" rx="8" ry="4" fill="#6D7A7B" transform="rotate(10 504 224)"/>
+        <ellipse cx="509" cy="228" rx="5" ry="2.5" fill="#DDE7E6" opacity=".75" transform="rotate(10 504 224)"/>
+        <path d="M557 313v-57q0-19-19-25" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity=".38"/>
+        <g transform = "translate(4,0)">
+          <rect x="546" y="323.5" width="11" height="5" rx="2.5" fill="#DCE5E4" transform="rotate(-12 551.5 326)"/>
+          <rect x="557" y="323.5" width="11" height="5" rx="2.5" fill="#DCE5E4" transform="rotate(12 562.5 326)"/>
+          <circle cx="557" cy="325.5" r="4" fill="#B9C4C4"/>
+        </g>
+      </g>
+
+      <!-- 泡沫层 -->
+      <g fill="#F8FFFD" opacity=".2">
+        <ellipse cx="240" cy="380" rx="76" ry="17"/>
+        <ellipse cx="355" cy="375" rx="56" ry="14"/>
+        <ellipse cx="460" cy="385" rx="82" ry="18"/>
+        <ellipse cx="540" cy="375" rx="37" ry="12"/>
+        <ellipse cx="280" cy="400" rx="35" ry="7"/>
+        <ellipse cx="460" cy="410" rx="37" ry="10"/>
+      </g>
+
+      <!-- 细小、半透明的泡泡 -->
+      <g opacity=".62" transform="translate(-20 20)">
+        <g fill="url(#bubble)" stroke="#FFFFFF" stroke-opacity=".34">
+          <circle cx="211" cy="353" r="15"/>
+          <circle cx="245" cy="337" r="10"/>
+          <circle cx="274" cy="358" r="18"/>
+          <circle cx="306" cy="335" r="9"/>
+          <circle cx="330" cy="356" r="15"/>
+          <circle cx="357" cy="336" r="11"/>
+          <circle cx="385" cy="360" r="17"/>
+          <circle cx="414" cy="337" r="10"/>
+          <circle cx="442" cy="357" r="15"/>
+          <circle cx="470" cy="339" r="12"/>
+          <circle cx="500" cy="357" r="17"/>
+          <circle cx="528" cy="341" r="9"/>
+          <circle cx="554" cy="360" r="13"/>
+          <circle cx="577" cy="348" r="8"/>
+          <circle cx="235" cy="372" r="9"/>
+          <circle cx="327" cy="376" r="10"/>
+          <circle cx="410" cy="378" r="8"/>
+          <circle cx="486" cy="377" r="9"/>
+          <circle cx="548" cy="375" r="7"/>
+          <circle cx="292" cy="386" r="7"/>
+          <circle cx="459" cy="389" r="6"/>
+          <circle cx="196" cy="367" r="5"/>
+          <circle cx="594" cy="368" r="4"/>
+          <circle cx="316" cy="346" r="6"/>
+          <circle cx="365" cy="371" r="5"/>
+          <circle cx="520" cy="367" r="6"/>
+          <circle cx="560" cy="386" r="5"/>
+          <circle cx="280" cy="376" r="5"/>
+        </g>
+        <g fill="#FFFFFF" opacity=".42">
+          <ellipse cx="204" cy="346" rx="5" ry="3" transform="rotate(-26 204 346)"/>
+          <ellipse cx="267" cy="349" rx="5" ry="3" transform="rotate(-24 267 349)"/>
+          <ellipse cx="377" cy="352" rx="5" ry="3" transform="rotate(-24 377 352)"/>
+          <ellipse cx="493" cy="349" rx="5" ry="3" transform="rotate(-24 493 349)"/>
+          <ellipse cx="548" cy="353" rx="4" ry="2" transform="rotate(-24 548 353)"/>
+        </g>
+      </g>
+
+      <!-- 空中漂浮的少量泡泡 -->
+      <g fill="url(#bubble)" stroke="#FFFFFF" stroke-opacity=".38" opacity=".34">
+        <circle cx="586" cy="311" r="4"/>
+        <circle cx="610" cy="286" r="3"/>
+      </g>
+    </g>
+
+    <!-- 右下角的架子、两瓶沐浴露、香皂 -->
+    <g>
+      <g>
+        <rect x="625" y="495" width="159" height="13" rx="6" fill="url(#wood)"/>
+        <path d="M645 508l-7 37M766 508l7 37" stroke="#5B3E2C" stroke-width="7" stroke-linecap="round"/>
+        <path d="M637 500c45-5 91-5 137 0" fill="none" stroke="#C99B72" stroke-width="2.5" opacity=".5"/>
+      </g>
+      
+      <g transform="translate(-3, 0)">
+        <!-- 沐浴露 A -->
+        <g transform="translate(5, 1)">
+          <ellipse cx="674" cy="498.5" rx="25" ry="4.5" fill="#3E2A1D" opacity=".4"/>
+          <rect x="651" y="411" width="46" height="87" rx="13" fill="url(#amber)"/>
+          <rect x="658" y="430" width="32" height="41" rx="7" fill="#F3E2C9" opacity=".95"/>
+          <path d="M662 442h24M662 452h19M662 462h22" stroke="#B98A56" stroke-width="3" stroke-linecap="round" opacity=".72"/>
+          <rect x="661" y="396" width="26" height="17" rx="5" fill="#554437"/>
+          <path d="M674 396v-13h18v6" fill="none" stroke="#554437" stroke-width="5" stroke-linejoin="round"/>
+          <path d="M659 418c11-4 22-4 31 0" fill="none" stroke="#F0B878" stroke-width="3" opacity=".55"/>
+        </g>
+
+        <!-- 沐浴露 B -->
+        <g transform="translate(-10, 3.8)">
+          <ellipse cx="724" cy="497" rx="23" ry="5" fill="#3E2A1D" opacity=".4"/>
+          <rect x="704" y="425" width="40" height="73" rx="12" fill="url(#teal)"/>
+          <rect x="710" y="441" width="28" height="35" rx="6" fill="#E7F0F4" opacity=".9"/>
+          <path d="M724.29 445.71c-6 0-10 4-10 9 6 1 11-2 17.92-3.08 0-1 9.83-6.04-1-2z" fill="#4F7F93"/>
+          <g fill="none" stroke="#6E93A7" stroke-width="2.2" stroke-linecap="round" opacity=".72">
+            <path d="M715.25 464.58c4-6 8.38-6.66 18.58-8.29"/>
+            <path d="M715.67 471.71c4-6 8.29-6.71 18.71-9.83"/>
+          </g>
+          <rect x="713" y="412" width="23" height="15" rx="4" fill="#3F5550"/>
+          <path d="M724 412v-12h16v6" fill="none" stroke="#3F5550" stroke-width="4.5" stroke-linejoin="round"/>
+          <path d="M711 432c9-3 19-3 27 0" fill="none" stroke="#B9D7CF" stroke-width="2.5" opacity=".6"/>
+        </g>
+      </g>
+
+      <!-- 香皂碟 + 香皂 -->
+      <g transform="translate(-10,-5)">
+        <ellipse cx="766" cy="501" rx="18.5" ry="5" fill="#3E2A1D" opacity=".6"/>
+        <ellipse cx="766" cy="500" rx="17" ry="5" fill="#D8C9B8"/>
+        <ellipse cx="766" cy="498" rx="10" ry="3.5" fill="#3E2A1D" opacity=".4"/>
+        <rect x="757" y="491" width="18" height="8" rx="4" fill="#F3E2C9"/>
+        <path d="M759 494h14" stroke="#D9C1A5" stroke-width="1.5" opacity=".7"/>
+      </g>
+    </g>
+
+    <!-- 左下角盆栽 -->
+    <g transform="translate(-10, 28)">
+      <ellipse cx="74.4" cy="515.7" rx="62" ry="17" fill="#4A372A" opacity=".3" filter="url(#soft)"/>
+      <path d="M34 459h80l-10 48c-2 10-13 15-30 15s-28-5-30-15z" fill="url(#pot)"/>
+      <ellipse cx="74" cy="459" rx="40" ry="10" fill="#EDE1D1"/>
+      <ellipse cx="74" cy="459" rx="31.33" ry="7" fill="#5D4936" opacity=".62"/>
+      <g fill="url(#leafLight)">
+        <path d="M74 459c-7-53-29-67-32-101 30 18 36 52 38 78 12-38 30-55 52-68-14 35-29 59-43 91z"/>
+        <path d="M74 459c-27-20-47-24-57-43 26 7 39 17 53 30-6-32 4-54 17-70 2 31-1 55-1 78z" opacity=".9"/>
+        <path d="M74 459c21-20 42-24 55-42-12 25-26 40-55.02 42.08 24-8 43-2 55.9 7.5-24 4-44 4-55.9-7.46z" opacity=".88"/>
+        <path d="M74 459c-9-28-6-47 4-65 10 20 12 40 10 59 9-19 21-30 36-36-4 22-15 38-50.02 42.08z" fill="url(#leaf)" opacity=".82"/>
+      </g>
+    </g>
+
+    <!-- 右前方小凳 -->
+    <g transform="translate(540,-20)">
+      <path d="M60 566l-4.2 27.3M130 566l3.2 27.7" stroke="#6B4E38" stroke-width="8" stroke-linecap="round"/>
+      <ellipse cx="95" cy="594" rx="62" ry="7" fill="#4A372A" opacity=".25" filter="url(#soft)"/>
+      <path d="M52 560c28-3 60-3 86 0" fill="none" stroke="#C99B72" stroke-width="2" opacity=".5"/>
+      <path d="M45 556c26-8 68-8 102 0l4 16c-30 8-72 8-110 0z" fill="url(#stoolCream)" stroke="#B79C7C" stroke-width="1.5"/>
+      <path d="M45 556c26-8 68-8 102 0" fill="none" stroke="#F7EBDD" stroke-width="2" opacity=".65"/>
+      <path d="M54 564c22 5 52 5 74 0" fill="none" stroke="#BFA27F" stroke-width="2" opacity=".4"/>
+      <path d="M58 570c19 4 44 4 62 0" fill="none" stroke="#BFA27F" stroke-width="2" opacity=".3"/>
+    </g>
+
+    <!-- 白天：偏冷的日光和更轻的暗角 -->
+    <rect width="800" height="600" fill="url(#roomLight)"/>
+    <ellipse cx="620" cy="260" rx="280" ry="250" fill="#EAF7FF" opacity=".05"/>
+    <rect width="800" height="600" fill="#DDEFF7" opacity=".025"/>
+    <rect width="800" height="600" filter="url(#grain)" opacity=".13" style="mix-blend-mode:soft-light"/>
+    <rect width="800" height="600" fill="#31201A" opacity=".025"/>
+  </g>
+</svg>

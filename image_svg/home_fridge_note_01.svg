@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">冰箱上的便签</title>
+  <desc id="desc">奶油色冰箱门的局部，上面贴着一张黄色便签、一枚爱心磁贴和两张小照片，旁边是冰箱把手。</desc>
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#DCE7DC"/>
+      <stop offset="1" stop-color="#C4D4C6"/>
+    </linearGradient>
+    <linearGradient id="fridge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F6F1E7"/>
+      <stop offset=".48" stop-color="#EDE5D8"/>
+      <stop offset="1" stop-color="#D8CEBF"/>
+    </linearGradient>
+    <linearGradient id="note" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE89B"/>
+      <stop offset="1" stop-color="#F2CF67"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".12"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#wall)"/>
+  <path d="M0 520h800v80H0z" fill="#B5C6B7" opacity=".55"/>
+  <g stroke="#B4C6B6" stroke-width="2" opacity=".5">
+    <path d="M0 440h800M0 500h800M0 560h800"/>
+  </g>
+  <ellipse cx="420" cy="560" rx="280" ry="40" fill="#4D5C4D" opacity=".2" filter="url(#soft)"/>
+
+  <!-- 冰箱局部 -->
+  <g>
+    <rect x="118" y="28" width="500" height="552" rx="26" fill="url(#fridge)"/>
+    <rect x="132" y="42" width="472" height="524" rx="20" fill="none" stroke="#FFFFFF" stroke-width="4" opacity=".55"/>
+    <path d="M592 28h24v552h-24z" fill="#CFC4B4" opacity=".7"/>
+    <path d="M610 78h16v214h-16z" fill="#B8AA97"/>
+    <path d="M613 84h10v202h-10z" fill="#DDD3C3" opacity=".65"/>
+    <path d="M610 346h16v116h-16z" fill="#B8AA97"/>
+    <path d="M613 352h10v104h-10z" fill="#DDD3C3" opacity=".65"/>
+    <path d="M118 260h500" stroke="#C9BDAC" stroke-width="5" opacity=".55"/>
+  </g>
+
+  <!-- 便签 -->
+  <g transform="translate(276 168) rotate(-4)">
+    <rect x="-86" y="-74" width="172" height="148" rx="4" fill="#6B5734" opacity=".18" filter="url(#soft)"/>
+    <rect x="-86" y="-82" width="172" height="148" rx="4" fill="url(#note)"/>
+    <path d="M-86 -82h172v24h-172z" fill="#F6D97B" opacity=".65"/>
+    <g stroke="#A68135" stroke-width="4" stroke-linecap="round" opacity=".55">
+      <path d="M-56 -38h112M-56 -8h96M-56 22h106M-56 52h62"/>
+    </g>
+    <path d="M52 54c10-14 30-8 26 8-4 13-26 24-26 24S26 75 22 62c-4-16 16-22 30-8z" fill="#E88B84" opacity=".9"/>
+    <circle cx="-54" cy="-80" r="13" fill="#D9574C"/>
+    <circle cx="-58" cy="-84" r="4" fill="#F8B1A7" opacity=".7"/>
+  </g>
+
+  <!-- 小照片 -->
+  <g transform="translate(182 376) rotate(5)">
+    <rect x="-34" y="-42" width="68" height="82" rx="4" fill="#FDFBF5"/>
+    <rect x="-27" y="-35" width="54" height="52" fill="#9CB7B1"/>
+    <circle cx="0" cy="-16" r="15" fill="#E6C18E"/>
+    <path d="M-22 16c8-18 16-24 22-24s14 6 22 24z" fill="#53766F"/>
+    <path d="M-27 42h54" stroke="#D9D0C0" stroke-width="2"/>
+  </g>
+  <g transform="translate(420 382) rotate(-3)">
+    <rect x="-39" y="-48" width="78" height="92" rx="4" fill="#FDFBF5"/>
+    <rect x="-31" y="-40" width="62" height="58" fill="#D8C6A5"/>
+    <circle cx="-10" cy="-18" r="13" fill="#D79B78"/>
+    <circle cx="16" cy="-18" r="13" fill="#D79B78"/>
+    <path d="M-31 18c10-14 21-20 31-20s21 6 31 20z" fill="#7B8D76"/>
+    <path d="M-31 44h62" stroke="#D9D0C0" stroke-width="2"/>
+  </g>
+
+  <!-- 磁贴 -->
+  <g>
+    <circle cx="494" cy="118" r="30" fill="#7C9A7A"/>
+    <circle cx="494" cy="118" r="24" fill="#A7BFA1"/>
+    <path d="M478 118l12 12 20-24" fill="none" stroke="#F8F5EA" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g>
+    <path d="M212 122c14-20 42-12 38 10-3 16-38 36-38 36s-36-20-39-36c-4-22 24-30 39-10z" fill="#D98E86"/>
+    <path d="M208 126c4-6 12-5 12 2 0 6-12 14-12 14s-12-8-12-14c0-7 8-8 12-2z" fill="#F5C8C2" opacity=".55"/>
+  </g>
+
+  <!-- 冰箱边缘高光 -->
+  <path d="M140 48v490" stroke="#FFFFFF" stroke-width="6" opacity=".55"/>
+  <rect width="800" height="600" filter="url(#grain)" opacity=".1" style="mix-blend-mode:soft-light"/>
+</svg>

@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">床头的小夜灯</title>
+  <desc id="desc">夜晚的卧室床头柜，一盏暖黄色小夜灯亮着，旁边有一本合上的书和一杯水，背景是深蓝色的墙。</desc>
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2F3A4A"/>
+      <stop offset="1" stop-color="#1E2835"/>
+    </linearGradient>
+    <linearGradient id="table" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7B5235"/>
+      <stop offset="1" stop-color="#4E3524"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFD98A" stop-opacity=".78"/>
+      <stop offset=".45" stop-color="#F4B95F" stop-opacity=".26"/>
+      <stop offset="1" stop-color="#F4B95F" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="shade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#E9BC72"/>
+      <stop offset=".5" stop-color="#FFE2A8"/>
+      <stop offset="1" stop-color="#C58B4C"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9DB7C9" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#5C7689" stop-opacity=".85"/>
+    </linearGradient>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".11"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#wall)"/>
+  <g stroke="#334153" stroke-width="2" opacity=".3">
+    <path d="M0 100h800M0 230h800M0 360h800"/>
+  </g>
+  <rect y="430" width="800" height="170" fill="url(#table)"/>
+  <path d="M0 430h800v13H0z" fill="#A77751" opacity=".55"/>
+  <g stroke="#3F291A" stroke-width="3" opacity=".25">
+    <path d="M0 492h800M0 558h800M128 430v170M426 430v170M664 430v170"/>
+  </g>
+
+  <!-- 夜灯光晕 -->
+  <circle cx="272" cy="330" r="270" fill="url(#glow)"/>
+  <ellipse cx="272" cy="436" rx="152" ry="34" fill="#F2B766" opacity=".16" filter="url(#soft)"/>
+
+  <!-- 小夜灯 -->
+  <g>
+    <ellipse cx="272" cy="442" rx="88" ry="20" fill="#17121A" opacity=".55" filter="url(#soft)"/>
+    <path d="M244 405h56l10 38h-76z" fill="#8A6338"/>
+    <ellipse cx="272" cy="405" rx="28" ry="8" fill="#C69758"/>
+    <path d="M214 300h116l-18 106q-4 18-22 18h-36q-18 0-22-18z" fill="url(#shade)"/>
+    <ellipse cx="272" cy="300" rx="58" ry="16" fill="#FFE7B4"/>
+    <ellipse cx="272" cy="300" rx="45" ry="10" fill="#F5C477"/>
+    <path d="M230 316c-8 34-10 64-6 88M314 316c8 34 10 64 6 88" fill="none" stroke="#C58B4C" stroke-width="4" opacity=".4"/>
+    <path d="M238 424h68" stroke="#5C3B22" stroke-width="7" stroke-linecap="round"/>
+    <path d="M252 424v18M292 424v18" stroke="#5C3B22" stroke-width="6" stroke-linecap="round"/>
+    <path d="M212 430h120" stroke="#E7C78F" stroke-width="3" opacity=".4"/>
+  </g>
+
+  <!-- 书 -->
+  <g transform="translate(446 448) rotate(-4)">
+    <rect x="-92" y="-18" width="184" height="36" rx="6" fill="#3A2A20" opacity=".4" filter="url(#soft)"/>
+    <rect x="-92" y="-26" width="184" height="36" rx="5" fill="#B45B4F"/>
+    <rect x="-88" y="-30" width="176" height="28" rx="4" fill="#D77B69"/>
+    <path d="M-88 -8h176" stroke="#F2D2C6" stroke-width="4" opacity=".65"/>
+    <path d="M-68 -30v28M60 -30v28" stroke="#9E4D43" stroke-width="3" opacity=".45"/>
+    <path d="M-32 -22h64" stroke="#F7DDD2" stroke-width="3" opacity=".55"/>
+  </g>
+
+  <!-- 水杯 -->
+  <g transform="translate(622 404)">
+    <ellipse cx="0" cy="34" rx="52" ry="13" fill="#17121A" opacity=".5" filter="url(#soft)"/>
+    <path d="M-42-34h84l-8 72q-2 10-12 10h-44q-10 0-12-10z" fill="#B7CEDC" opacity=".35"/>
+    <path d="M-34-4h68l-6 38q-1 8-8 8h-40q-7 0-8-8z" fill="url(#water)" opacity=".85"/>
+    <ellipse cx="0" cy="-34" rx="42" ry="11" fill="#DDEAF1" opacity=".5"/>
+    <ellipse cx="0" cy="-34" rx="33" ry="7" fill="#6D899B" opacity=".7"/>
+    <path d="M-30-12v32" stroke="#EAF4F8" stroke-width="5" stroke-linecap="round" opacity=".28"/>
+  </g>
+
+  <!-- 充电线 -->
+  <g fill="none" stroke="#BBB5AA" stroke-width="5" stroke-linecap="round" opacity=".65">
+    <path d="M674 454c40 6 54 28 42 48s-48 18-58 2"/>
+    <path d="M658 504c-20 6-32 14-40 26"/>
+  </g>
+  <rect x="600" y="512" width="24" height="15" rx="4" fill="#9A958C" opacity=".8"/>
+
+  <!-- 墙面余光 -->
+  <path d="M0 0h800v430H0z" fill="#F4B95F" opacity=".04"/>
+  <rect width="800" height="600" filter="url(#grain)" opacity=".1" style="mix-blend-mode:soft-light"/>
+</svg>

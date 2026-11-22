@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">天台上的晚霞</title>
+  <desc id="desc">橙粉色的晚霞铺满天空，远处是城市剪影，近处是天台栏杆。</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5D4E78"/>
+      <stop offset=".42" stop-color="#C46872"/>
+      <stop offset=".7" stop-color="#F09566"/>
+      <stop offset="1" stop-color="#FFD48A"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFF7D2" stop-opacity="1"/>
+      <stop offset=".35" stop-color="#FFD58A" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#FFB75A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="city" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4C3B50"/>
+      <stop offset="1" stop-color="#2C2638"/>
+    </linearGradient>
+    <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2B252E"/>
+      <stop offset="1" stop-color="#16141A"/>
+    </linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".88" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".16"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#sky)"/>
+  <circle cx="214" cy="354" r="185" fill="url(#sunGlow)" opacity=".85"/>
+  <circle cx="214" cy="354" r="48" fill="#FFF0B5" opacity=".95"/>
+
+  <!-- 云层 -->
+  <g fill="#FFD7B2" opacity=".4">
+    <path d="M0 160c64-22 121-11 167 3 58 18 103 12 140-7 53-28 115-20 156 2 47 25 97 21 142 2 42-17 101-11 145 7 22 9 42 11 50 12v24c-72-17-118-8-175 4-59 13-104 2-155-8-50-10-95 7-139 13-58 8-108-4-158-9-44-5-87 7-137 13v-26c-15-3-35-8-36-10z"/>
+    <path d="M0 255c51-18 105-13 155 2 52 15 104 8 150-9 53-19 108-8 159 7 47 14 96 4 140-7 45-12 98-5 147 10 20 6 35 8 49 9v19c-59-12-101-3-148 3-57 7-102-5-151-11-54-7-105 6-154 13-50 7-99-4-147-10-45-6-93 4-140 10-26 4-48 4-60 3z" opacity=".7"/>
+  </g>
+  <g fill="#F8C199" opacity=".28">
+    <path d="M92 196c27-12 65-10 87 3-30 5-59 5-87-3z"/>
+    <path d="M510 197c31-12 71-8 96 5-34 4-67 3-96-5z"/>
+    <path d="M354 250c25-10 55-8 75 2-26 4-51 3-75-2z"/>
+  </g>
+
+  <!-- 飞鸟 -->
+  <g fill="none" stroke="#3F3146" stroke-width="3" stroke-linecap="round" opacity=".7">
+    <path d="M556 191q8-7 16 0 8-7 16 0"/>
+    <path d="M606 222q6-6 13 0 6-6 13 0"/>
+    <path d="M510 236q5-5 11 0 5-5 11 0"/>
+  </g>
+
+  <!-- 城市剪影 -->
+  <g fill="url(#city)">
+    <path d="M0 410h36v-47h28v47h24v-84h31v30h20v54h29v-66h42v66h33v-101h25v35h28v66h36v-77h41v77h26v-50h35v50h24v-72h39v72h35v-44h28v44h31v-112h31v112h30v-62h34v62h27v-38h30v38h38v-88h34v88h39v65H0z"/>
+    <path d="M0 435h800v18H0z" opacity=".6"/>
+  </g>
+  <g fill="#F6C27D" opacity=".72">
+    <rect x="79" y="342" width="7" height="9"/><rect x="92" y="342" width="7" height="9"/><rect x="79" y="359" width="7" height="9"/>
+    <rect x="153" y="350" width="6" height="8"/><rect x="167" y="350" width="6" height="8"/><rect x="181" y="350" width="6" height="8"/>
+    <rect x="299" y="336" width="7" height="8"/><rect x="315" y="336" width="7" height="8"/><rect x="299" y="352" width="7" height="8"/>
+    <rect x="406" y="352" width="6" height="8"/><rect x="420" y="352" width="6" height="8"/><rect x="434" y="352" width="6" height="8"/>
+    <rect x="525" y="330" width="7" height="9"/><rect x="540" y="330" width="7" height="9"/><rect x="525" y="347" width="7" height="9"/>
+    <rect x="649" y="320" width="6" height="8"/><rect x="665" y="320" width="6" height="8"/><rect x="681" y="320" width="6" height="8"/>
+    <rect x="719" y="358" width="7" height="8"/><rect x="735" y="358" width="7" height="8"/>
+  </g>
+
+  <!-- 天台栏杆 -->
+  <g>
+    <path d="M0 468h800v132H0z" fill="url(#roof)"/>
+    <path d="M0 475h800" stroke="#75606A" stroke-width="5" opacity=".55"/>
+    <path d="M56 474v-58M190 474v-58M324 474v-58M458 474v-58M592 474v-58M726 474v-58" stroke="#17141A" stroke-width="9"/>
+    <path d="M30 419h738v15H30z" fill="#1D1920"/>
+    <path d="M30 424h738" stroke="#75606A" stroke-width="3" opacity=".45"/>
+    <path d="M0 510h800" stroke="#0C0A0E" stroke-width="3" opacity=".6"/>
+    <path d="M0 567h800" stroke="#0C0A0E" stroke-width="3" opacity=".45"/>
+  </g>
+
+  <!-- 天台上的小盆栽 -->
+  <g>
+    <path d="M689 456h66l-8 34h-51z" fill="#4A3431"/>
+    <path d="M720 456c-7-29-25-39-30-62 24 14 28 31 31 46 8-22 22-34 40-43-10 26-23 42-33 59" fill="#3E4E3C"/>
+    <path d="M720 455c-1-21-11-31-14-45 13 12 16 26 18 37" fill="#52644A" opacity=".7"/>
+  </g>
+
+  <!-- 晚霞光晕 -->
+  <ellipse cx="209" cy="352" rx="260" ry="130" fill="#FFE2A6" opacity=".08" filter="url(#soft)"/>
+  <rect width="800" height="600" filter="url(#grain)" opacity=".15" style="mix-blend-mode:soft-light"/>
+  <rect width="800" height="600" fill="#24182B" opacity=".06"/>
+</svg>

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">SVG 插画模板</title>
+  <desc id="desc">800×600 的 4:3 插画模板，带安全框、网格、背景、阴影和一只杯子示例。</desc>
+
+  <!-- ===== 1. 先定义渐变、裁剪和阴影 ===== -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F3EBDD"/>
+      <stop offset="1" stop-color="#DED0BE"/>
+    </linearGradient>
+    <linearGradient id="table" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B98962"/>
+      <stop offset="1" stop-color="#7E563D"/>
+    </linearGradient>
+    <linearGradient id="cup" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#D9D4C8"/>
+    </linearGradient>
+    <radialGradient id="coffee" cx="40%" cy="35%" r="70%">
+      <stop offset="0" stop-color="#8A5A36"/>
+      <stop offset="1" stop-color="#4A2B19"/>
+    </radialGradient>
+    <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <!-- 所有画面内容都放进这个裁剪区域，防止贴边元素溢出 -->
+    <clipPath id="frameClip">
+      <rect width="800" height="600" rx="24"/>
+    </clipPath>
+  </defs>
+
+  <!-- ===== 2. 从这里开始是画面 ===== -->
+  <g clip-path="url(#frameClip)">
+
+    <!-- 背景 -->
+    <rect width="800" height="600" fill="url(#bg)"/>
+    <rect y="410" width="800" height="190" fill="url(#table)"/>
+
+    <!-- 阴影：先画在物体下面 -->
+    <ellipse cx="400" cy="465" rx="155" ry="30" fill="#3E2A1D" opacity=".35" filter="url(#softShadow)"/>
+
+    <!-- 主体：杯子 -->
+    <g id="main-object">
+      <rect x="315" y="300" width="170" height="145" rx="28" fill="url(#cup)"/>
+      <ellipse cx="400" cy="303" rx="85" ry="24" fill="#F7F5EF"/>
+      <ellipse cx="400" cy="303" rx="67" ry="16" fill="url(#coffee)"/>
+      <path d="M485 330c48-7 54 80 2 88" fill="none" stroke="#E8E4DA" stroke-width="17" stroke-linecap="round"/>
+      <path d="M485 330c48-7 54 80 2 88" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity=".45"/>
+      <path d="M337 328c26-9 53-9 79-1" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+    </g>
+
+    <!-- 热气：放在主体上方 -->
+    <g fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" opacity=".55">
+      <path d="M367 270c-18-25 16-36-2-65"/>
+      <path d="M409 258c-15-24 14-38-2-69"/>
+      <path d="M451 272c-14-21 13-32-1-57"/>
+    </g>
+
+    <!-- 桌面高光 -->
+    <path d="M0 438c185-20 354-20 512 0 101 13 197 14 288 5v22c-136 12-241 8-359-5-156-17-298-13-441 2z" fill="#E8B98C" opacity=".16"/>
+
+    <!-- ===== 3. 调试辅助：确认完成后删除下面这一组 ===== -->
+    <g id="guides" opacity=".45">
+      <rect x="24" y="24" width="752" height="552" fill="none" stroke="#FF5A5A" stroke-width="2" stroke-dasharray="8 10"/>
+      <g stroke="#FFFFFF" stroke-width="1" opacity=".28">
+        <path d="M100 0v600M200 0v600M300 0v600M400 0v600M500 0v600M600 0v600M700 0v600"/>
+        <path d="M0 100h800M0 200h800M0 300h800M0 400h800M0 500h800"/>
+      </g>
+    </g>
+
+  </g>
+</svg>

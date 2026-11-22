@@ -1,0 +1,222 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">一碗白米饭配小菜</title>
+  <desc id="desc">深夜厨房的台面上铺着深蓝格纹桌旗，一大碗冒尖的白米饭，旁边一盘炒青菜、一小碟泡菜，一双筷子搭在碗沿。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#33393B"/>
+      <stop offset=".6" stop-color="#262B2D"/>
+      <stop offset="1" stop-color="#181D1E"/>
+    </linearGradient>
+    <radialGradient id="lamp" cx="50%" cy="40%" r="55%">
+      <stop offset="0" stop-color="#FFE0A7" stop-opacity=".7"/>
+      <stop offset=".55" stop-color="#FFC978" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#FFC978" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="table" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7A5B42"/>
+      <stop offset="1" stop-color="#4A3527"/>
+    </linearGradient>
+    <linearGradient id="bowl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4EEE1"/>
+      <stop offset=".7" stop-color="#DCD1C0"/>
+      <stop offset="1" stop-color="#BDB09C"/>
+    </linearGradient>
+    <radialGradient id="rice" cx="45%" cy="35%" r="75%">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset=".8" stop-color="#F2ECDD"/>
+      <stop offset="1" stop-color="#DCD0B8"/>
+    </radialGradient>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4F0E6"/>
+      <stop offset="1" stop-color="#CFC5B3"/>
+    </linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+    <filter id="steam" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".18"/></feComponentTransfer>
+    </filter>
+    <pattern id="riceGrain" width="28" height="24" patternUnits="userSpaceOnUse">
+      <path d="M4 7c3-2 6-1 7 1" fill="none" stroke="#D3C4A8" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M16 16c3-2 6-1 7 1" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>
+      <ellipse cx="10" cy="18" rx="2.2" ry="1.2" fill="#D3C4A8" opacity=".65"/>
+      <path d="M21 4c2 1 3 3 3 5" fill="none" stroke="#D3C4A8" stroke-width="1.5" stroke-linecap="round"/>
+    </pattern>
+    <linearGradient id="wallBeige" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4E7D1"/>
+      <stop offset="1" stop-color="#E2CDAF"/>
+    </linearGradient>
+    <linearGradient id="cityDusk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8FA6B0"/>
+      <stop offset=".62" stop-color="#C59A76"/>
+      <stop offset="1" stop-color="#E0AA72"/>
+    </linearGradient>
+    <linearGradient id="clothGreen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6F8060"/>
+      <stop offset="1" stop-color="#53664A"/>
+    </linearGradient>
+    <linearGradient id="floorWood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8A6246"/>
+      <stop offset="1" stop-color="#6A4832"/>
+    </linearGradient>
+    <linearGradient id="lightCone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF4D6" stop-opacity=".26"/>
+      <stop offset=".65" stop-color="#FFE7B0" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#FFE7B0" stop-opacity=".03"/>
+    </linearGradient>
+    <radialGradient id="lightPool" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFF1C8" stop-opacity=".55"/>
+      <stop offset=".55" stop-color="#FFDD9A" stop-opacity=".24"/>
+      <stop offset="1" stop-color="#FFDD9A" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="tableClip">
+      <path d="M80 285H720L900 548H-100Z"/>
+    </clipPath>
+    <clipPath id="sideWindowClip">
+      <path d="M30 82L148 106V206L30 230Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- 沿用 food_simple_01 的厨房背景 -->
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <g opacity=".72">
+    <rect x="0" y="0" width="800" height="88" fill="#202527"/>
+    <path d="M0 88h800" stroke="#51595A" stroke-width="3" opacity=".6"/>
+    <rect x="54" y="106" width="245" height="190" rx="8" fill="#181D1F"/>
+    <rect x="64" y="116" width="225" height="170" rx="4" fill="#23333A"/>
+    <path d="M64 208h225M174 116v170" stroke="#39474C" stroke-width="3" opacity=".7"/>
+    <g fill="#F0C778" opacity=".2">
+      <rect x="76" y="130" width="18" height="18"/><rect x="110" y="160" width="28" height="10"/><rect x="190" y="140" width="19" height="24"/>
+    </g>
+    <rect x="536" y="112" width="214" height="172" rx="8" fill="#242A2B"/>
+    <path d="M552 128h182M552 164h182M552 200h182M552 236h182" stroke="#393F40" stroke-width="3" opacity=".48"/>
+    <circle cx="684" cy="226" r="8" fill="#7D8989" opacity=".4"/>
+    <path d="M586 210h86" stroke="#515A5A" stroke-width="4" opacity=".6"/>
+  </g>
+
+  <ellipse cx="386" cy="226" rx="360" ry="250" fill="url(#lamp)" opacity=".8"/>
+  <path d="M0 300h800v300H0z" fill="#6E4A32"/>
+  <path d="M0 300h800" stroke="#A87A56" stroke-width="4" opacity=".7"/>
+  <g stroke="#4A3021" stroke-width="2" opacity=".35">
+    <path d="M0 365h800M0 438h800M0 511h800M0 570h800"/>
+    <path d="M138 300v300M326 300v300M514 300v300M702 300v300"/>
+  </g>
+
+  <!-- 深蓝格纹桌旗 -->
+  <path d="M258 300Q400 294 542 300L612 554H188Z" fill="#24364A"/>
+  <g stroke="#D9CEB8" stroke-width="7" opacity=".55">
+    <path d="M300 300L254 554"/>
+    <path d="M350 298L336 554"/>
+    <path d="M400 297L418 554"/>
+    <path d="M450 298L500 554"/>
+    <path d="M500 300L582 554"/>
+  </g>
+  <g stroke="#D9CEB8" stroke-width="7" opacity=".45">
+    <path d="M240 344Q400 336 560 344"/>
+    <path d="M228 400Q400 390 572 400"/>
+    <path d="M214 458Q400 446 586 458"/>
+    <path d="M198 518Q400 504 602 518"/>
+  </g>
+  <g stroke="#A54835" stroke-width="2" opacity=".7">
+    <path d="M280 300L220 554M320 299L294 554M370 297L370 554M420 297L456 554M470 299L530 554M520 300L600 554"/>
+    <path d="M232 370Q400 360 568 370M218 428Q400 416 582 428M204 488Q400 474 596 488"/>
+  </g>
+  <g stroke="#D9CEB8" stroke-width="2" opacity=".8">
+    <path d="M260 554v8M280 554v8M300 554v8M320 554v8M340 554v8M360 554v8M380 554v8M400 554v8M420 554v8M440 554v8M460 554v8M480 554v8M500 554v8M520 554v8M540 554v8M560 554v8M580 554v8"/>
+  </g>
+  <ellipse cx="400" cy="468" rx="300" ry="135" fill="url(#lightPool)" opacity=".55"/>
+  <!-- 大碗阴影 -->
+  <ellipse cx="405" cy="472" rx="178" ry="44" fill="#120D0A" opacity=".6" filter="url(#soft)"/>
+
+  <!-- 米饭大碗 -->
+  <g>
+    <path d="M238 332h334c-8 96-66 162-167 162-101 0-159-66-167-162z" fill="url(#bowl)"/>
+    <ellipse cx="405" cy="332" rx="167" ry="60" fill="#F5EFE3"/>
+    <ellipse cx="405" cy="336" rx="154" ry="51" fill="#D9CBB6"/>
+    <!-- 冒尖的米饭：加一圈碗沿阴影，避免看起来像平铺的白面 -->
+    <ellipse cx="405" cy="333" rx="138" ry="50" fill="#E2D5BC"/>
+    <ellipse cx="405" cy="327" rx="130" ry="55" fill="url(#rice)"/>
+    <ellipse cx="405" cy="327" rx="128" ry="53" fill="url(#riceGrain)" opacity=".8"/>
+    <ellipse cx="405" cy="327" rx="130" ry="55" fill="none" stroke="#CDBE9F" stroke-width="2" opacity=".45"/>
+    <path d="M300 350c34 22 85 29 134 20 30-5 55-14 73-25" fill="none" stroke="#CFC0A2" stroke-width="6" opacity=".55" stroke-linecap="round"/>
+    <g fill="none" stroke="#D6C9B1" stroke-width="2" stroke-linecap="round" opacity=".65">
+      <path d="M316 320c8-5 17-6 26-2M350 302c9-4 19-4 27 0M394 318c8-5 18-5 26-1M432 306c9-4 19-3 27 1M458 330c8-3 17-2 24 2"/>
+    </g>
+    <g fill="#E7DCC4" opacity=".85">
+      <circle cx="352" cy="312" r="4"/><circle cx="388" cy="300" r="3.5"/><circle cx="430" cy="306" r="4"/>
+      <circle cx="462" cy="318" r="3.5"/><circle cx="372" cy="330" r="3"/><circle cx="414" cy="336" r="3"/>
+      <circle cx="336" cy="324" r="3"/><circle cx="486" cy="330" r="3"/>
+    </g>
+  </g>
+
+  <g transform="translate(-100,-54)">
+    <!-- 筷：右撇子，筷尖搭在右侧碗沿，筷柄落在桌面 -->
+    <g stroke-linecap="round">
+      <path d="M570 305L690 460" stroke="#B48859" stroke-width="7"/>
+      <path d="M585 310L714 460" stroke="#C69C6A" stroke-width="7"/>
+      <path d="M570 305L690 460" stroke="#E2C297" stroke-width="2.5" opacity=".55"/>
+      <path d="M585 310L714 460" stroke="#EED0A6" stroke-width="2.5" opacity=".55"/>
+    </g>  
+  </g>
+
+  <!-- 蒸汽 -->
+  <g fill="none" stroke="#FFF1D3" stroke-linecap="round" opacity=".32" filter="url(#steam)">
+    <path d="M360 282c-24-40 22-56-2-98" stroke-width="12"/>
+    <path d="M424 268c-19-38 20-55-2-100" stroke-width="11"/>
+  </g>
+
+  <!-- 左小盘：炒青菜 -->
+  <g>
+    <ellipse cx="186" cy="486" rx="82" ry="34" fill="#120D0A" opacity=".5" filter="url(#soft)"/>
+    <ellipse cx="184" cy="478" rx="78" ry="31" fill="url(#plate)"/>
+    <ellipse cx="184" cy="476" rx="62" ry="21" fill="#F8F4EB"/>
+    <g fill="#5E8B50">
+      <path d="M148 476c-5-18 18-29 29-14-2 13-14 21-29 14z"/>
+      <path d="M178 486c-2-16 22-25 31-8 0 12-17 19-31 8z" fill="#6F9D5A"/>
+      <path d="M190 466c2-14 20-19 27-5 1 10-13 16-27 5z" fill="#7FA866"/>
+    </g>
+    <g fill="none" stroke="#3F6638" stroke-width="3" stroke-linecap="round" opacity=".8">
+      <path d="M157 480l19-8M188 487l20-8M199 470l14-6"/>
+    </g>
+    <g fill="none" stroke="#B7D19E" stroke-width="2" stroke-linecap="round" opacity=".85">
+      <path d="M160 471c6 4 10 9 12 15M191 480c5 3 8 7 10 12M203 464c4 2 7 6 8 10"/>
+    </g>
+    <g fill="#EEF0D8" opacity=".95">
+      <circle cx="172" cy="470" r="4"/><circle cx="196" cy="479" r="3.5"/><circle cx="207" cy="466" r="3"/>
+    </g>
+  </g>
+
+  <!-- 右小碟：泡菜 -->
+  <g>
+    <ellipse cx="632" cy="492" rx="64" ry="28" fill="#120D0A" opacity=".5" filter="url(#soft)"/>
+    <ellipse cx="630" cy="486" rx="60" ry="26" fill="url(#plate)"/>
+    <ellipse cx="630" cy="484" rx="46" ry="17" fill="#F8F4EB"/>
+    <g fill="#C85A3E">
+      <path d="M596 486c4-15 19-17 28-6 6-8 19-4 18 7-2 13-19 17-30 10-9 5-19 0-16-11z"/>
+      <path d="M620 474c3-10 15-12 21-4 5-6 15-2 14 6-1 9-14 13-23 8-6 2-13-1-12-10z" fill="#D87255"/>
+      <path d="M582 490c4-11 15-13 21-4 5-6 14-2 13 5-1 8-13 12-21 7-5 2-14 0-13-8z" fill="#B84A34"/>
+    </g>
+    <g fill="none" stroke="#F0CDB0" stroke-width="3" stroke-linecap="round" opacity=".9">
+      <path d="M602 486c7-3 14 0 18 6M626 477c6-2 11 0 14 5M589 491c5-2 10 0 13 4"/>
+    </g>
+    <g fill="none" stroke="#8F3527" stroke-width="2.5" stroke-linecap="round" opacity=".75">
+      <path d="M604 487c7-4 14-3 20 1M627 476c6-3 12-2 17 2M589 491c5-3 11-2 16 1"/>
+    </g>
+    <g fill="#F6D7B8" opacity=".9">
+      <circle cx="610" cy="479" r="2"/><circle cx="635" cy="487" r="2"/><circle cx="598" cy="494" r="1.8"/>
+    </g>
+    <g fill="#7E2B20" opacity=".75">
+      <circle cx="607" cy="483" r="1.4"/><circle cx="621" cy="492" r="1.2"/><circle cx="641" cy="483" r="1.3"/>
+    </g>
+  </g>
+
+  <rect width="800" height="600" filter="url(#grain)" opacity=".13" style="mix-blend-mode:soft-light"/>
+  <rect width="800" height="600" fill="#0B1112" opacity=".03"/>
+</svg>
+
+

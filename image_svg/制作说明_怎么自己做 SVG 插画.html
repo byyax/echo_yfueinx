@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>怎么自己做 SVG 插画</title>
+<style>
+  :root {
+    --brand:#6B8E23; --brand-soft:#f1f6e6; --bg:#fdfcf8; --card:#ffffff;
+    --text:#2d3748; --border:#e6e8ec; --code-bg:#f1f3f5;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); line-height:1.78;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif; }
+  .wrap { max-width: 840px; margin: 0 auto; padding: 44px 24px 90px; }
+  h1 { font-size: 30px; margin: 0 0 6px; letter-spacing:.5px; }
+  h2 { font-size: 21px; color: var(--brand); margin: 48px 0 14px; padding-top: 16px; border-top: 1px solid var(--border); }
+  h3 { font-size: 17px; margin: 30px 0 10px; }
+  h4 { font-size: 15px; margin: 22px 0 8px; }
+  p { margin: 10px 0; }
+  code { background: var(--code-bg); padding: 1px 6px; border-radius: 6px; font-size: .92em;
+    font-family: ui-monospace, Consolas, "Courier New", monospace; }
+  pre { background:#1f2328; color:#e6edf3; padding:16px 18px; border-radius:12px; overflow:auto; margin:14px 0; }
+  pre code { background:none; padding:0; color:inherit; font-size:13px; line-height:1.6; }
+  table { width:100%; border-collapse:collapse; margin:14px 0; font-size:14px; }
+  th, td { border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background: var(--brand-soft); font-weight:600; }
+  blockquote { margin:12px 0; padding:10px 14px; border-left:3px solid var(--brand);
+    background: var(--brand-soft); border-radius:0 8px 8px 0; color:#4b5563; }
+  ul, ol { padding-left: 24px; margin: 10px 0; }
+  li { margin: 6px 0; }
+  li pre { margin: 8px 0; }
+  hr { border:none; border-top:1px solid var(--border); margin:34px 0; }
+  a { color: var(--brand); }
+  img { max-width: 100%; }
+  .toc { background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:14px 18px; margin:26px 0 8px; font-size:14px; box-shadow:0 2px 10px rgba(0,0,0,.03); }
+  .toc strong { display:block; margin-bottom:6px; color:#8a9299; font-size:12px; letter-spacing:1px; }
+  .toc a { color:var(--brand); text-decoration:none; display:block; padding:3px 0; }
+  .toc a:hover { text-decoration:underline; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#141414; --card:#1d1d1d; --text:#e5e7eb; --border:#333; --code-bg:#2a2a2a; --brand-soft:#2b3320; }
+    h2 { color:#A4C639; }
+    code { background:#2a2a2a; }
+    blockquote { color:#c9d1d9; }
+  }
+  @media (max-width: 640px) {
+    .wrap { padding: 28px 16px 70px; }
+    h1 { font-size: 25px; }
+    h2 { font-size: 19px; }
+    table { font-size: 12px; }
+    th, td { padding: 6px 7px; }
+  }
+  </style>
+</head>
+<body>
+<div class="wrap"><nav class="toc"><strong>目录</strong><a href="#sec-1">1. 用 VSCode 打开</a><a href="#sec-2">2. 坐标系</a><a href="#sec-3">3. 最常用的标签</a><a href="#sec-4">4. 分层顺序</a><a href="#sec-5">5. 渐变和阴影</a><a href="#sec-6">6. 防止边缘溢出</a><a href="#sec-7">7. 建议的练习顺序</a></nav><h1>怎么自己做 SVG 插画</h1>
+<p>这个文件夹里的 <code>.svg</code> 文件都可以直接用 VSCode 打开修改。SVG 本质上是文本，不是只能靠软件导出的图片。</p>
+<h2 id="sec-1">1. 用 VSCode 打开</h2>
+<ol>
+<li>打开 VSCode；</li>
+<li>文件 → 打开文件夹；</li>
+<li>选择 <code>D:\Echo_yfueinx14.0\photo_samples</code>；</li>
+<li>点开 <code>_template.svg</code>，看到的就是源代码；</li>
+<li>改完后按 <code>Ctrl + S</code> 保存；</li>
+<li>在文件管理器里双击这个 SVG，用 Edge 打开预览；改一次、刷新一次即可。</li>
+</ol>
+<p>可选：在 VSCode 扩展里安装 <code>SVG Preview</code> 或 <code>Live Preview</code>，可以边改边看。没有扩展也不影响，浏览器就是最好的预览器。</p>
+<h2 id="sec-2">2. 坐标系</h2>
+<ul>
+<li>画布是 <code>viewBox="0 0 800 600"</code>；</li>
+<li>左上角是 <code>(0, 0)</code>；</li>
+<li><code>x</code> 向右变大，<code>y</code> 向下变大；</li>
+<li>最终是 4:3，宽 800、高 600。</li>
+</ul>
+<h2 id="sec-3">3. 最常用的标签</h2>
+<pre><code class="language-svg">&lt;rect x="100" y="100" width="200" height="120" rx="20" fill="#E8D5C0"/&gt;
+&lt;circle cx="400" cy="300" r="80" fill="#FFF"/&gt;
+&lt;ellipse cx="400" cy="300" rx="120" ry="60" fill="#FFF"/&gt;
+&lt;line x1="100" y1="100" x2="300" y2="200" stroke="#333" stroke-width="4"/&gt;
+&lt;path d="M100 300 Q200 150 400 300 T700 300" fill="none" stroke="#333" stroke-width="6"/&gt;
+</code></pre>
+<p><code>path</code> 的常用命令：</p>
+<ul>
+<li><code>M</code>：移动到某个点；</li>
+<li><code>L</code>：画直线；</li>
+<li><code>Q</code>：二次曲线；</li>
+<li><code>C</code>：三次曲线；</li>
+<li><code>A</code>：圆弧；</li>
+<li><code>Z</code>：闭合路径。</li>
+</ul>
+<h2 id="sec-4">4. 分层顺序</h2>
+<p>SVG 是“后画的盖住先画的”。推荐顺序：</p>
+<ol>
+<li>背景色；</li>
+<li>远处的大形状；</li>
+<li>桌面/地面；</li>
+<li>阴影；</li>
+<li>主体物体；</li>
+<li>小道具；</li>
+<li>高光、蒸汽、颗粒；</li>
+<li>最后再叠加暗角。</li>
+</ol>
+<h2 id="sec-5">5. 渐变和阴影</h2>
+<p>渐变放在 <code>&lt;defs&gt;</code> 里，然后通过 <code>url(#id)</code> 使用：</p>
+<pre><code class="language-svg">&lt;defs&gt;
+  &lt;linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"&gt;
+    &lt;stop offset="0" stop-color="#FFB07A"/&gt;
+    &lt;stop offset="1" stop-color="#6C4C7A"/&gt;
+  &lt;/linearGradient&gt;
+  &lt;filter id="blur"&gt;
+    &lt;feGaussianBlur stdDeviation="12"/&gt;
+  &lt;/filter&gt;
+&lt;/defs&gt;
+
+&lt;rect width="800" height="600" fill="url(#sky)"/&gt;
+&lt;ellipse cx="400" cy="460" rx="180" ry="30" fill="#000" opacity=".3" filter="url(#blur)"/&gt;
+</code></pre>
+<h2 id="sec-6">6. 防止边缘溢出</h2>
+<p>边缘看起来“被切掉”或“溢出去”，通常是这几个原因：</p>
+<ul>
+<li>图形坐标超出 <code>0～800 / 0～600</code>；</li>
+<li>线条有宽度，<code>x=0</code> 的线会有一半画在画布外；</li>
+<li>模糊/阴影会向外扩散；</li>
+<li>旋转或放大后的组超出边界；</li>
+<li>没有给整个画面加裁剪。</li>
+</ul>
+<p>最稳的做法：</p>
+<pre><code class="language-svg">&lt;defs&gt;
+  &lt;clipPath id="frameClip"&gt;
+    &lt;rect width="800" height="600" rx="24"/&gt;
+  &lt;/clipPath&gt;
+&lt;/defs&gt;
+
+&lt;g clip-path="url(#frameClip)"&gt;
+  &lt;!-- 所有画面内容 --&gt;
+&lt;/g&gt;
+</code></pre>
+<p>同时留出 <strong>24px 安全边距</strong>。<code>_template.svg</code> 里已经放了红色虚线安全框，作品完成后把 <code>id="guides"</code> 那一组删掉即可。</p>
+<h2 id="sec-7">7. 建议的练习顺序</h2>
+<ol>
+<li>复制 <code>_template.svg</code> 为 <code>my_first.svg</code>；</li>
+<li>先只改背景色和桌子颜色；</li>
+<li>再移动杯子位置；</li>
+<li>再改杯子形状、加一个小碟子；</li>
+<li>最后加渐变、阴影和一点蒸汽；</li>
+<li>保存后刷新浏览器看效果。</li>
+</ol>
+<p>不要一上来就画很复杂的场景。先把“背景 + 一个主体 + 一个道具 + 一个阴影”画顺，再往上加东西。</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">玄关的两把伞</title>
+  <desc id="desc">玄关墙角放着一个雨伞架，里面并排立着两把合上的长柄伞，一把深灰色，一把米色，地砖上有一点水迹。</desc>
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E7E1D7"/>
+      <stop offset="1" stop-color="#CFC6B8"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C9B79D"/>
+      <stop offset="1" stop-color="#A68E70"/>
+    </linearGradient>
+    <linearGradient id="dark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#30363A"/>
+      <stop offset=".5" stop-color="#50585D"/>
+      <stop offset="1" stop-color="#262B2F"/>
+    </linearGradient>
+    <linearGradient id="light" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#CFC1A8"/>
+      <stop offset=".5" stop-color="#E9DDC5"/>
+      <stop offset="1" stop-color="#B8A88E"/>
+    </linearGradient>
+    <linearGradient id="stand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6B5A45"/>
+      <stop offset="1" stop-color="#493B2C"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".12"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#wall)"/>
+  <rect y="420" width="800" height="180" fill="url(#floor)"/>
+  <path d="M0 420h800v12H0z" fill="#E7D7BF" opacity=".6"/>
+  <g stroke="#8B7052" stroke-width="2" opacity=".28">
+    <path d="M0 474h800M0 538h800"/>
+    <path d="M130 420v180M390 420v180M650 420v180"/>
+  </g>
+  <path d="M0 420h18v180H0z" fill="#BBA88D" opacity=".45"/>
+
+  <!-- 墙面挂钩 -->
+  <g>
+    <rect x="240" y="112" width="52" height="18" rx="8" fill="#9C8B75"/>
+    <circle cx="266" cy="112" r="9" fill="#C6B69F"/>
+    <rect x="456" y="112" width="52" height="18" rx="8" fill="#9C8B75"/>
+    <circle cx="482" cy="112" r="9" fill="#C6B69F"/>
+  </g>
+
+  <!-- 伞架 -->
+  <g>
+    <ellipse cx="402" cy="528" rx="176" ry="34" fill="#4A3524" opacity=".25" filter="url(#soft)"/>
+    <path d="M286 360h232l-18 150q-4 22-26 22H330q-22 0-26-22z" fill="url(#stand)"/>
+    <ellipse cx="402" cy="360" rx="116" ry="22" fill="#826D53"/>
+    <ellipse cx="402" cy="360" rx="96" ry="15" fill="#3D3124"/>
+    <path d="M306 392q96 26 192 0" fill="none" stroke="#8C765A" stroke-width="5" opacity=".45"/>
+    <path d="M294 478q108 24 216 0" fill="none" stroke="#3E3225" stroke-width="4" opacity=".4"/>
+    <path d="M300 520h204" stroke="#2F251B" stroke-width="8" stroke-linecap="round" opacity=".55"/>
+  </g>
+
+  <!-- 深灰伞 -->
+  <g transform="translate(352 354) rotate(-5)">
+    <path d="M-18 8h36l-4-178h-28z" fill="url(#dark)"/>
+    <path d="M-12 8h10l-3-176h-8z" fill="#6B7479" opacity=".38"/>
+    <path d="M-24-170h48l-6-24h-36z" fill="#2F3539"/>
+    <path d="M18 8h24c18 0 22 14 10 26-8 8-20 7-26-3" fill="none" stroke="#30363A" stroke-width="10" stroke-linecap="round"/>
+    <path d="M18 8h24c18 0 22 14 10 26-8 8-20 7-26-3" fill="none" stroke="#626B70" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+    <path d="M-4 8v18" stroke="#1E2225" stroke-width="7" stroke-linecap="round"/>
+    <path d="M-10-198h20" stroke="#8B9397" stroke-width="5" stroke-linecap="round"/>
+    <g stroke="#23282C" stroke-width="3" opacity=".55">
+      <path d="M-18-4l5 12M-8-4l3 12M2-4l1 12M12-4l-1 12"/>
+    </g>
+  </g>
+
+  <!-- 米色伞 -->
+  <g transform="translate(452 354) rotate(4)">
+    <path d="M-18 8h36l-4-168h-28z" fill="url(#light)"/>
+    <path d="M-12 8h10l-3-166h-8z" fill="#F6EDDB" opacity=".5"/>
+    <path d="M-24-160h48l-6-24h-36z" fill="#BFB098"/>
+    <path d="M18 8h24c18 0 22 14 10 26-8 8-20 7-26-3" fill="none" stroke="#C4B69E" stroke-width="10" stroke-linecap="round"/>
+    <path d="M18 8h24c18 0 22 14 10 26-8 8-20 7-26-3" fill="none" stroke="#F8F0E1" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+    <path d="M-4 8v18" stroke="#8D7B63" stroke-width="7" stroke-linecap="round"/>
+    <path d="M-10-188h20" stroke="#8E7F67" stroke-width="5" stroke-linecap="round"/>
+    <g stroke="#B6A78E" stroke-width="3" opacity=".55">
+      <path d="M-18-4l5 12M-8-4l3 12M2-4l1 12M12-4l-1 12"/>
+    </g>
+  </g>
+
+  <!-- 水迹 -->
+  <g fill="#7A8D8C" opacity=".16">
+    <ellipse cx="336" cy="542" rx="42" ry="10" transform="rotate(-6 336 542)"/>
+    <ellipse cx="478" cy="558" rx="28" ry="7" transform="rotate(8 478 558)"/>
+    <circle cx="520" cy="530" r="5"/>
+    <circle cx="296" cy="520" r="3"/>
+  </g>
+
+  <!-- 墙上光 -->
+  <g fill="#FFF0CE" opacity=".18" filter="url(#soft)">
+    <ellipse cx="220" cy="280" rx="120" ry="40" transform="rotate(-20 220 280)"/>
+  </g>
+  <rect width="800" height="600" filter="url(#grain)" opacity=".11" style="mix-blend-mode:soft-light"/>
+</svg>

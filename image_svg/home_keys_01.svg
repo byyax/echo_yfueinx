@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">玄关托盘里的两串钥匙</title>
+  <desc id="desc">木质玄关柜上放着一只浅色陶瓷托盘，里面有两串钥匙，一串带黑色车钥匙，一串带红色小吊牌，旁边有一盆小绿植。</desc>
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E9E1D6"/>
+      <stop offset="1" stop-color="#D6C9B9"/>
+    </linearGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C09061"/>
+      <stop offset="1" stop-color="#996B43"/>
+    </linearGradient>
+    <linearGradient id="tray" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F3EEE3"/>
+      <stop offset="1" stop-color="#D6CCBC"/>
+    </linearGradient>
+    <linearGradient id="pot" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C98E72"/>
+      <stop offset="1" stop-color="#A8684D"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".12"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#wall)"/>
+  <rect y="348" width="800" height="252" fill="url(#wood)"/>
+  <path d="M0 348h800v11H0z" fill="#E3C7A4" opacity=".65"/>
+  <g stroke="#7A5130" stroke-width="3" opacity=".2">
+    <path d="M0 414h800M0 494h800M0 566h800M126 348v252M380 348v252M636 348v252"/>
+  </g>
+  <ellipse cx="410" cy="485" rx="300" ry="58" fill="#5A3924" opacity=".24" filter="url(#soft)"/>
+
+  <!-- 托盘 -->
+  <g>
+    <ellipse cx="410" cy="430" rx="236" ry="102" fill="#B28E68" opacity=".35" filter="url(#soft)"/>
+    <ellipse cx="410" cy="420" rx="236" ry="102" fill="url(#tray)"/>
+    <ellipse cx="410" cy="420" rx="207" ry="79" fill="#E7DECF"/>
+    <ellipse cx="410" cy="420" rx="207" ry="79" fill="none" stroke="#C9BCA8" stroke-width="4"/>
+    <path d="M260 380q150-36 300 0" fill="none" stroke="#FFFFFF" stroke-width="5" opacity=".5"/>
+  </g>
+
+  <!-- 第一串：黑色车钥匙 -->
+  <g transform="translate(330 410) rotate(8)">
+    <circle cx="0" cy="0" r="24" fill="none" stroke="#9C958A" stroke-width="8"/>
+    <path d="M-4 -22l-10-34" stroke="#8D8578" stroke-width="6" stroke-linecap="round"/>
+    <g transform="translate(-6 -102)">
+      <rect x="-44" y="-28" width="88" height="58" rx="17" fill="#2E3134"/>
+      <rect x="-35" y="-20" width="70" height="42" rx="13" fill="#474B4F"/>
+      <rect x="-25" y="-12" width="28" height="15" rx="5" fill="#A4ABAE" opacity=".45"/>
+      <circle cx="25" cy="-4" r="7" fill="#C8CDCE"/>
+      <path d="M-18 13h13M0 13h13M18 13h13" stroke="#7B8184" stroke-width="3" opacity=".7"/>
+    </g>
+    <g transform="translate(0 0) rotate(-20)">
+      <circle cx="0" cy="0" r="16" fill="none" stroke="#A49C90" stroke-width="7"/>
+      <path d="M14 0h94" stroke="#A49C90" stroke-width="8" stroke-linecap="round"/>
+      <path d="M100 0v16h12V0M112 16v13h11V16" fill="none" stroke="#A49C90" stroke-width="7" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(0 0) rotate(28)">
+      <circle cx="0" cy="0" r="15" fill="none" stroke="#B0A89B" stroke-width="7"/>
+      <path d="M13 0h82" stroke="#B0A89B" stroke-width="7" stroke-linecap="round"/>
+      <path d="M88 0v14h11V0M99 14v12h10V14" fill="none" stroke="#B0A89B" stroke-width="6" stroke-linejoin="round"/>
+    </g>
+  </g>
+
+  <!-- 第二串：红色吊牌 -->
+  <g transform="translate(526 400) rotate(-8)">
+    <circle cx="0" cy="0" r="22" fill="none" stroke="#B7B0A3" stroke-width="7"/>
+    <path d="M18 8l78 62" stroke="#AFA79A" stroke-width="8" stroke-linecap="round"/>
+    <path d="M88 64l12-3M96 72l12-3" stroke="#8D8578" stroke-width="6" stroke-linecap="round"/>
+    <path d="M6 -19l-20-32" stroke="#8D8578" stroke-width="6" stroke-linecap="round"/>
+    <g transform="translate(-34 -72) rotate(-12)">
+      <rect x="-34" y="-24" width="68" height="48" rx="10" fill="#B8574F"/>
+      <rect x="-27" y="-17" width="54" height="34" rx="7" fill="#D77C70"/>
+      <path d="M-14 0h28" stroke="#FBE4DE" stroke-width="4" stroke-linecap="round" opacity=".75"/>
+      <circle cx="28" cy="-16" r="5" fill="#8E3B36"/>
+    </g>
+  </g>
+
+  <!-- 小绿植 -->
+  <g transform="translate(676 360)">
+    <ellipse cx="0" cy="118" rx="58" ry="13" fill="#4C3020" opacity=".3" filter="url(#soft)"/>
+    <path d="M-42 58h84l-10 58q-2 12-14 12h-36q-12 0-14-12z" fill="url(#pot)"/>
+    <ellipse cx="0" cy="58" rx="42" ry="11" fill="#D6A083"/>
+    <path d="M0 58V6" stroke="#4D6A45" stroke-width="6" stroke-linecap="round"/>
+    <g fill="#6E8F5C">
+      <ellipse cx="-26" cy="14" rx="34" ry="17" transform="rotate(-34 -26 14)"/>
+      <ellipse cx="28" cy="8" rx="36" ry="18" transform="rotate(30 28 8)"/>
+      <ellipse cx="-6" cy="-18" rx="30" ry="16" transform="rotate(-6 -6 -18)"/>
+    </g>
+    <g fill="#9CB57D" opacity=".55">
+      <ellipse cx="-24" cy="10" rx="17" ry="6" transform="rotate(-34 -24 10)"/>
+      <ellipse cx="25" cy="4" rx="18" ry="6" transform="rotate(30 25 4)"/>
+    </g>
+  </g>
+
+  <rect width="800" height="600" filter="url(#grain)" opacity=".11" style="mix-blend-mode:soft-light"/>
+</svg>

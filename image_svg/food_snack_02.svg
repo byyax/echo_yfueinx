@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">夜市小吃</title>
+  <desc id="desc">夜市摊位的灯光下，一份章鱼小丸子放在纸托里，旁边有汽水和竹签。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#241613"/>
+      <stop offset=".55" stop-color="#3B2118"/>
+      <stop offset="1" stop-color="#15100F"/>
+    </linearGradient>
+    <linearGradient id="table" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6A3F2C"/>
+      <stop offset="1" stop-color="#351F19"/>
+    </linearGradient>
+    <radialGradient id="lamp" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFD690" stop-opacity=".85"/>
+      <stop offset=".45" stop-color="#FFB75A" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#FFB75A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ball" cx="34%" cy="28%" r="76%">
+      <stop offset="0" stop-color="#F4C176"/>
+      <stop offset=".55" stop-color="#D58B3D"/>
+      <stop offset="1" stop-color="#9B4E1E"/>
+    </radialGradient>
+    <linearGradient id="tray" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7EAD5"/>
+      <stop offset="1" stop-color="#D9BE97"/>
+    </linearGradient>
+    <linearGradient id="soda" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F2A04A"/>
+      <stop offset="1" stop-color="#AB4A25"/>
+    </linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="steam" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".18"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#bg)"/>
+
+  <!-- 虚化的夜市灯 -->
+  <g filter="url(#soft)">
+    <circle cx="95" cy="128" r="42" fill="#FFB45F" opacity=".55"/>
+    <circle cx="172" cy="86" r="19" fill="#FFE1A5" opacity=".5"/>
+    <circle cx="272" cy="146" r="25" fill="#FF8E5C" opacity=".28"/>
+    <circle cx="665" cy="92" r="55" fill="#FFB45F" opacity=".34"/>
+    <circle cx="730" cy="174" r="24" fill="#FFE1A5" opacity=".36"/>
+    <circle cx="574" cy="56" r="13" fill="#FFC36D" opacity=".5"/>
+    <circle cx="390" cy="104" r="17" fill="#FF8E5C" opacity=".23"/>
+  </g>
+  <path d="M0 0h800v112q-140 42-280 0T240 112 0 86z" fill="#160D0B" opacity=".72"/>
+  <path d="M0 28h800v34H0z" fill="#8B2E22" opacity=".3"/>
+
+  <rect y="462" width="800" height="138" fill="url(#table)"/>
+  <path d="M0 462h800" stroke="#9A5F40" stroke-width="4" opacity=".5"/>
+  <g stroke="#2B1914" stroke-width="3" opacity=".3">
+    <path d="M0 505h800M0 552h800"/>
+  </g>
+
+  <!-- 暖光 -->
+  <ellipse cx="392" cy="220" rx="390" ry="270" fill="url(#lamp)" opacity=".85"/>
+
+  
+  <g><!-- 小丸子+汽水整体 -->
+  
+    <!-- 蒸汽 -->
+    <g transform="translate(50, 0)" fill="none" stroke="#FFE6C8" stroke-linecap="round" opacity=".28" filter="url(#steam)">
+      <path d="M302 290c-25-46 28-63-2-111" stroke-width="14"/>
+      <path d="M390 272c-26-52 27-74-1-125" stroke-width="12"/>
+      <path d="M472 294c-18-42 23-58 0-96" stroke-width="14"/>
+    </g>
+
+    <g transform="translate(50, 30)"> <!-- 小丸子整体 -->
+      <!-- 小吃纸托后侧 -->
+      <g transform="translate(390 390) scale(.82) translate(-390 -390)">
+      <g>
+        <ellipse cx="389" cy="483" rx="214" ry="30" fill="#120B09" opacity=".6" filter="url(#soft)"/>
+        <path d="M172 336h432l-35 132c-8 29-39 40-84 40H291c-45 0-76-11-84-40z" fill="url(#tray)"/>
+        <path d="M188 354h400l-27 104c-6 19-27 27-62 27H277c-35 0-56-8-62-27z" fill="#EFE0C8"/>
+      </g>
+
+      <!-- 章鱼小丸子 -->
+      <g >
+        <g transform="translate(260 335)"><circle cx="0" cy="0" r="57" fill="#9A4C1C"/><circle cx="0" cy="-2" r="53" fill="url(#ball)"/><path d="M-35-26c21-16 50-17 70-2" fill="none" stroke="#FFD59A" stroke-width="5" opacity=".55"/></g>
+        <g transform="translate(380 326)"><circle cx="0" cy="0" r="61" fill="#9A4C1C"/><circle cx="0" cy="-2" r="57" fill="url(#ball)"/><path d="M-38-30c22-18 55-18 76-2" fill="none" stroke="#FFD59A" stroke-width="5" opacity=".55"/></g>
+        <g transform="translate(500 335)"><circle cx="0" cy="0" r="57" fill="#9A4C1C"/><circle cx="0" cy="-2" r="53" fill="url(#ball)"/><path d="M-35-26c21-16 50-17 70-2" fill="none" stroke="#FFD59A" stroke-width="5" opacity=".55"/></g>
+        <g transform="translate(280 413)"><circle cx="0" cy="0" r="52" fill="#8F4519"/><circle cx="0" cy="-2" r="48" fill="url(#ball)"/><path d="M-31-23c20-15 45-15 63-2" fill="none" stroke="#FFD59A" stroke-width="4" opacity=".5"/></g>
+        <g transform="translate(395 413)"><circle cx="0" cy="0" r="53" fill="#8F4519"/><circle cx="0" cy="-2" r="49" fill="url(#ball)"/><path d="M-31-23c20-15 45-15 63-2" fill="none" stroke="#FFD59A" stroke-width="4" opacity=".5"/></g>
+        <g transform="translate(510 413)"><circle cx="0" cy="0" r="53" fill="#8F4519"/><circle cx="0" cy="-2" r="49" fill="url(#ball)"/><path d="M-31-23c20-15 45-15 63-2" fill="none" stroke="#FFD59A" stroke-width="4" opacity=".5"/></g>
+        
+        <!-- 酱汁和蛋黄酱 -->
+        <g fill="none" stroke-linecap="round">
+          <path d="M250 318q22 20 47 3t55 6 54-6 55 8 52-8" stroke="#4A2011" stroke-width="8" opacity=".9"/>
+          <path d="M216 345q28-20 54 0t53-2 56 9 56-9 54 3 52-4" stroke="#4A2011" stroke-width="8" opacity=".8"/>
+          <path d="M239 382q28 15 51-4t53 5 52-7 54 7 44-3" stroke="#4A2011" stroke-width="7" opacity=".8"/>
+          <path d="M228 318 q7 14 43 2t53 5 55-8 53 9 50-5 68 10" stroke="#F7EBD5" stroke-width="4" opacity=".9"/>
+          <path d="M238 371 q26 12 48-2 t55 4 56-8 54 8 42-2 55 4" stroke="#F7EBD5" stroke-width="3.5" opacity=".85"/>
+        </g>
+
+        <!-- 木鱼花和海苔 -->
+        <g fill="#D9A97B" opacity=".9"> <!-- 木鱼花 -->
+          <path d="M250 292c11-18 36-11 31 5-5 14-31 14-31-5z"/>
+          <path d="M400 281c15-15 37-5 27 10-8 12-33 7-27-10z"/>
+          <path d="M515 312c9-15 31-11 28 4-3 14-30 13-28-4z"/>
+          <path d="M264 363c8-12 26-8 23 4-3 11-24 10-23-4z"/>
+          <path d="M452 373c10-13 30-6 23 6-6 10-26 6-23-6z"/>
+        </g>
+        <g fill="#557245" opacity=".9"> <!-- 海苔 -->
+          <path d="M347 292l12-15 7 18-12 9z"/>
+          <path d="M481 300l11-12 7 16-11 8z"/>
+          <path d="M373 390l11-13 7 16-11 8z"/>
+        </g>
+
+        </g>
+          <!--小吃纸托前侧-->
+          <path d="M188 354 h400l-27 104 c-6 19-27 27-62 27 H277 c-35 0-56-8-62-27z" fill="#EFE0C8" fill-opacity=".4"/>
+        </g>
+    </g>
+
+
+    <!-- 汽水 -->
+    <g transform="translate(190 480) scale(1.15) translate(-667 -500)">
+      <ellipse cx="667" cy="500" rx="55" ry="15" fill="#120B09" opacity=".55" filter="url(#soft)"/>
+      <path d="M624 300h86l-10 186c-2 21-15 29-33 29 s-31-8-33-29z" fill="#E9D3B7" opacity=".16"/>
+      <path d="M630 326h74l-8 154 c-2 14-12 20-29 20 s-27-6-29-20z" fill="url(#soda)" opacity=".72"/>
+      <path d="M630 326 h74 v4 2h-74 z" fill="#F8E2C0" opacity=".42"/>
+      <path d="M686 216 L694 214 L672 462 L664 464 Z" fill="#e8af3e"/>
+      <path d="M688 232 L668 450" stroke="#F5D180" stroke-width="3" stroke-linecap="round"/>
+      <g fill="#FFE6C0" opacity=".55">
+        <circle cx="648" cy="382" r="4"/><circle cx="676" cy="404" r="3"/><circle cx="659" cy="442" r="4"/><circle cx="686" cy="363" r="3"/>
+      </g>
+    </g>
+
+    <!-- 竹签 -->
+    <g>
+      <path d="M520 530 l183 121" stroke="#D8B58C" stroke-width="8" stroke-linecap="round"/>
+      <path d="M560 520 l194 124" stroke="#D8B58C" stroke-width="8" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- 桌面反光 -->
+  <ellipse cx="391" cy="532" rx="252" ry="24" fill="#FFB35E" opacity=".07" filter="url(#soft)"/>
+  <rect width="800" height="600" filter="url(#grain)" opacity=".18" style="mix-blend-mode:soft-light"/>
+  <rect width="800" height="600" fill="#130B09" opacity=".12"/>
+</svg>

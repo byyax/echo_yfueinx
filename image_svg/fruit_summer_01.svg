@@ -1,0 +1,112 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">夏日水果</title>
+  <desc id="desc">俯视的浅蓝色条纹桌布上，一大盘夏日水果：西瓜、桃子、芒果、葡萄和菠萝。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E6F0F1"/>
+      <stop offset="1" stop-color="#C9DDE0"/>
+    </linearGradient>
+    <linearGradient id="cloth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BFD7DD"/>
+      <stop offset="1" stop-color="#9FC2CA"/>
+    </linearGradient>
+    <radialGradient id="peach" cx="35%" cy="30%" r="75%">
+      <stop offset="0" stop-color="#F8C8A8"/>
+      <stop offset=".65" stop-color="#E89A78"/>
+      <stop offset="1" stop-color="#C96E58"/>
+    </radialGradient>
+    <linearGradient id="mango" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F2C05E"/>
+      <stop offset="1" stop-color="#E8902E"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <!-- 俯视：整块浅蓝桌布 -->
+  <rect width="800" height="600" fill="#BFD7DD"/>
+  <g stroke="#A6C6CE" stroke-width="3" opacity=".45">
+    <path d="M0 70H800M0 140H800M0 210H800M0 280H800M0 350H800M0 420H800M0 490H800M0 560H800"/>
+  </g>
+  <g stroke="#E8F1F2" stroke-width="1.5" opacity=".5">
+    <path d="M0 105H800M0 175H800M0 245H800M0 315H800M0 385H800M0 455H800M0 525H800"/>
+  </g>
+
+  <!-- 白盘 -->
+  <ellipse cx="400" cy="354" rx="300" ry="170" fill="#2B1A10" opacity=".12" filter="url(#soft)"/>
+  <ellipse cx="400" cy="344" rx="300" ry="170" fill="#F7F1E4"/>
+  <ellipse cx="400" cy="340" rx="270" ry="148" fill="#FFFFFF"/>
+  <ellipse cx="400" cy="340" rx="238" ry="124" fill="none" stroke="#D9E4E6" stroke-width="3"/>
+
+  <g transform="translate(400 344) scale(1.22) translate(-400 -344)">
+  <!-- 西瓜 -->
+  <g>
+    <path d="M230 300c50-54 134-54 184 0-54 44-130 44-184 0z" fill="#D8503E"/>
+    <path d="M220 306c58-58 146-58 204 0" fill="none" stroke="#4D7145" stroke-width="14"/>
+    <path d="M220 306c58-58 146-58 204 0" fill="none" stroke="#7FA866" stroke-width="5"/>
+    <g fill="#3A2318">
+      <ellipse cx="274" cy="298" rx="4" ry="6" transform="rotate(-20 274 298)"/>
+      <ellipse cx="316" cy="282" rx="4" ry="6" transform="rotate(10 316 282)"/>
+      <ellipse cx="360" cy="296" rx="4" ry="6" transform="rotate(-10 360 296)"/>
+      <ellipse cx="400" cy="282" rx="4" ry="6" transform="rotate(15 400 282)"/>
+    </g>
+  </g>
+
+  <!-- 桃子 -->
+  <g>
+    <circle cx="500" cy="268" r="58" fill="url(#peach)"/>
+    <path d="M500 212c-6-11 0-20 9-24 4 9 0 18-9 24z" fill="#4D7145"/>
+    <path d="M500 268c-2-20 16-38 36-34" fill="none" stroke="#F7D3C0" stroke-width="4" opacity=".6"/>
+    <circle cx="570" cy="292" r="44" fill="url(#peach)"/>
+    <path d="M570 250c-4-9 0-16 8-18 2 8-2 14-8 18z" fill="#4D7145"/>
+  </g>
+
+  <!-- 芒果片 -->
+  <g>
+    <path d="M336 400c-32-18-38-54-12-74 28-22 66-8 72 24 4 28-24 46-60 50z" fill="url(#mango)"/>
+    <path d="M328 392c-18-14-20-38-4-50 18-14 42-4 46 14 4 16-14 28-42 36z" fill="#F2C05E"/>
+    <g stroke="#D98A2E" stroke-width="3" opacity=".55">
+      <path d="M324 352l38 18M340 340l26 30M352 330l14 22"/>
+    </g>
+  </g>
+
+  <!-- 葡萄 -->
+  <g>
+    <path d="M510 400c-8 30 16 56 50 58 34 2 60-20 58-48" fill="none" stroke="#4D7145" stroke-width="5"/>
+    <g fill="#7FA866">
+      <circle cx="526" cy="404" r="14"/><circle cx="552" cy="396" r="14"/><circle cx="578" cy="404" r="14"/>
+      <circle cx="536" cy="426" r="14"/><circle cx="562" cy="420" r="14"/><circle cx="588" cy="428" r="14"/>
+      <circle cx="548" cy="448" r="14"/><circle cx="574" cy="448" r="14"/>
+    </g>
+    <g fill="#B9D89A" opacity=".6">
+      <circle cx="522" cy="400" r="4"/><circle cx="548" cy="392" r="4"/><circle cx="574" cy="400" r="4"/>
+      <circle cx="532" cy="422" r="4"/><circle cx="558" cy="416" r="4"/><circle cx="584" cy="424" r="4"/>
+    </g>
+  </g>
+
+  <!-- 菠萝块 -->
+  <g transform="rotate(10 654 356)">
+    <path d="M620 340l68-34 30 66-72 28z" fill="#E8C94E"/>
+    <g stroke="#A9782E" stroke-width="3" opacity=".6">
+      <path d="M630 344l64 44M646 330l48 58M662 320l30 54"/>
+    </g>
+    <path d="M686 338c10-14 20-18 30-14-6 12-16 18-30 14z" fill="#4D7145"/>
+  </g>
+
+  <!-- 薄荷叶 -->
+  <g fill="#5E8B50">
+    <path d="M286 360c-2-20 16-32 30-22-2 16-14 24-30 22z"/>
+    <path d="M306 374c8-14 24-16 32-4-8 10-20 14-32 4z" fill="#7FA866"/>
+  </g>
+  </g>
+
+  <rect width="800" height="600" filter="url(#grain)" opacity=".14" style="mix-blend-mode:soft-light"/>
+  <rect width="800" height="600" fill="#2C3B44" opacity=".04"/>
+</svg>
+

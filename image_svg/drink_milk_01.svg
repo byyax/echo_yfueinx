@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">一杯牛奶</title>
+  <desc id="desc">木桌上放着一杯牛奶，旁边有两块饼干，清晨的光从左边照过来。</desc>
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5EAD6"/>
+      <stop offset="1" stop-color="#E4D3B9"/>
+    </linearGradient>
+    <linearGradient id="table" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8A6246"/>
+      <stop offset="1" stop-color="#5E3F2B"/>
+    </linearGradient>
+    <linearGradient id="milk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset=".75" stop-color="#F4EBDD"/>
+      <stop offset="1" stop-color="#DCCDB8"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFE6B0" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#FFE6B0" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#wall)"/>
+  <rect y="422" width="800" height="178" fill="url(#table)"/>
+  <path d="M0 422h800" stroke="#A87A56" stroke-width="4" opacity=".65"/>
+  <g stroke="#4A3021" stroke-width="2" opacity=".28">
+    <path d="M0 480H800M0 540H800M110 600L230 422M340 600L370 422M570 600L540 422M730 600L680 422"/>
+  </g>
+
+  <!-- 阴影和桌垫 -->
+  <ellipse cx="420" cy="516" rx="180" ry="34" fill="#2B1A10" opacity=".32" filter="url(#soft)"/>
+  <ellipse cx="420" cy="508" rx="158" ry="28" fill="#C9A57F" opacity=".35"/>
+
+  <!-- 牛奶杯 -->
+  <g>
+    <path d="M332 196h176l-14 286c-2 20-26 28-74 28s-72-8-74-28z" fill="#F7EBD8" opacity=".3"/>
+    <path d="M342 212h156l-11 266c-2 14-22 20-67 20s-65-6-67-20z" fill="url(#milk)"/>
+    <ellipse cx="420" cy="212" rx="78" ry="16" fill="#FFFFFF"/>
+    <ellipse cx="420" cy="212" rx="64" ry="11" fill="#F4EBDD"/>
+    <path d="M350 232c-4 84-2 172 4 238" fill="none" stroke="#FFFFFF" stroke-width="8" opacity=".7" stroke-linecap="round"/>
+    <path d="M492 238c4 80 2 160-4 220" fill="none" stroke="#D9CBB6" stroke-width="4" opacity=".5" stroke-linecap="round"/>
+    <path d="M342 212h156" stroke="#D9CBB6" stroke-width="3" opacity=".6"/>
+    <!-- 杯壁上的小气泡 -->
+    <g fill="#FFFFFF" opacity=".75">
+      <circle cx="368" cy="300" r="4"/><circle cx="386" cy="340" r="3"/><circle cx="358" cy="380" r="5"/>
+      <circle cx="472" cy="320" r="4"/><circle cx="480" cy="360" r="3"/>
+    </g>
+  </g>
+
+  <!-- 饼干盘 -->
+  <g>
+    <ellipse cx="650" cy="498" rx="92" ry="28" fill="#2B1A10" opacity=".25" filter="url(#soft)"/>
+    <ellipse cx="646" cy="490" rx="86" ry="24" fill="#E8DFC8"/>
+    <ellipse cx="646" cy="487" rx="68" ry="17" fill="#F7F1E4"/>
+    <g transform="rotate(-10 620 478)">
+      <circle cx="620" cy="478" r="32" fill="#C99A5E"/>
+      <circle cx="620" cy="478" r="26" fill="#E0B77A"/>
+      <g fill="#5A3A26" opacity=".8">
+        <circle cx="610" cy="468" r="3"/><circle cx="630" cy="472" r="3"/><circle cx="618" cy="488" r="3"/><circle cx="636" cy="490" r="2.5"/>
+      </g>
+    </g>
+    <g transform="rotate(12 674 486)">
+      <circle cx="674" cy="486" r="28" fill="#C99A5E"/>
+      <circle cx="674" cy="486" r="22" fill="#E0B77A"/>
+      <g fill="#5A3A26" opacity=".8">
+        <circle cx="666" cy="478" r="3"/><circle cx="684" cy="484" r="3"/><circle cx="670" cy="496" r="2.5"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- 桌布上的餐巾 -->
+  <g transform="rotate(6 202 500)">
+    <path d="M148 476h112l-10 60H136z" fill="#F3E7D1"/>
+    <path d="M158 486h86" stroke="#C9A57F" stroke-width="2" opacity=".5"/>
+  </g>
+
+  <!-- 光与颗粒 -->
+  <ellipse cx="230" cy="220" rx="240" ry="190" fill="url(#sun)" opacity=".55"/>
+  <path d="M0 240l240 40 160 320H0z" fill="#FFE4B8" opacity=".05"/>
+  <rect width="800" height="600" filter="url(#grain)" opacity=".14" style="mix-blend-mode:soft-light"/>
+  <rect width="800" height="600" fill="#3A2416" opacity=".05"/>
+</svg>

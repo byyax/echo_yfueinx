@@ -1,0 +1,126 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">傍晚的河边散步</title>
+  <desc id="desc">傍晚的河边步道，前面是石栏杆和河面，远处有桥和城市，一个人沿着步道往前走。</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E9B88E"/>
+      <stop offset=".55" stop-color="#F2C9A0"/>
+      <stop offset="1" stop-color="#F7DDB6"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#557C8C"/>
+      <stop offset="1" stop-color="#2E5364"/>
+    </linearGradient>
+    <linearGradient id="walk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C9C0AE"/>
+      <stop offset="1" stop-color="#8F8678"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFF4CE" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#FFE3A5" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".88" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".15"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#sky)"/>
+  <circle cx="650" cy="170" r="140" fill="url(#sun)" opacity=".8"/>
+  <circle cx="650" cy="170" r="30" fill="#FFF4CE" opacity=".8"/>
+
+  <!-- 对岸城市轮廓 -->
+  <g fill="#6E6E74" opacity=".85">
+    <rect x="0" y="248" width="54" height="72"/>
+    <rect x="62" y="226" width="38" height="94"/>
+    <rect x="108" y="256" width="60" height="64"/>
+    <rect x="176" y="234" width="34" height="86"/>
+    <rect x="218" y="260" width="48" height="60"/>
+    <rect x="470" y="242" width="42" height="78"/>
+    <rect x="520" y="220" width="52" height="100"/>
+    <rect x="580" y="250" width="38" height="70"/>
+    <rect x="626" y="232" width="58" height="88"/>
+    <rect x="694" y="256" width="42" height="64"/>
+  </g>
+  <g fill="#F2C078" opacity=".55">
+    <rect x="14" y="264" width="6" height="8"/><rect x="30" y="280" width="6" height="8"/>
+    <rect x="74" y="242" width="6" height="8"/><rect x="88" y="260" width="6" height="8"/>
+    <rect x="124" y="270" width="6" height="8"/><rect x="188" y="248" width="6" height="8"/>
+    <rect x="532" y="238" width="6" height="8"/><rect x="548" y="254" width="6" height="8"/>
+    <rect x="640" y="246" width="6" height="8"/><rect x="660" y="264" width="6" height="8"/>
+  </g>
+
+  <!-- 河面 -->
+  <path d="M0 306H800V336H0Z" fill="#B9AE9C"/>\n  <path d="M0 306H800" stroke="#E3D6C2" stroke-width="4" opacity=".6"/>\n  <path d="M0 336H800" stroke="#5E5A53" stroke-width="3" opacity=".4"/>\n  <rect y="336" width="800" height="132" fill="url(#water)"/>
+  <g stroke="#9FC2CB" stroke-width="2" opacity=".3">
+    <path d="M0 344h800M0 372h800M0 400h800M0 428h800M0 456h800"/>
+  </g>
+  <g fill="#F7DDB6" opacity=".25">
+    <ellipse cx="640" cy="360" rx="70" ry="5"/><ellipse cx="650" cy="386" rx="48" ry="4"/>
+    <ellipse cx="630" cy="412" rx="34" ry="3"/>
+  </g>
+
+  <!-- 远处的桥 -->
+  <g>
+    <path d="M60 330C180 260 300 258 420 330" fill="none" stroke="#7C5A48" stroke-width="10"/>
+    <path d="M60 330V360M420 330V360" stroke="#7C5A48" stroke-width="8"/>
+    <path d="M90 330v24M140 306v42M190 290v58M240 282v66M290 282v66M340 290v58M390 306v42" stroke="#7C5A48" stroke-width="4" opacity=".7"/>
+  </g>
+
+  <!-- 步道 -->
+  <path d="M0 468H800V600H0Z" fill="url(#walk)"/>
+  <g stroke="#6E665A" stroke-width="2" opacity=".35">
+    <path d="M0 510H800M0 552H800M120 468V600M300 468V600M480 468V600M660 468V600"/>
+  </g>
+
+  <!-- 石栏杆 -->
+  <g>
+    <path d="M0 448H800V468H0Z" fill="#B9AE9C"/>
+    <g fill="#A89C89">
+      <rect x="30" y="456" width="18" height="48" rx="3"/><rect x="120" y="456" width="18" height="48" rx="3"/>
+      <rect x="210" y="456" width="18" height="48" rx="3"/><rect x="300" y="456" width="18" height="48" rx="3"/>
+      <rect x="390" y="456" width="18" height="48" rx="3"/><rect x="480" y="456" width="18" height="48" rx="3"/>
+      <rect x="570" y="456" width="18" height="48" rx="3"/><rect x="660" y="456" width="18" height="48" rx="3"/>
+      <rect x="750" y="456" width="18" height="48" rx="3"/>
+    </g>
+    <path d="M0 448H800" stroke="#E3D6C2" stroke-width="4" opacity=".7"/>
+  </g>
+
+  <!-- 左侧树和路灯 -->
+  <g>
+    <path d="M72 600c0-92 8-164 20-228l24 4c-4 76-6 150-4 218z" fill="#4A3427"/>
+    <g>
+      <circle cx="34" cy="286" r="64" fill="#5E7F52"/>
+      <circle cx="102" cy="248" r="78" fill="#738F5C"/>
+      <circle cx="160" cy="300" r="54" fill="#55754C"/>
+      <circle cx="96" cy="332" r="62" fill="#688653"/>
+    </g>
+    <path d="M54 600c10-14 24-20 40-20l8 8c-16 2-30 6-42 12z" fill="#4A3427"/>\n    <path d="M98 600c8-12 18-18 30-20l6 8c-12 2-22 6-30 12z" fill="#4A3427"/>\n    <path d="M250 474V312" stroke="#3A332B" stroke-width="9" stroke-linecap="round"/>
+    <path d="M250 316c0-18 14-26 32-26h16" fill="none" stroke="#3A332B" stroke-width="7" stroke-linecap="round"/>
+    <path d="M282 290h34l-5 28h-24z" fill="#3A332B"/>
+    <path d="M288 293h22l-3 21h-16z" fill="#FFE4A2" opacity=".8"/>
+    <circle cx="300" cy="306" r="34" fill="#FFD98C" opacity=".16" filter="url(#soft)"/>
+  </g>
+
+  <!-- 长椅 -->
+  <g>
+    <path d="M600 516h126c7 0 12 5 12 12v24H588v-24c0-7 5-12 12-12z" fill="#7A5436"/>
+    <path d="M590 552h148v12H590z" fill="#5B3D27"/>
+    <path d="M604 564l-6 30M724 564l6 30" stroke="#2D2923" stroke-width="7" stroke-linecap="round"/>
+  </g>
+
+
+  <!-- 飞鸟和光 -->
+  <g fill="none" stroke="#4E5A66" stroke-width="2" opacity=".55">
+    <path d="M520 206c6-5 12-5 18 0M560 188c5-4 10-4 15 0M600 214c5-4 10-4 15 0"/>
+  </g>
+  <ellipse cx="650" cy="180" rx="220" ry="120" fill="#FFE0A0" opacity=".08" filter="url(#soft)"/>
+  <rect width="800" height="600" filter="url(#grain)" opacity=".15" style="mix-blend-mode:soft-light"/>
+  <rect width="800" height="600" fill="#3C2A20" opacity=".05"/>
+</svg>
+
+

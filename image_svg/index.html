@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>照片插画样例 · v14</title>
+<style>
+  :root {
+    --bg: #f1eee6;
+    --panel: #fffdf8;
+    --panel-2: #f7f3ea;
+    --ink: #2a2e27;
+    --muted: #777c70;
+    --line: #e2ddd1;
+    --accent: #7d8c49;
+    --accent-soft: #e8edda;
+    --shadow: 0 18px 50px rgba(64, 58, 44, .12);
+    --shadow-sm: 0 8px 22px rgba(64, 58, 44, .09);
+  }
+  [data-theme="dark"] {
+    --bg: #14181a;
+    --panel: #1d2224;
+    --panel-2: #242a2c;
+    --ink: #edf0e8;
+    --muted: #9aa19a;
+    --line: #30383a;
+    --accent: #b9c77a;
+    --accent-soft: #2d3824;
+    --shadow: 0 18px 50px rgba(0, 0, 0, .38);
+    --shadow-sm: 0 8px 22px rgba(0, 0, 0, .25);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 12% 0%, rgba(183, 199, 122, .18), transparent 30rem),
+      radial-gradient(circle at 92% 8%, rgba(237, 198, 150, .18), transparent 32rem),
+      var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    transition: background .3s ease, color .3s ease;
+  }
+  a { color: inherit; }
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between; gap: 18px;
+    padding: 14px clamp(16px, 4vw, 54px);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  }
+  .brand { font-size: 12px; font-weight: 800; letter-spacing: .22em; color: var(--accent); white-space: nowrap; }
+  .top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .seg { display: flex; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
+  .seg button {
+    border: 0; border-radius: 999px; background: transparent; color: var(--muted);
+    padding: 8px 13px; font: inherit; font-size: 12px; cursor: pointer;
+  }
+  .seg button.active { background: var(--accent); color: #fff; box-shadow: 0 3px 10px rgba(70, 86, 37, .2); }
+  .ghost-btn, .home-link {
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1px solid var(--line); border-radius: 999px; background: var(--panel);
+    color: var(--ink); text-decoration: none; font: inherit; font-size: 12px;
+    padding: 9px 14px; cursor: pointer;
+  }
+  .ghost-btn:hover, .home-link:hover { border-color: var(--accent); color: var(--accent); }
+  main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 70px; }
+  .hero { max-width: 760px; padding: 18px 4px 30px; }
+  .eyebrow { margin: 0 0 12px; font-size: 11px; font-weight: 800; letter-spacing: .22em; color: var(--accent); }
+  h1 { margin: 0 0 16px; font-size: clamp(34px, 6vw, 58px); line-height: 1.04; letter-spacing: -.035em; font-weight: 820; }
+  .lede { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.85; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .chip { padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--muted); font-size: 12px; }
+  .chip strong { color: var(--ink); font-weight: 700; }
+
+  .demo-wrap { margin: 10px 0 48px; }
+  .demo-label { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: var(--muted); font-size: 12px; }
+  .demo-label::before { content: ""; width: 28px; height: 1px; background: var(--accent); opacity: .65; }
+  .demo {
+    position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 28px;
+    padding: 28px clamp(16px, 4vw, 40px); background:
+      radial-gradient(circle at 80% 10%, rgba(255,255,255,.24), transparent 28rem),
+      linear-gradient(135deg, #e9e4d7, #ddd5c1);
+    box-shadow: var(--shadow-sm);
+  }
+  [data-theme="dark"] .demo { background: linear-gradient(135deg, #242b2d, #1b2224); }
+  .demo::before {
+    content: ""; position: absolute; inset: 0; opacity: .42; pointer-events: none;
+    background-image: radial-gradient(rgba(99, 89, 66, .16) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+  .demo-row { position: relative; display: flex; gap: 10px; align-items: flex-end; max-width: 430px; }
+  .avatar {
+    width: 38px; height: 38px; flex: 0 0 38px; border-radius: 12px; overflow: hidden;
+    display: grid; place-items: center; background: #dfe5d0; box-shadow: var(--shadow-sm);
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .demo-stack { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+  .demo-bubble {
+    width: min(280px, 64vw); border-radius: 20px; overflow: hidden; background: var(--panel);
+    box-shadow: 0 12px 30px rgba(49, 43, 32, .2);
+  }
+  .demo-bubble img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+  .demo-bubble .demo-cap {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    padding: 9px 12px; font-size: 12px; color: var(--muted);
+  }
+  .demo-bubble .demo-cap b { color: var(--ink); font-weight: 650; }
+  .demo-time { font-size: 10px; color: var(--muted); opacity: .85; }
+
+  .filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 22px; }
+  .filters button {
+    border: 1px solid var(--line); border-radius: 999px; background: var(--panel);
+    color: var(--muted); padding: 9px 14px; font: inherit; font-size: 12px; cursor: pointer;
+  }
+  .filters button.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 650; }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(18px, 3vw, 30px); }
+  .shot {
+    margin: 0; min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 26px;
+    background: var(--panel); box-shadow: var(--shadow-sm);
+    transition: transform .3s ease, box-shadow .3s ease;
+  }
+  .shot:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+  .shot-media { position: relative; overflow: hidden; border-radius: 18px; background: var(--panel-2); aspect-ratio: 4 / 3; }
+  .shot-media img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .55s cubic-bezier(.2,.7,.2,1); }
+  .shot:hover .shot-media img { transform: scale(1.025); }
+  .shot-overlay {
+    position: absolute; inset: auto 0 0; padding: 42px 14px 12px;
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+    color: #fff; background: linear-gradient(180deg, transparent, rgba(12, 14, 12, .66));
+    transition: opacity .2s ease;
+  }
+  .shot-overlay .place { font-size: 12px; font-weight: 650; letter-spacing: .02em; }
+  .shot-overlay .time { font-size: 10px; opacity: .78; white-space: nowrap; }
+  body.plain .shot-overlay { opacity: 0; }
+  body.plain .shot-media { border-radius: 14px; }
+  figcaption { padding: 13px 4px 4px; }
+  .shot-head { display: flex; align-items: center; gap: 8px; }
+  .tag { padding: 4px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 10px; font-weight: 700; letter-spacing: .04em; }
+  .shot h2 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+  .shot p { margin: 7px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+  .shot a { display: inline-flex; margin-top: 10px; color: var(--accent); font-size: 11px; text-decoration: none; }
+  .shot a:hover { text-decoration: underline; }
+
+  .foot {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
+    margin-top: 50px; padding-top: 22px; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 12px; line-height: 1.7;
+  }
+  .foot b { color: var(--ink); }
+  .foot a { color: var(--accent); }
+
+  @media (max-width: 760px) {
+    .topbar { align-items: flex-start; flex-direction: column; gap: 9px; padding: 11px 12px; }
+    .top-actions { width: 100%; justify-content: flex-start; gap: 6px; flex-wrap: nowrap; }
+    .seg { flex: 1 1 auto; min-width: 0; }
+    .seg button { flex: 1; padding: 7px 8px; font-size: 11px; white-space: nowrap; }
+    .ghost-btn, .home-link { flex: 0 0 auto; padding: 8px 9px; font-size: 11px; white-space: nowrap; }
+    main { width: calc(100% - 24px); padding-top: 30px; }
+    .grid { grid-template-columns: 1fr; }
+    .shot { padding: 9px; border-radius: 22px; }
+    .demo { padding: 20px 14px; border-radius: 22px; }
+    .demo-row { max-width: 100%; }
+    .demo-bubble { width: min(250px, 64vw); }
+    .foot { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">ECHO · PHOTO SAMPLES</div>
+    <div class="top-actions">
+      <div class="seg" aria-label="预览模式">
+        <button type="button" data-view="card" class="active">聊天卡片</button>
+        <button type="button" data-view="plain">纯插画</button>
+      </div>
+      <button type="button" class="ghost-btn" id="themeBtn">深色预览</button>
+      <a class="home-link" href="../index.html">← 返回聊天</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">V14 · VISUAL TEST</p>
+      <h1>照片插画样例</h1>
+      <p class="lede">4:3 固定 SVG 插画，给“他发来一张照片”做视觉测试。图片本身不含文字，地点、时间和说明由聊天卡片叠加，所以同一张图可以重复使用。</p>
+      <div class="chips">
+        <span class="chip"><strong>10</strong> 张样例</span>
+        <span class="chip">洗澡 · 健身</span>
+        <span class="chip">吃饭 · 4 种</span>
+        <span class="chip">风景 · 4 种</span>
+        <span class="chip">SVG · 可无损缩放</span>
+      </div>
+    </section>
+
+    <section class="demo-wrap" aria-label="聊天中的样子">
+      <div class="demo-label">聊天里的样子</div>
+      <div class="demo">
+        <div class="demo-row">
+          <div class="avatar"><img src="../icons/icon-heart-192.png" alt="对方头像"></div>
+          <div class="demo-stack">
+            <div class="demo-bubble">
+              <img src="bath_01.svg" alt="浴室泡泡浴示例">
+              <div class="demo-cap"><b>刚洗完，今天好累</b><span>19:20</span></div>
+            </div>
+            <span class="demo-time">浴室 · 傍晚</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="filters" aria-label="分类筛选">
+      <button type="button" class="active" data-filter="all">全部</button>
+      <button type="button" data-filter="bath">洗澡</button>
+      <button type="button" data-filter="gym">健身</button>
+      <button type="button" data-filter="food">吃饭</button>
+      <button type="button" data-filter="scenery">风景</button>
+    </nav>
+
+    <section class="grid" id="grid">
+      <figure class="shot" data-cat="bath">
+        <div class="shot-media">
+          <img src="bath_01.svg" loading="lazy" alt="傍晚浴室泡泡浴插画">
+          <div class="shot-overlay"><span class="place">浴室 · 傍晚</span><span class="time">19:20</span></div>
+        </div>
+        <figcaption>
+          <div class="shot-head"><span class="tag">洗澡 · 傍晚</span><h2>百叶窗和泡泡浴</h2></div>
+          <p>晚霞百叶窗、壁架、盆栽、蜡烛、两瓶沐浴露和长方形防滑垫。浴缸改为薄边，并加了弧形出水口；没有花洒。</p>
+          <a href="bath_01.svg" target="_blank" rel="noopener">查看原图 ↗</a>
+        </figcaption>
+      </figure>
+
+      <figure class="shot" data-cat="gym">
+        <div class="shot-media">
+          <img src="gym_01.svg" loading="lazy" alt="健身房哑铃和水壶插画">
+          <div class="shot-overlay"><span class="place">健身房</span><span class="time">19:12</span></div>
+        </div>
+        <figcaption>
+          <div class="shot-head"><span class="tag">健身</span><h2>哑铃和 1L 水壶</h2></div>
+          <p>深色橡胶地面、训练凳、毛巾和傍晚窗光。水壶上保留了 1L 标记，方便一眼看懂。</p>
+          <a href="gym_01.svg" target="_blank" rel="noopener">查看原图 ↗</a>
+        </figcaption>
+      </figure>
+
+      <figure class="shot" data-cat="food">
+        <div class="shot-media">
+          <img src="food_snack_01.svg" loading="lazy" alt="夜市章鱼小丸子插画">
+          <div class="shot-overlay"><span class="place">夜市</span><span class="time">21:08</span></div>
+        </div>
+        <figcaption>
+          <div class="shot-head"><span class="tag">吃饭</span><h2>小吃 · 章鱼小丸子</h2></div>
+          <p>暖色夜市灯、纸托、酱汁和木鱼花。适合“路过买点吃的”这种很轻的场景。</p>
+          <a href="food_snack_01.svg" target="_blank" rel="noopener">查看原图 ↗</a>
+        </figcaption>
+      </figure>
+
+      <figure class="shot" data-cat="food">
+        <div class="shot-media">
+          <img src="food_formal_01.svg" loading="lazy" alt="正式晚餐意面和红酒插画">
+          <div class="shot-overlay"><span class="place">西餐厅</span><span class="time">19:30</span></div>
+        </div>
+        <figcaption>
+          <div class="shot-head"><span class="tag">吃饭</span><h2>正式晚餐 · 意面</h2></div>
+          <p>白桌布、意面、红酒、刀叉和蜡烛。适合约会、纪念日或“今天吃得正式一点”。</p>
+          <a href="food_formal_01.svg" target="_blank" rel="noopener">查看原图 ↗</a>
+        </figcaption>
+      </figure>
+
+      <figure class="shot" data-cat="food">
+        <div class="shot-media">
+          <img src="food_feast_01.svg" loading="lazy" alt="火锅大餐插画">
+          <div class="shot-overlay"><span class="place">家里</span><span class="time">18:45</span></div>
+        </div>
+        <figcaption>
+          <div class="shot-head"><span class="tag">吃饭</span><h2>大餐 · 鸳鸯火锅</h2></div>
+          <p>俯视圆桌构图，中间是鸳鸯锅，周围摆满肉片、蔬菜、蘑菇、饺子和蘸料。</p>
+          <a href="food_feast_01.svg" target="_blank" rel="noopener">查看原图 ↗</a>
+        </figcaption>
+      </figure>
+
+      <figure class="shot" data-cat="food">
+        <div class="shot-media">
+          <img src="food_simple_01.svg" loading="lazy" alt="深夜泡面插画">
+          <div class="shot-overlay"><span class="place">厨房</span><span class="time">23:16</span></div>
+        </div>
+        <figcaption>
+          <div class="shot-head"><span class="tag">吃饭</span><h2>随便应付 · 泡面加蛋</h2></div>
+          <p>深夜厨房、一碗泡面、一个蛋和一杯热水。适合“今天太累了，随便吃点”。</p>
+          <a href="food_simple_01.svg" target="_blank" rel="noopener">查看原图 ↗</a>
+        </figcaption>
+      </figure>
+
+      <figure class="shot" data-cat="scenery">
+        <div class="shot-media">
+          <img src="scenery_sunset_01.svg" loading="lazy" alt="天台晚霞插画">
+          <div class="shot-overlay"><span class="place">天台</span><span class="time">18:22</span></div>
+        </div>
+        <figcaption>
+          <div class="shot-head"><span class="tag">风景</span><h2>晚霞 · 天台</h2></div>
+          <p>橙粉色天空、城市剪影和前景栏杆。栏杆把画面压住，更像站在天台拿手机拍的。</p>
+          <a href="scenery_sunset_01.svg" target="_blank" rel="noopener">查看原图 ↗</a>
+        </figcaption>
+      </figure>
+
+      <figure class="shot" data-cat="scenery">
+        <div class="shot-media">
+          <img src="scenery_night_01.svg" loading="lazy" alt="城市夜景插画">
+          <div class="shot-overlay"><span class="place">城市</span><span class="time">21:40</span></div>
+        </div>
+        <figcaption>
+          <div class="shot-head"><span class="tag">风景</span><h2>城市夜景</h2></div>
+          <p>深蓝夜空、月亮、楼群窗灯和江面倒影。前景栏杆和远处灯光拉开层次。</p>
+          <a href="scenery_night_01.svg" target="_blank" rel="noopener">查看原图 ↗</a>
+        </figcaption>
+      </figure>
+
+      <figure class="shot" data-cat="scenery">
+        <div class="shot-media">
+          <img src="scenery_sky_01.svg" loading="lazy" alt="蓝天白云插画">
+          <div class="shot-overlay"><span class="place">路边</span><span class="time">15:06</span></div>
+        </div>
+        <figcaption>
+          <div class="shot-head"><span class="tag">风景</span><h2>天空 · 大朵白云</h2></div>
+          <p>午后蓝天、积云、飞机云和飞鸟。底部只留一点屋顶和树，让画面保持开阔。</p>
+          <a href="scenery_sky_01.svg" target="_blank" rel="noopener">查看原图 ↗</a>
+        </figcaption>
+      </figure>
+
+      <figure class="shot" data-cat="scenery">
+        <div class="shot-media">
+          <img src="scenery_walk_01.svg" loading="lazy" alt="公园小路散步插画">
+          <div class="shot-overlay"><span class="place">公园</span><span class="time">17:48</span></div>
+        </div>
+        <figcaption>
+          <div class="shot-head"><span class="tag">风景</span><h2>散步 · 公园小路</h2></div>
+          <p>金色阳光、树影、长椅和路灯。小路向前收窄，适合“下班后走一走”的场景。</p>
+          <a href="scenery_walk_01.svg" target="_blank" rel="noopener">查看原图 ↗</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <footer class="foot">
+      <div><b>这只是视觉样例，还没有接入聊天。</b><br>目前都是 4:3、800 × 600 的 SVG，后续可加相机/截图/分享外框。</div>
+      <div><a href="../index.html">返回聊天</a> · <a href="制作说明.md">制作说明</a> · <a href="_template.svg" target="_blank" rel="noopener">空白模板</a></div>
+    </footer>
+  </main>
+
+<script>
+  const body = document.body;
+  const viewButtons = document.querySelectorAll('[data-view]');
+  viewButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      viewButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      body.classList.toggle('plain', btn.dataset.view === 'plain');
+    });
+  });
+
+  const themeBtn = document.getElementById('themeBtn');
+  themeBtn.addEventListener('click', () => {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (dark) document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', 'dark');
+    themeBtn.textContent = dark ? '深色预览' : '浅色预览';
+  });
+
+  const filterButtons = document.querySelectorAll('[data-filter]');
+  const shots = document.querySelectorAll('.shot');
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+      shots.forEach(shot => {
+        shot.style.display = (filter === 'all' || shot.dataset.cat === filter) ? '' : 'none';
+      });
+    });
+  });
+</script>
+</body>
+</html>

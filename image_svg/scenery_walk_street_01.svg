@@ -1,0 +1,109 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-labelledby="title desc">
+  <title id="title">傍晚的街道散步</title>
+  <desc id="desc">傍晚的城市街道，人行道前面是马路和亮着灯的小店，路灯刚亮，一个人沿着人行道往前走。</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#53647E"/>
+      <stop offset=".55" stop-color="#8C7D89"/>
+      <stop offset="1" stop-color="#E2A47E"/>
+    </linearGradient>
+    <linearGradient id="road" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3B4148"/>
+      <stop offset="1" stop-color="#22272C"/>
+    </linearGradient>
+    <linearGradient id="walk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9A49A"/>
+      <stop offset="1" stop-color="#74726C"/>
+    </linearGradient>
+    <linearGradient id="window" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE2A2"/>
+      <stop offset="1" stop-color="#E8A965"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".88" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".15"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#sky)"/>
+  <circle cx="660" cy="210" r="160" fill="#FFE0A0" opacity=".14" filter="url(#soft)"/>
+
+  <!-- 街对面的楼和店 -->
+  <g>
+    <rect x="0" y="120" width="170" height="220" fill="#4A4E55"/>
+    <rect x="170" y="96" width="150" height="244" fill="#565B62"/>
+    <rect x="320" y="132" width="140" height="208" fill="#42474E"/>
+    <rect x="460" y="108" width="170" height="232" fill="#50555C"/>
+    <rect x="630" y="126" width="170" height="214" fill="#454A51"/>
+    <g fill="#F2C078" opacity=".55">
+      <rect x="20" y="150" width="24" height="30"/><rect x="62" y="150" width="24" height="30"/><rect x="104" y="150" width="24" height="30"/>
+      <rect x="190" y="130" width="28" height="34"/><rect x="236" y="130" width="28" height="34"/><rect x="282" y="130" width="28" height="34"/>
+      <rect x="342" y="160" width="24" height="28"/><rect x="384" y="160" width="24" height="28"/>
+      <rect x="486" y="140" width="30" height="34"/><rect x="536" y="140" width="30" height="34"/><rect x="586" y="140" width="30" height="34"/>
+      <rect x="654" y="154" width="26" height="30"/><rect x="704" y="154" width="26" height="30"/><rect x="754" y="154" width="26" height="30"/>
+    </g>
+    <!-- 店铺遮阳篷和门口 -->
+    <g>
+      <rect x="188" y="230" width="118" height="16" fill="#A54835"/>
+      <path d="M188 246h118l-10 116H198z" fill="#2E3339"/>
+      <rect x="204" y="258" width="86" height="70" fill="url(#window)" opacity=".8"/>
+      <rect x="470" y="236" width="146" height="16" fill="#3F6F5A"/>
+      <path d="M470 252h146l-12 120H482z" fill="#2A2F35"/>
+      <rect x="488" y="266" width="108" height="76" fill="url(#window)" opacity=".72"/>
+      <rect x="656" y="244" width="118" height="14" fill="#C99A4E"/>
+      <rect x="662" y="258" width="106" height="72" fill="#2F343A"/>
+      <rect x="674" y="272" width="82" height="46" fill="url(#window)" opacity=".55"/>
+    </g>
+  </g>
+
+  <!-- 对面人行道 -->\n  <path d="M0 326H800V352H0Z" fill="#A9A49A"/>\n  <path d="M0 326H800" stroke="#D9D3C8" stroke-width="3" opacity=".6"/>\n\n  <!-- 马路 -->
+  <path d="M0 344H800V462H0Z" fill="url(#road)"/>
+  <g stroke="#D9CEB8" stroke-width="6" opacity=".55">
+    <path d="M40 418h80M164 418h80M288 418h80M412 418h80M536 418h80M660 418h80"/>
+  </g>
+
+  <!-- 斑马线：往近处逐渐变宽的梯形横条 -->\n  <g fill="#E8DFC8" opacity=".8">\n    <path d="M500 384H730L738 394H492Z"/>\n    <path d="M488 400H742L752 411H478Z"/>\n    <path d="M476 417H754L766 428H464Z"/>\n    <path d="M464 434H766L780 445H450Z"/>\n  </g>\n\n  <!-- 人行道 -->
+  <path d="M0 462H800V600H0Z" fill="url(#walk)"/>
+  <g stroke="#5D5B56" stroke-width="2" opacity=".35">
+    <path d="M0 505H800M0 550H800M110 462V600M260 462V600M410 462V600M560 462V600M710 462V600"/>
+  </g>
+  <path d="M0 462H800" stroke="#D9D3C8" stroke-width="4" opacity=".65"/>
+
+  <!-- 路灯 -->
+  <g>
+    <path d="M120 470V250" stroke="#2C3035" stroke-width="9" stroke-linecap="round"/>
+    <path d="M120 254c0-20 14-28 34-28h18" fill="none" stroke="#2C3035" stroke-width="7" stroke-linecap="round"/>
+    <path d="M156 226h38l-6 32h-26z" fill="#2C3035"/>
+    <path d="M162 229h26l-4 24h-18z" fill="#FFE4A2" opacity=".85"/>
+    <circle cx="176" cy="244" r="36" fill="#FFD98C" opacity=".18" filter="url(#soft)"/>
+    <path d="M690 470V250" stroke="#2C3035" stroke-width="9" stroke-linecap="round"/>
+    <path d="M690 254c0-20 14-28 34-28h18" fill="none" stroke="#2C3035" stroke-width="7" stroke-linecap="round"/>
+    <path d="M726 226h38l-6 32h-26z" fill="#2C3035"/>
+    <path d="M732 229h26l-4 24h-18z" fill="#FFE4A2" opacity=".85"/>
+    <circle cx="746" cy="244" r="36" fill="#FFD98C" opacity=".18" filter="url(#soft)"/>
+  </g>
+
+  <!-- 红绿灯 -->
+  <g>
+    <path d="M570 452V350" stroke="#2C3035" stroke-width="7" stroke-linecap="round"/>
+    <rect x="554" y="310" width="32" height="60" rx="6" fill="#2C3035"/>
+    <circle cx="570" cy="326" r="7" fill="#E05A46"/>
+    <circle cx="570" cy="344" r="7" fill="#D9A94E" opacity=".45"/>
+    <circle cx="570" cy="360" r="7" fill="#7DDF8C" opacity=".35"/>
+  </g>
+
+
+  <!-- 地面反光和空气 -->
+  <g fill="#FFD98C" opacity=".08" filter="url(#soft)">
+    <ellipse cx="176" cy="510" rx="50" ry="16"/><ellipse cx="628" cy="510" rx="50" ry="16"/>
+    <ellipse cx="404" cy="390" rx="230" ry="30"/>
+  </g>
+  <rect width="800" height="600" filter="url(#grain)" opacity=".15" style="mix-blend-mode:soft-light"/>
+  <rect width="800" height="600" fill="#1E2630" opacity=".06"/>
+</svg>
+
+
