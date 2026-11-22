@@ -120,6 +120,51 @@ button:active, .icon-btn:active, .text-btn:active { transform: scale(0.92) !impo
 }
 .bubble.img-bubble { padding: 0; background: transparent; box-shadow: none; }
 .bubble.img-bubble img { max-width: 120px; max-height: 120px; display: block; border-radius: 12px; object-fit: cover; }
+/* 内置图片卡：4:3 的图 + 图下一句配文 */
+.bubble.img-bubble .img-card.has-caption {
+  width: min(64vw, 200px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.bubble.img-bubble .img-card.has-caption img {
+  width: 100%;
+  max-width: none;
+  height: auto;
+  max-height: none;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  cursor: zoom-in;
+}
+.img-caption {
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border-radius: 14px;
+  border-top-left-radius: 4px;
+  background: var(--bubble-other);
+  color: var(--bubble-other-text, var(--bubble-text, #111));
+  font-size: 14px;
+  line-height: 1.5;
+  box-shadow: var(--shadow-sm);
+  word-break: break-word;
+}
+.row.me .img-card.has-caption { align-items: flex-end; }
+.row.me .img-caption {
+  border-top-left-radius: 14px;
+  border-top-right-radius: 4px;
+  background: var(--bubble-me);
+  color: var(--bubble-me-text, var(--bubble-text, #111));
+}
+[data-theme="dark"] .img-caption {
+  background-color: color-mix(in srgb, var(--palette-main, #8A9A5B) 26%, #1e1e1e);
+  color: #e5e7eb;
+}
+[data-theme="dark"] .row.me .img-caption {
+  background-color: color-mix(in srgb, var(--palette-main, #8A9A5B) 12%, #2c2c2c);
+  color: #e5e7eb;
+}
 .bubble-time { font-size: 10px; color: #999; margin-top: 4px; }
 .read-status { margin-left: 6px; color: #8a9299; }
 .read-status.unread { color: var(--primary-dark, #6B8E23); font-weight: 600; }

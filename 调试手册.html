@@ -54,7 +54,7 @@
   </style>
 </head>
 <body>
-<div class="wrap"><nav class="toc"><strong>目录</strong><a href="#sec-1">1. 打开控制台</a><a href="#sec-2">2. 让对方发消息</a><a href="#sec-3">3. 测试 2G</a><a href="#sec-4">4. 测试离线</a><a href="#sec-5">5. 测试正在输入</a><a href="#sec-6">6. 让对方随机回复</a><a href="#sec-7">7. 测试个性签名</a><a href="#sec-8">8. 测试情绪</a><a href="#sec-9">9. 建议的检查顺序</a><a href="#sec-10">10. 注意事项</a></nav><h1>Echo Yfueinx 调试手册</h1>
+<div class="wrap"><nav class="toc"><strong>目录</strong><a href="#sec-1">1. 打开控制台</a><a href="#sec-2">2. 让对方发消息</a><a href="#sec-3">3. 测试 2G</a><a href="#sec-4">4. 测试离线</a><a href="#sec-5">5. 测试正在输入</a><a href="#sec-6">6. 让对方随机回复</a><a href="#sec-7">7. 测试内置图片卡</a><a href="#sec-8">8. 测试个性签名</a><a href="#sec-9">9. 测试情绪</a><a href="#sec-10">10. 建议的检查顺序</a><a href="#sec-11">11. 注意事项</a></nav><h1>Echo Yfueinx 调试手册</h1>
 <blockquote>
 <p>这些命令只在电脑浏览器控制台里使用。测试消息会真的写进聊天记录，建议先导出备份，测完长按删除。</p>
 </blockquote>
@@ -136,7 +136,27 @@ echoDebug.typing(false)
 <pre><code class="language-js">echoDebug.reply()
 </code></pre>
 <p>会走一次正常的随机回复，可能抽到字卡、礼物、音乐或拍一拍。</p>
-<h2 id="sec-7">7. 测试个性签名</h2>
+<h2 id="sec-7">7. 测试内置图片卡</h2>
+<pre><code class="language-js">echoDebug.image()                 // 按当前时间、当前月份随机发一张
+echoDebug.image(22)               // 模拟晚上 22 点
+echoDebug.image(7, 11)            // 模拟早上 7 点、11 月
+echoDebug.imageFile('bath_06_night.svg')
+echoDebug.images()
+echoDebug.captions('bath_06_night.svg')
+</code></pre>
+<ul>
+<li><code>image(小时, 月份)</code>：按指定小时和月份抽一张符合条件的图片，并直接发送；小时用 0～23，月份用 1～12，不填就用当前本地时间；</li>
+<li><code>image()</code> 会绕过 8 分钟冷却，方便连续看效果；</li>
+<li><code>imageFile('文件名')</code>：不管时段，强制发指定图片；可以在第二个参数传一句自定义配文，例如 <code>echoDebug.imageFile('bath_06_night.svg', '测试配文')</code>；</li>
+<li><code>images()</code>：在控制台表格里列出所有内置图片、分类、时段权重和配文数量；</li>
+<li><code>captions('文件名')</code>：列出这张图的全部配文。</li>
+</ul>
+<p>建议对比：</p>
+<pre><code class="language-js">echoDebug.image(12)   // 白天，不应该出现夜景和夜晚浴室
+echoDebug.image(22)   // 晚上，不应该出现白天浴室和晚霞
+</code></pre>
+<p>这些消息也是真实聊天记录，测完长按删除。</p>
+<h2 id="sec-8">8. 测试个性签名</h2>
 <pre><code class="language-js">echoDebug.signature('测试签名')
 echoDebug.randomSignature()
 echoDebug.signatureList()
@@ -147,7 +167,7 @@ echoDebug.signatureList()
 <li><code>signatureList()</code>：在控制台列出签名库和当前签名。</li>
 </ul>
 <p>如果正在播放音乐、签名栏显示歌词，新签名会先记下来，等音乐停止后再显示。也可以用来测试长签名：换成 30～40 个字，检查是否先缩字、再左右滚动。</p>
-<h2 id="sec-8">8. 测试情绪</h2>
+<h2 id="sec-9">9. 测试情绪</h2>
 <pre><code class="language-js">debugMoodSwitch('sad')
 debugMoodSwitch('jealous')
 debugMoodSwitch('clingy')
@@ -158,16 +178,17 @@ debugLateNightMood()
 </code></pre>
 <p>常用情绪：</p>
 <p><code>calm</code>、<code>happy</code>、<code>excited</code>、<code>intimate</code>、<code>jealous</code>、<code>irritated</code>、<code>sad</code>、<code>anxious</code>、<code>anxiety</code>、<code>restrained</code>、<code>waiting</code>、<code>sleepy</code>、<code>clingy</code>、<code>playful</code>、<code>proud</code>、<code>thoughtful</code>。</p>
-<h2 id="sec-9">9. 建议的检查顺序</h2>
+<h2 id="sec-10">10. 建议的检查顺序</h2>
 <ol>
 <li>普通文字、礼物、红包、互动、位置、歌曲、选择卡各发一次；</li>
 <li>点开卡片，检查是否变成「已领取 / 已拆开 / 已接受 / 已播放」；</li>
 <li>切 2G，发几条消息，检查慢网提示、慢网短句和恢复补话；</li>
 <li>切离线，发消息，检查 3 秒自动回复和离线回来；</li>
+<li>用 <code>echoDebug.image(12)</code> 和 <code>echoDebug.image(22)</code> 检查白天/夜晚图片卡和配文；</li>
 <li>检查情绪气泡是否出现、换色、升档；</li>
 <li>刷新页面，确认刚才的测试消息还在。</li>
 </ol>
-<h2 id="sec-10">10. 注意事项</h2>
+<h2 id="sec-11">11. 注意事项</h2>
 <ul>
 <li>手机浏览器一般没有控制台，请在电脑上测；</li>
 <li>命令报 <code>undefined</code> 或找不到 <code>echoDebug</code>，先强制刷新页面（<code>Ctrl + F5</code>）；</li>

@@ -89,7 +89,7 @@
 <p>就是普通网页：<code>index.html</code> 引入 CSS 和一堆 <code>.js</code>，浏览器直接执行。所有 js <strong>共享同一个全局作用域</strong>：<code>data.js</code> 里定义的 <code>saveAllData()</code>，<code>chat_core.js</code> 可以直接调用。</p>
 <h3>2. 加载顺序很重要</h3>
 <p><code>index.html</code> 底部按顺序加载：</p>
-<pre><code>data.js → chat_sound.js → chat_core.js → ... → mood_pools.js → chat_mood.js → router.js → custom_icons.js → pwa.js</code></pre>
+<pre><code>data.js → chat_sound.js → chat_images.js → chat_core.js → ... → mood_pools.js → chat_mood.js → router.js → custom_icons.js → pwa.js</code></pre>
 <ul>
 <li><code>data.js</code> 必须最先，因为它定义 <code>chatSettings</code>、<code>chatHistory</code>、<code>PALETTES</code>；</li>
 <li><code>router.js</code> 靠后，负责初始化渲染；</li>
@@ -129,7 +129,7 @@
 <li>3% 分享/邀请听歌（分享约 1.95%、邀请约 1.05%；8 分钟内有音乐事件时跳过）；</li>
 <li>5% 礼物/红包/转账；</li>
 <li>20% 引用你的话；</li>
-<li>12% 回图片；</li>
+<li>12% 回图片（有上传图库或内置 SVG 可用时；内置 SVG 再占其中约 25%）；</li>
 <li>否则从字卡随机抽一条文字；</li>
 <li>30% 再附带一个 Emoji。</li>
 </ol>
@@ -170,7 +170,7 @@
 </ol>
 <hr>
 <h2>三、文件结构</h2>
-<table><thead><tr><th>文件</th><th>负责</th></tr></thead><tbody><tr><td><code>index.html</code></td><td>页面骨架、弹窗、启动画面、脚本顺序</td></tr><tr><td><code>style.css</code></td><td>全部样式、35 套配色、动画</td></tr><tr><td><code>data.js</code></td><td>全局数据、默认设置、配色表、通用函数</td></tr><tr><td><code>history_store.js</code></td><td>聊天记录 IndexedDB 主存储、v13 迁移、启动就绪信号</td></tr><tr><td><code>chat_core.js</code></td><td>画气泡、发消息、随机回复、拍一拍、引用</td></tr><tr><td><code>chat_stickers.js</code></td><td>表情面板</td></tr><tr><td><code>chat_tools.js</code></td><td>图片、拍照、位置、互动、录音</td></tr><tr><td><code>chat_call.js</code></td><td>语音通话、来电、小窗、通话心情</td></tr><tr><td><code>chat_money.js</code></td><td>红包、转账、支付密码、礼物商城</td></tr><tr><td><code>manage_cards.js</code></td><td>字卡库、标签、批量、查重、文字字卡导入</td></tr><tr><td><code>manage_settings.js</code></td><td>聊天设置、配色选择、头像裁剪</td></tr><tr><td><code>manage_history.js</code></td><td>聊天记录页、字卡统计</td></tr><tr><td><code>manage_data.js</code></td><td>导出、导入、清理</td></tr><tr><td><code>manage_music.js</code></td><td>音乐管理页</td></tr><tr><td><code>music_lyrics.js</code></td><td>内置歌词</td></tr><tr><td><code>chat_music.js</code></td><td>播放器、歌单、歌词同步、导入</td></tr><tr><td><code>mood_pools.js</code></td><td>16 档情绪数据、通用补充、基础权重、emoji、动画映射</td></tr><tr><td><code>chat_mood.js</code></td><td>情绪抽签、权重衰减、事件、渲染</td></tr><tr><td><code>router.js</code></td><td>页面切换、配色、状态栏、初始化</td></tr><tr><td><code>custom_icons.js</code></td><td>把 emoji 图标换成图片</td></tr><tr><td><code>pwa.js</code> / <code>sw.js</code></td><td>安装到桌面、手机通知</td></tr></tbody></table>
+<table><thead><tr><th>文件</th><th>负责</th></tr></thead><tbody><tr><td><code>index.html</code></td><td>页面骨架、弹窗、启动画面、脚本顺序</td></tr><tr><td><code>style.css</code></td><td>全部样式、35 套配色、动画</td></tr><tr><td><code>data.js</code></td><td>全局数据、默认设置、配色表、通用函数</td></tr><tr><td><code>history_store.js</code></td><td>聊天记录 IndexedDB 主存储、v13 迁移、启动就绪信号</td></tr><tr><td><code>chat_core.js</code></td><td>画气泡、发消息、随机回复、拍一拍、引用</td></tr><tr><td><code>chat_images.js</code></td><td>内置 SVG 图片目录、时段/月份权重、配文、随机图片卡</td></tr><tr><td><code>chat_stickers.js</code></td><td>表情面板</td></tr><tr><td><code>chat_tools.js</code></td><td>图片、拍照、位置、互动、录音</td></tr><tr><td><code>chat_call.js</code></td><td>语音通话、来电、小窗、通话心情</td></tr><tr><td><code>chat_money.js</code></td><td>红包、转账、支付密码、礼物商城</td></tr><tr><td><code>manage_cards.js</code></td><td>字卡库、标签、批量、查重、文字字卡导入</td></tr><tr><td><code>manage_settings.js</code></td><td>聊天设置、配色选择、头像裁剪</td></tr><tr><td><code>manage_history.js</code></td><td>聊天记录页、字卡统计</td></tr><tr><td><code>manage_data.js</code></td><td>导出、导入、清理</td></tr><tr><td><code>manage_music.js</code></td><td>音乐管理页</td></tr><tr><td><code>music_lyrics.js</code></td><td>内置歌词</td></tr><tr><td><code>chat_music.js</code></td><td>播放器、歌单、歌词同步、导入</td></tr><tr><td><code>mood_pools.js</code></td><td>16 档情绪数据、通用补充、基础权重、emoji、动画映射</td></tr><tr><td><code>chat_mood.js</code></td><td>情绪抽签、权重衰减、事件、渲染</td></tr><tr><td><code>router.js</code></td><td>页面切换、配色、状态栏、初始化</td></tr><tr><td><code>custom_icons.js</code></td><td>把 emoji 图标换成图片</td></tr><tr><td><code>pwa.js</code> / <code>sw.js</code></td><td>安装到桌面、手机通知</td></tr></tbody></table>
 <hr>
 <h2>四、数据模型</h2>
 <h3>1. localStorage 键</h3>
@@ -425,10 +425,47 @@ location.reload();</code></pre>
 <li>打开面板后会重新对齐当前页。</li>
 </ul>
 <p>加新工具：放到对应 <code>.tool-page</code> 的 <code>.tool-grid</code> 里，再在 js 里绑点击；超过 8 个就放到第二页。</p>
+<h3>6.16 内置图片卡</h3>
+<p><strong>位置</strong>：<code>chat_images.js</code> + <code>image_svg/</code>；图片消息的渲染在 <code>chat_core.js</code> 的 <code>addMessageDOM()</code>，图片卡样式在 <code>style.css</code> 的 <code>.img-card.has-caption</code> 和 <code>.img-caption</code>。</p>
+<p><strong>原理</strong>：</p>
+<ul>
+<li><code>IMAGE_SVG_CATALOG</code> 每项是一张图：<code>file</code>、<code>category</code>、可选的 <code>weather</code> / <code>months</code> / <code>times</code>、以及 <code>captions</code>；</li>
+<li><code>IMAGE_SVG_CATEGORY_WEIGHTS</code> 决定先抽哪一类；<code>WEATHER_MONTH_WEIGHTS</code> 决定不同月份各天气的权重；</li>
+<li><code>times</code> 是时间段权重：<code>dawn</code> / <code>morning</code> / <code>noon</code> / <code>afternoon</code> / <code>evening</code> / <code>night</code> / <code>lateNight</code>。有 <code>times</code> 但没写某个时间段时，该时间段权重按 0，不会抽到；完全没写 <code>times</code> 才是全天可用；</li>
+<li>实际抽取时先按分类权重选分类，再在该分类里按「时间权重 × 月份/季节权重」（天气再乘天气月份权重）抽具体图片；会避开上一张刚刚发过的图片；</li>
+<li>发送前 <code>pickCaption()</code> 从这张图的 <code>captions</code> 里随机抽一句，并尽量避开上一句；然后 <code>sendSvgImageEntry()</code> 调 <code>sendMessage({ val, caption }, 'image', ...)</code>；</li>
+<li><code>chat_core.js</code> 发现 <code>content.caption</code> 时，把图片和 <code>&lt;div class="img-caption"&gt;</code> 一起放进 <code>.img-card.has-caption</code>，固定 4:3 显示；引用、复制时 <code>getQuoteDisplayText()</code> 会返回「[图片] + 配文」；</li>
+<li><code>IMAGE_SVG_COOLDOWN_MS</code> 是 8 分钟冷却；<code>randomReply()</code> 的图片事件约占剩余回复 12%，其中 <code>IMAGE_SVG_SHARE</code>（0.25）抽内置 SVG，抽不到时回退到上传图库。</li>
+</ul>
+<p><strong>加一张图</strong>：</p>
+<ol start="1">
+<li>把 SVG 放进 <code>image_svg/</code>；</li>
+<li>在 <code>IMAGE_SVG_CATALOG</code> 加一项：</li>
+</ol>
+<pre><code class="language-js">{
+  file: 'xxx.svg',
+  category: 'room', // weather / scenery / food / fruit / drink / room / home / desk / pet
+  times: { morning: 1, noon: 1, afternoon: 1, evening: 0.5, night: 0 },
+  captions: ['文案一', '文案二', '文案三', '文案四', '文案五']
+}
+</code></pre>
+<ol start="3">
+<li>天气图再加 <code>weather: 'sunny'</code> 等键；水果想分季节就加 <code>months: { 6: 1, 7: 1, 8: 1 }</code>；</li>
+<li>每张图建议至少 5 条配文，长度控制在图片卡宽度内。</li>
+</ol>
+<p><strong>调试</strong>：</p>
+<pre><code class="language-js">echoDebug.image(22)                         // 模拟晚上 22 点随机发一张
+echoDebug.image(7, 11)                      // 模拟早上 7 点、11 月
+echoDebug.imageFile('bath_06_night.svg')    // 强制发指定图
+echoDebug.images()                          // 列出图片、分类、时段权重、配文数
+echoDebug.captions('bath_06_night.svg')     // 查看这张图的全部配文
+</code></pre>
+<p>调试命令会绕过 8 分钟冷却，但同样会写进真实聊天记录。</p>
+<p><strong>注意</strong>：没写 <code>times</code> 的图片全天可抽；写了 <code>times</code> 却漏掉某个时间段，那个时间段就是 0。新增图片如果不放进 <code>IMAGE_SVG_CATALOG</code>，文件放在目录里也不会被抽到。</p>
 <hr>
 <h2>七、往各个模块加内容</h2>
 <p>这一节都是“加东西”的完整步骤：先改哪里，再怎么验证，最后是常见坑。</p>
-<table><thead><tr><th>想加什么</th><th>主要文件</th><th>一句话</th></tr></thead><tbody><tr><td>一首内置歌</td><td><code>music/</code>、<code>chat_music.js</code></td><td>放 mp3 + 加一行 src</td></tr><tr><td>礼物</td><td><code>chat_money.js</code></td><td><code>GIFT_ITEMS</code> 加一行</td></tr><tr><td>互动动作</td><td><code>data.js</code></td><td>动作 + 回复各加一份</td></tr><tr><td>字卡 / 标签 / 表情</td><td>后台界面</td><td>不用改代码</td></tr><tr><td>拍一拍 / 位置 / 签名</td><td>后台界面 或 <code>data.js</code></td><td>往对应数组加</td></tr><tr><td>音效</td><td><code>sound/</code>、<code>chat_sound.js</code></td><td>放文件 + 登记</td></tr><tr><td>一种新情绪</td><td><code>chat_mood.js</code>、<code>style.css</code></td><td>文案 + 颜色 + 权重</td></tr><tr><td>一套配色</td><td><code>data.js</code>、<code>style.css</code></td><td>数组 + CSS 块</td></tr><tr><td>新工具按钮</td><td><code>index.html</code> + 新 js</td><td>先加按钮再加逻辑</td></tr></tbody></table>
+<table><thead><tr><th>想加什么</th><th>主要文件</th><th>一句话</th></tr></thead><tbody><tr><td>一首内置歌</td><td><code>music/</code>、<code>chat_music.js</code></td><td>放 mp3 + 加一行 src</td></tr><tr><td>一张内置图片卡</td><td><code>image_svg/</code>、<code>chat_images.js</code></td><td>放 SVG + <code>IMAGE_SVG_CATALOG</code> 加一项</td></tr><tr><td>礼物</td><td><code>chat_money.js</code></td><td><code>GIFT_ITEMS</code> 加一行</td></tr><tr><td>互动动作</td><td><code>data.js</code></td><td>动作 + 回复各加一份</td></tr><tr><td>字卡 / 标签 / 表情</td><td>后台界面</td><td>不用改代码</td></tr><tr><td>拍一拍 / 位置 / 签名</td><td>后台界面 或 <code>data.js</code></td><td>往对应数组加</td></tr><tr><td>音效</td><td><code>sound/</code>、<code>chat_sound.js</code></td><td>放文件 + 登记</td></tr><tr><td>一种新情绪</td><td><code>chat_mood.js</code>、<code>style.css</code></td><td>文案 + 颜色 + 权重</td></tr><tr><td>一套配色</td><td><code>data.js</code>、<code>style.css</code></td><td>数组 + CSS 块</td></tr><tr><td>新工具按钮</td><td><code>index.html</code> + 新 js</td><td>先加按钮再加逻辑</td></tr></tbody></table>
 <h3>7.1 加一首内置歌</h3>
 <p><strong>要改</strong>：<code>music/</code>、<code>chat_music.js</code>；歌词另外放 <code>music_lyrics.js</code>。</p>
 <ol start="1">

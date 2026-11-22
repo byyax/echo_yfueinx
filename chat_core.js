@@ -106,7 +106,10 @@ function refreshTimeLabels() {
 let bubbleMenuCtx = null;
 
 function getQuoteDisplayText(content, type) {
-  if (type === 'image') return '[图片]';
+  if (type === 'image') {
+    const caption = content && content.caption ? ' ' + content.caption : '';
+    return '[图片]' + caption;
+  }
   if (type === 'redpacket') return '[红包] ' + (content.note || '');
   if (type === 'musicshare') return '[歌曲] ' + (content.name || '');
   if (type === 'musicinvite') return '[一起听歌] ' + (content.name || '');
@@ -531,6 +534,14 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
       img.src = content.val;
       img.onclick = () => { document.getElementById('previewImg').src = content.val; document.getElementById('imagePreviewModal').classList.add('show'); };
       bodyDiv.appendChild(img);
+      if (content.caption) {
+        // 内置图片卡：图片下面带一句随机文案，样式和普通聊天气泡一致。
+        bodyDiv.className = 'img-card has-caption';
+        const captionEl = document.createElement('div');
+        captionEl.className = 'img-caption';
+        captionEl.textContent = content.caption;
+        bodyDiv.appendChild(captionEl);
+      }
     } else if (type === 'audio') {
       bubble.classList.add('voice-bubble');
       const dur = Math.max(1, Math.round(content.dur || 0));
@@ -1062,7 +1073,8 @@ const RANDOM_PAT_CHANCE = 0.06;
 const RANDOM_MUSIC_CHANCE = 0.03;
 const RANDOM_MUSIC_INVITE_RATIO = 0.35; // 音乐事件中 35% 是邀请，约 1.05%
 const RANDOM_MONEY_CHANCE = 0.05;
-const RANDOM_IMAGE_CARD_CHANCE = 0.12;
+const RANDOM_IMAGE_CARD_CHANCE = 0.12; // 图片事件总概率；低于互动事件合计（拍一拍 6% + 音乐 3% + 礼物/红包 5%）
+const IMAGE_SVG_SHARE = 0.25; // 图片事件里约 25% 用内置 SVG，其余用本地上传的表情/图片
 const MUSIC_EVENT_COOLDOWN = 8 * 60 * 1000;
 
 function hasRecentMusicEvent() {
@@ -1164,7 +1176,16 @@ function randomReply() {
     }
   }
 
-  if (imageCards.length > 0 && Math.random() < RANDOM_IMAGE_CARD_CHANCE) { sendMessage(imageCards[Math.floor(Math.random() * imageCards.length)].val, 'image', false, quote); return; }
+  if (Math.random() < RANDOM_IMAGE_CARD_CHANCE) {
+    const canSvg = typeof sendRandomSvgImage === 'function';
+    const preferSvg = canSvg && Math.random() < IMAGE_SVG_SHARE;
+    if (preferSvg && sendRandomSvgImage({ quote })) return;
+
+    if (imageCards.length > 0) {
+      sendMessage(imageCards[Math.floor(Math.random() * imageCards.length)].val, 'image', false, quote);
+      return;
+    }
+  }
 
   // 2G：文字回复不再全部抽字卡，先按比例说一句“卡死了”这类慢网短句。
   if (typeof getOtherNetworkMode === 'function' && getOtherNetworkMode() === '2G' &&

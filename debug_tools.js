@@ -24,6 +24,10 @@
       ['echoDebug.networkRecover()', '模拟 2G 恢复并可能补一句'],
       ['echoDebug.typing(true)', '显示“正在输入”，false 收起'],
       ['echoDebug.reply()', '立即随机回一条'],
+      ['echoDebug.image(22, 11)', '按 22 点、11 月随机发一张内置图片卡'],
+      ['echoDebug.imageFile("bath_06_night.svg")', '强制发指定内置图片卡'],
+      ['echoDebug.images()', '查看内置图片、时段和配文数量'],
+      ['echoDebug.captions("bath_06_night.svg")', '查看某张图片的全部配文'],
       ['echoDebug.signature("内容")', '把当前个性签名改成指定内容'],
       ['echoDebug.randomSignature()', '从签名库随机换一条'],
       ['echoDebug.signatureList()', '查看签名库'],
@@ -205,6 +209,51 @@
   E.reply = function () {
     if (typeof randomReply === 'function') { randomReply(); return '已随机回复'; }
     return '随机回复函数不可用';
+  };
+
+  E.image = function (hour, month) {
+    if (typeof sendRandomSvgImage !== 'function') return '内置图片函数不可用';
+    const h = hour == null ? new Date().getHours() : Number(hour);
+    const ok = sendRandomSvgImage({ hour: h, month, ignoreCooldown: true });
+    if (!ok) return '没有符合这个时间的图片';
+    const file = (typeof lastSvgImageFile !== 'undefined') ? lastSvgImageFile : '';
+    return '已发送内置图片：' + file;
+  };
+
+  E.imageFile = function (file, caption) {
+    if (typeof sendRandomSvgImage !== 'function') return '内置图片函数不可用';
+    const name = String(file || '').trim();
+    if (!name) return '用法：echoDebug.imageFile("bath_06_night.svg")';
+    const ok = sendRandomSvgImage({ file: name, caption, ignoreCooldown: true });
+    return ok ? '已发送内置图片：' + name : '找不到这张图片：' + name;
+  };
+
+  E.images = function () {
+    if (typeof IMAGE_SVG_CATALOG === 'undefined' || !Array.isArray(IMAGE_SVG_CATALOG)) return '图片目录不可用';
+    const rows = IMAGE_SVG_CATALOG.map(item => {
+      const times = item.times
+        ? Object.keys(item.times).filter(k => item.times[k] > 0).map(k => k + ':' + item.times[k]).join(' ')
+        : '全天';
+      return {
+        文件: item.file,
+        分类: item.category,
+        天气: item.weather || '',
+        时段权重: times,
+        配文数: (item.captions || []).length
+      };
+    });
+    console.table(rows);
+    return '共 ' + rows.length + ' 张内置图片';
+  };
+
+  E.captions = function (file) {
+    if (typeof findSvgImageEntry !== 'function') return '图片目录不可用';
+    const entry = findSvgImageEntry(file);
+    if (!entry) return '找不到这张图片：' + String(file || '');
+    const list = entry.captions || [];
+    list.forEach((text, i) => console.log(i + 1 + '.', text));
+    if (!list.length) return '这张图还没有配文';
+    return entry.file + ' 共 ' + list.length + ' 条配文';
   };
 
   window.echoDebug = E;
