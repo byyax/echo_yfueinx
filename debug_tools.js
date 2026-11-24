@@ -234,10 +234,14 @@
       const times = item.times
         ? Object.keys(item.times).filter(k => item.times[k] > 0).map(k => k + ':' + item.times[k]).join(' ')
         : '全天';
+      const months = item.months
+        ? Object.keys(item.months).filter(k => item.months[k] > 0).map(k => k + ':' + item.months[k]).join(' ')
+        : '全年';
       return {
         文件: item.file,
         分类: item.category,
         天气: item.weather || '',
+        月份权重: months,
         时段权重: times,
         配文数: (item.captions || []).length
       };

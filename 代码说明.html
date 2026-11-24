@@ -431,6 +431,7 @@ location.reload();</code></pre>
 <ul>
 <li><code>IMAGE_SVG_CATALOG</code> 每项是一张图：<code>file</code>、<code>category</code>、可选的 <code>weather</code> / <code>months</code> / <code>times</code>、以及 <code>captions</code>；</li>
 <li><code>IMAGE_SVG_CATEGORY_WEIGHTS</code> 决定先抽哪一类；<code>WEATHER_MONTH_WEIGHTS</code> 决定不同月份各天气的权重；</li>
+<li>天气图按季节分文件，共 26 张：<code>weather_spring_*</code>（3–5 月）、<code>weather_summer_*</code>（6–8 月）、<code>weather_autumn_*</code>（9–11 月）、<code>weather_winter_*</code>（12–2 月）；<code>months</code> 直接决定只在对应季节出现；</li>
 <li><code>times</code> 是时间段权重：<code>dawn</code> / <code>morning</code> / <code>noon</code> / <code>afternoon</code> / <code>evening</code> / <code>night</code> / <code>lateNight</code>。有 <code>times</code> 但没写某个时间段时，该时间段权重按 0，不会抽到；完全没写 <code>times</code> 才是全天可用；</li>
 <li>实际抽取时先按分类权重选分类，再在该分类里按「时间权重 × 月份/季节权重」（天气再乘天气月份权重）抽具体图片；会避开上一张刚刚发过的图片；</li>
 <li>发送前 <code>pickCaption()</code> 从这张图的 <code>captions</code> 里随机抽一句，并尽量避开上一句；然后 <code>sendSvgImageEntry()</code> 调 <code>sendMessage({ val, caption }, 'image', ...)</code>；</li>

@@ -21,18 +21,18 @@ const IMAGE_SVG_CATEGORY_WEIGHTS = {
 // 月份 → 天气权重（北半球默认）。权重为 0 的天气不会出现。
 // 夏天 6–8 月雪为 0；冬天雷雨为 0。
 const WEATHER_MONTH_WEIGHTS = {
-  1:  { sunny: 8,  overcast: 18, rain_light: 8,  rain_medium: 4,  rain_heavy: 2,  thunderstorm: 0,  snow_light: 20, snow_heavy: 18 },
-  2:  { sunny: 10, overcast: 18, rain_light: 10, rain_medium: 5,  rain_heavy: 2,  thunderstorm: 0,  snow_light: 16, snow_heavy: 12 },
-  3:  { sunny: 18, overcast: 16, rain_light: 16, rain_medium: 8,  rain_heavy: 3,  thunderstorm: 1,  snow_light: 4,  snow_heavy: 0 },
-  4:  { sunny: 22, overcast: 14, rain_light: 18, rain_medium: 10, rain_heavy: 4,  thunderstorm: 3,  snow_light: 1,  snow_heavy: 0 },
-  5:  { sunny: 24, overcast: 12, rain_light: 20, rain_medium: 12, rain_heavy: 6,  thunderstorm: 6,  snow_light: 0,  snow_heavy: 0 },
-  6:  { sunny: 22, overcast: 10, rain_light: 18, rain_medium: 16, rain_heavy: 10, thunderstorm: 12, snow_light: 0,  snow_heavy: 0 },
-  7:  { sunny: 20, overcast: 8,  rain_light: 14, rain_medium: 18, rain_heavy: 16, thunderstorm: 16, snow_light: 0,  snow_heavy: 0 },
-  8:  { sunny: 20, overcast: 8,  rain_light: 14, rain_medium: 18, rain_heavy: 16, thunderstorm: 14, snow_light: 0,  snow_heavy: 0 },
-  9:  { sunny: 22, overcast: 12, rain_light: 18, rain_medium: 10, rain_heavy: 4,  thunderstorm: 6,  snow_light: 0,  snow_heavy: 0 },
-  10: { sunny: 18, overcast: 16, rain_light: 16, rain_medium: 8,  rain_heavy: 3,  thunderstorm: 2,  snow_light: 0,  snow_heavy: 0 },
-  11: { sunny: 12, overcast: 18, rain_light: 10, rain_medium: 5,  rain_heavy: 2,  thunderstorm: 0,  snow_light: 6,  snow_heavy: 2 },
-  12: { sunny: 8,  overcast: 18, rain_light: 8,  rain_medium: 4,  rain_heavy: 2,  thunderstorm: 0,  snow_light: 16, snow_heavy: 10 }
+  1:  { sunny: 8,  overcast: 18, rain_light: 8,  rain_medium: 4,  rain_heavy: 2,  thunderstorm: 0,  snow_light: 20, snow_heavy: 18, windy: 8,  sleet: 8 },
+  2:  { sunny: 10, overcast: 18, rain_light: 10, rain_medium: 5,  rain_heavy: 2,  thunderstorm: 0,  snow_light: 16, snow_heavy: 12, windy: 8,  sleet: 6 },
+  3:  { sunny: 18, overcast: 16, rain_light: 16, rain_medium: 8,  rain_heavy: 3,  thunderstorm: 1,  snow_light: 4,  snow_heavy: 0,  windy: 10, sleet: 0 },
+  4:  { sunny: 22, overcast: 14, rain_light: 18, rain_medium: 10, rain_heavy: 4,  thunderstorm: 3,  snow_light: 1,  snow_heavy: 0,  windy: 10, sleet: 0 },
+  5:  { sunny: 24, overcast: 12, rain_light: 20, rain_medium: 12, rain_heavy: 6,  thunderstorm: 6,  snow_light: 0,  snow_heavy: 0,  windy: 8,  sleet: 0 },
+  6:  { sunny: 22, overcast: 10, rain_light: 18, rain_medium: 16, rain_heavy: 10, thunderstorm: 12, snow_light: 0,  snow_heavy: 0,  windy: 6,  sleet: 0 },
+  7:  { sunny: 20, overcast: 8,  rain_light: 14, rain_medium: 18, rain_heavy: 16, thunderstorm: 16, snow_light: 0,  snow_heavy: 0,  windy: 5,  sleet: 0 },
+  8:  { sunny: 20, overcast: 8,  rain_light: 14, rain_medium: 18, rain_heavy: 16, thunderstorm: 14, snow_light: 0,  snow_heavy: 0,  windy: 5,  sleet: 0 },
+  9:  { sunny: 22, overcast: 12, rain_light: 18, rain_medium: 10, rain_heavy: 4,  thunderstorm: 6,  snow_light: 0,  snow_heavy: 0,  windy: 7,  sleet: 0 },
+  10: { sunny: 18, overcast: 16, rain_light: 16, rain_medium: 8,  rain_heavy: 3,  thunderstorm: 2,  snow_light: 0,  snow_heavy: 0,  windy: 9,  sleet: 0 },
+  11: { sunny: 12, overcast: 18, rain_light: 10, rain_medium: 5,  rain_heavy: 2,  thunderstorm: 0,  snow_light: 6,  snow_heavy: 2,  windy: 9,  sleet: 0 },
+  12: { sunny: 8,  overcast: 18, rain_light: 8,  rain_medium: 4,  rain_heavy: 2,  thunderstorm: 0,  snow_light: 16, snow_heavy: 10, windy: 8,  sleet: 7 }
 };
 
 // 时间段：凌晨 / 清晨 / 上午 / 中午 / 下午 / 傍晚 / 晚上 / 深夜
@@ -51,46 +51,169 @@ function getImageTimeSlot(hour) {
 // times 里没写的时间段按 0 处理；完全没写 times 的图片全天可用。
 // captions 是这张图可配的文案，发送时随机抽一句；每张图至少 5 条。
 const IMAGE_SVG_CATALOG = [
-  // 天气
+  // 天气：按季节分文件，months 控制只在该季节出现
+  // 春天
   {
-    file: 'weather_sunny_01.svg', category: 'weather', weather: 'sunny',
+    file: 'weather_spring_sunny_01.svg', category: 'weather', weather: 'sunny',
+    months: { 3: 1, 4: 1.25, 5: 1 },
     times: { dawn: 0.35, morning: 1, noon: 1, afternoon: 1, evening: 0.2, night: 0, lateNight: 0 },
-    captions: ['今天天气挺好的', '外面太阳有点大', '这种天适合出去走走', '晒得我有点睁不开眼', '今天天很蓝，基本看不到云']
+    captions: ['今天的太阳很暖和', '外面树都发芽了', '路边的花开了', '这种天气适合出去走走', '风里都是春天的味道']
   },
   {
-    file: 'weather_overcast_01.svg', category: 'weather', weather: 'overcast',
+    file: 'weather_spring_overcast_01.svg', category: 'weather', weather: 'overcast',
+    months: { 3: 1, 4: 1.25, 5: 1 },
     times: { dawn: 0.4, morning: 1, noon: 1, afternoon: 1, evening: 0.9, night: 0.2, lateNight: 0 },
-    captions: ['今天阴沉沉的', '看着像要下雨', '外面没什么太阳', '今天的天一直都是灰的', '风有点凉', '不同季节的阴天，槽点都不一样']
+    captions: ['春天的阴天还是有点凉', '天灰灰的，花倒是开了', '看着像要下雨', '今天风有点大', '春天就是忽冷忽热']
   },
   {
-    file: 'weather_rain_light_01.svg', category: 'weather', weather: 'rain_light',
+    file: 'weather_spring_rain_light_01.svg', category: 'weather', weather: 'rain_light',
+    months: { 3: 1, 4: 1.25, 5: 1 },
+    times: { dawn: 0.5, morning: 1, noon: 1, afternoon: 1, evening: 1.1, night: 0.9, lateNight: 0.6 },
+    captions: ['下小雨了', '雨里的花很好看', '出门记得带伞', '一场春雨一场暖', '窗户上都是水珠']
+  },
+  {
+    file: 'weather_spring_rain_medium_01.svg', category: 'weather', weather: 'rain_medium',
+    months: { 3: 1, 4: 1.25, 5: 1 },
+    times: { dawn: 0.3, morning: 1, noon: 1, afternoon: 1, evening: 1.2, night: 1, lateNight: 0.5 },
+    captions: ['春雨下得有点密', '路上都是落花', '今天有点凉', '鞋都快湿了', '雨声还挺大']
+  },
+  {
+    file: 'weather_spring_rain_heavy_01.svg', category: 'weather', weather: 'rain_heavy',
+    months: { 3: 1, 4: 1.25, 5: 1 },
+    times: { dawn: 0.3, morning: 0.9, noon: 0.9, afternoon: 1, evening: 1.3, night: 1.1, lateNight: 0.5 },
+    captions: ['这雨下得跟倒水一样', '今天还有点冷，但是出门的时候我穿了拖鞋和短裤', '感觉很快天气就回暖了', '裤脚又湿了', '这雨有点大']
+  },
+  {
+    file: 'weather_spring_windy_01.svg', category: 'weather', weather: 'windy',
+    months: { 3: 1, 4: 1.25, 5: 1 },
+    times: { dawn: 0.3, morning: 1, noon: 1, afternoon: 1, evening: 0.8, night: 0.1, lateNight: 0 },
+    captions: ['今天风好大', '树叶都被吹下来了', '头发都吹乱了', '走在路上的时候有一种花香', '出门记得穿件外套']
+  },
+
+  // 夏天
+  {
+    file: 'weather_summer_sunny_01.svg', category: 'weather', weather: 'sunny',
+    months: { 6: 1, 7: 1.25, 8: 1 },
+    times: { dawn: 0.35, morning: 1, noon: 1, afternoon: 1, evening: 0.2, night: 0, lateNight: 0 },
+    captions: ['今天天气挺好的', '外面太阳太大了，今天会很热', '白天太晒了，还是得到晚上才适合出去走走', '晒得我有点睁不开眼', '今天天很蓝，基本看不到云']
+  },
+  {
+    file: 'weather_summer_overcast_01.svg', category: 'weather', weather: 'overcast',
+    months: { 6: 1, 7: 1.25, 8: 1 },
+    times: { dawn: 0.4, morning: 1, noon: 1, afternoon: 1, evening: 0.9, night: 0.2, lateNight: 0 },
+    captions: ['光闷着不下雨，太难受了', '你还好吗？会感到不舒服吗？', '今天阴沉沉的', '看着像要下雨', '外面没什么太阳', '阴天太闷了，雨要下不下的', '吹了凉风好舒服！']
+  },
+  {
+    file: 'weather_summer_rain_light_01.svg', category: 'weather', weather: 'rain_light',
+    months: { 6: 1, 7: 1.25, 8: 1 },
     times: { dawn: 0.5, morning: 1, noon: 1, afternoon: 1, evening: 1.1, night: 0.9, lateNight: 0.6 },
     captions: ['下雨了', '外面在下小雨', '希望等下我出门的时候。雨已经停了', '雨不大，就是一直下', '窗户上都是啪嗒啪嗒流下来的水珠']
   },
   {
-    file: 'weather_rain_medium_01.svg', category: 'weather', weather: 'rain_medium',
+    file: 'weather_summer_rain_medium_01.svg', category: 'weather', weather: 'rain_medium',
+    months: { 6: 1, 7: 1.25, 8: 1 },
     times: { dawn: 0.3, morning: 1, noon: 1, afternoon: 1, evening: 1.2, night: 1, lateNight: 0.5 },
-    captions: ['这雨下得不小', '雨有点密', '路上都湿了', '鞋都快湿了', '雨声还挺大']
+    captions: ['这雨下得不小', '我想出去淋雨', '我会享受夏日雨季的', '我的鞋和裤腿又湿了', '雨声其实对我来说听着很舒服', '如果在山里或者竹林里度假，下雨天会是什么样呢？']
   },
   {
-    file: 'weather_rain_heavy_01.svg', category: 'weather', weather: 'rain_heavy',
+    file: 'weather_summer_rain_heavy_01.svg', category: 'weather', weather: 'rain_heavy',
+    months: { 6: 1, 7: 1.25, 8: 1 },
     times: { dawn: 0.3, morning: 0.9, noon: 0.9, afternoon: 1, evening: 1.3, night: 1.1, lateNight: 0.5 },
     captions: ['雨太大了', '外面跟倒水一样', '裤脚全湿了', '路上都没什么人了', '这雨下得有点吓人']
   },
   {
-    file: 'weather_thunderstorm_01.svg', category: 'weather', weather: 'thunderstorm',
+    file: 'weather_summer_thunderstorm_01.svg', category: 'weather', weather: 'thunderstorm',
+    months: { 6: 1, 7: 1.25, 8: 1 },
     times: { dawn: 0.1, morning: 0.3, noon: 0.5, afternoon: 1, evening: 1.2, night: 0.8, lateNight: 0.2 },
-    captions: ['打雷了', '外面雷声好大', '这天气有点吓人', '刚闪了一下', '雨跟着就下来了']
+    captions: ['打雷了', '外面闪电和雷声好大', '我不怕打雷，不伤害人的情况下，极端天气有一种世界末日的感觉，我很喜欢', '每次闪电，我都会想到光和声音的传播速度不一样，然后雷声就来了', '下了大雨，如果这个时候能和你在一起就好了，一起逃走吧']
   },
   {
-    file: 'weather_snow_light_01.svg', category: 'weather', weather: 'snow_light',
+    file: 'weather_summer_windy_01.svg', category: 'weather', weather: 'windy',
+    months: { 6: 1, 7: 1.25, 8: 1 },
+    times: { dawn: 0.2, morning: 1, noon: 1, afternoon: 1, evening: 1, night: 0.2, lateNight: 0 },
+    captions: ['今天风挺大', '总算没那么闷热了', '树荫下还挺凉快', '云跑得很快', '晚上应该会舒服点']
+  },
+
+  // 秋天
+  {
+    file: 'weather_autumn_sunny_01.svg', category: 'weather', weather: 'sunny',
+    months: { 9: 1, 10: 1.25, 11: 1 },
+    times: { dawn: 0.35, morning: 1, noon: 1, afternoon: 1, evening: 0.2, night: 0, lateNight: 0 },
+    captions: ['这天气正正好好，穿外套不冷也不热，没什么风，阳光让人很舒服', '今天天很蓝，树叶已经黄了，也挺好看', '给你拍了很多黄叶子的照片', '这种天气适合出去走走', '秋天真的来了']
+  },
+  {
+    file: 'weather_autumn_overcast_01.svg', category: 'weather', weather: 'overcast',
+    months: { 9: 1, 10: 1.25, 11: 1 },
+    times: { dawn: 0.4, morning: 1, noon: 1, afternoon: 1, evening: 0.9, night: 0.2, lateNight: 0 },
+    captions: ['秋天的阴天可不是开玩笑，会很凉的', '天灰灰的，叶子倒是很黄', '看着像要下雨', '今天风有点大', '秋天阴沉沉的']
+  },
+  {
+    file: 'weather_autumn_rain_light_01.svg', category: 'weather', weather: 'rain_light',
+    months: { 9: 1, 10: 1.25, 11: 1 },
+    times: { dawn: 0.5, morning: 1, noon: 1, afternoon: 1, evening: 1.1, night: 0.9, lateNight: 0.6 },
+    captions: ['下小雨了，又要降温了吗？', '雨打黄叶还挺好看', '出门记得带伞', '一场秋雨一场凉', '窗户上都是水珠']
+  },
+  {
+    file: 'weather_autumn_rain_medium_01.svg', category: 'weather', weather: 'rain_medium',
+    months: { 9: 1, 10: 1.25, 11: 1 },
+    times: { dawn: 0.3, morning: 1, noon: 1, afternoon: 1, evening: 1.2, night: 1, lateNight: 0.5 },
+    captions: ['这雨有点大了', '路上都是湿叶子', '今天降温了，你也要注意保暖', '雨声还挺大', '鞋都快湿了']
+  },
+  {
+    file: 'weather_autumn_rain_heavy_01.svg', category: 'weather', weather: 'rain_heavy',
+    months: { 9: 1, 10: 1.25, 11: 1 },
+    times: { dawn: 0.3, morning: 0.9, noon: 0.9, afternoon: 1, evening: 1.3, night: 1.1, lateNight: 0.5 },
+    captions: ['今天的雨好大，却不能像夏天那样享受雨了', '已经开始冷了，雨还那么大，出门不能穿短裤和拖鞋就是折磨', '我跟黄叶一样都要被秋雨打倒了', '...裤脚又湿了', '好大的雨，外面的声音真的很大']
+  },
+  {
+    file: 'weather_autumn_windy_01.svg', category: 'weather', weather: 'windy',
+    months: { 9: 1, 10: 1.25, 11: 1 },
+    times: { dawn: 0.2, morning: 1, noon: 1, afternoon: 1, evening: 1, night: 0.2, lateNight: 0 },
+    captions: ['风一吹，叶子全掉了', '今天风有点大', '路上都是落叶', '树都快吹秃了', '出门多穿一点']
+  },
+
+  // 冬天
+  {
+    file: 'weather_winter_sunny_01.svg', category: 'weather', weather: 'sunny',
+    months: { 12: 1, 1: 1.25, 2: 1 },
+    times: { dawn: 0.3, morning: 1, noon: 1, afternoon: 1, evening: 0.3, night: 0, lateNight: 0 },
+    captions: ['冬天要多晒太阳，好舒服啊，虽然还是很冷', '今天天很蓝，就是有点冷', '阳光照在身上暖暖的', '好不容易放晴了，出去走走怎么样？', '难得这么好的天']
+  },
+  {
+    file: 'weather_winter_overcast_01.svg', category: 'weather', weather: 'overcast',
+    months: { 12: 1, 1: 1.25, 2: 1 },
+    times: { dawn: 0.4, morning: 1, noon: 1, afternoon: 1, evening: 0.9, night: 0.2, lateNight: 0 },
+    captions: ['秋冬的阴天真的很阴哈哈哈，真的好冷', '外边看起来越来越萧条了', '天气预报说晚间会刮大风降温，我今天晚上要盖厚被子了', '已经连续几天不是阴天就是下雨了', '我可能会因为这种天气去吃一顿好的', '想待在家里']
+  },
+  {
+    file: 'weather_winter_rain_01.svg', category: 'weather', weather: 'rain_medium',
+    months: { 12: 1, 1: 1.25, 2: 1 },
+    times: { dawn: 0.3, morning: 1, noon: 1, afternoon: 1, evening: 1.1, night: 1, lateNight: 0.4 },
+    captions: ['下雨了，再冷一点就下雪了', '雨落在枯草地上', '出门记得带伞', '今天又湿又冷', '今天吃热乎乎的东西犒劳自己']
+  },
+  {
+    file: 'weather_winter_sleet_01.svg', category: 'weather', weather: 'sleet',
+    months: { 12: 1, 1: 1.25, 2: 1 },
+    times: { dawn: 0.3, morning: 1, noon: 1, afternoon: 1, evening: 1, night: 0.8, lateNight: 0.3 },
+    captions: ['又下雨又下雪', '雨夹雪，地上全是水', '今天出门得小心点', '又冷又湿', '这种天最适合待在家']
+  },
+  {
+    file: 'weather_winter_windy_01.svg', category: 'weather', weather: 'windy',
+    months: { 12: 1, 1: 1.25, 2: 1 },
+    times: { dawn: 0.3, morning: 1, noon: 1, afternoon: 1, evening: 0.8, night: 0.2, lateNight: 0 },
+    captions: ['今天风刮得我脸好疼..真的是刀割一样的感觉', '得把全身都包起来，我还是更喜欢温度', '不是疗毒的话，这风还是不要刮我的骨头了', '感觉一不注意就会感冒了', '你那边冷不冷？']
+  },
+  {
+    file: 'weather_winter_snow_light_01.svg', category: 'weather', weather: 'snow_light',
+    months: { 12: 1, 1: 1.25, 2: 1 },
     times: { dawn: 0.3, morning: 1, noon: 1, afternoon: 1, evening: 0.6, night: 0.1, lateNight: 0 },
-    captions: ['下雪了', '外面飘雪了', '雪不大，但是挺好看', '地上薄薄一层', '落在衣服上就化了']
+    captions: ['下雪了', '外面飘雪了', '是初雪的话，要听某首歌吧？', '地上薄薄一层', '雪落在我的掌心里，马上就化了', '第一场雪下起的午后，想和你分享感动']
   },
   {
-    file: 'weather_snow_heavy_01.svg', category: 'weather', weather: 'snow_heavy',
+    file: 'weather_winter_snow_heavy_01.svg', category: 'weather', weather: 'snow_heavy',
+    months: { 12: 1, 1: 1.25, 2: 1 },
     times: { dawn: 0.2, morning: 1, noon: 1, afternoon: 0.9, evening: 0.5, night: 0.1, lateNight: 0 },
-    captions: ['雪下得好大', '外面白了一片', '这雪有点夸张', '路上脚印都没了', '出门得慢点走', '你在的话，我们出去堆雪人和打雪仗']
+    captions: ['雪下得好大，你应该会喜欢这种雪景', '睡醒了，就看见了外面的雪景', '我好想和你一起堆雪人', '十二月的奇迹？', '出门得慢点走', '你在的话，我们出去堆雪人和打雪仗']
   },
 
   // 散步/风景
@@ -227,7 +350,7 @@ const IMAGE_SVG_CATALOG = [
   {
     file: 'gym_02.svg', category: 'room',
     times: { dawn: 0.1, morning: 0.7, noon: 0.8, afternoon: 1, evening: 1.3, night: 0.3, lateNight: 0 },
-    captions: ['来健身房了', '今天练一会儿', '人不多', '今天没什么力气', '练完再回去']
+    captions: ['来健身房了', '今天练一会儿', '今天人不多，不用抢器械', '今天人很多，光是等，就花了点时间', '今天没什么力气，但是还是练了一会', '今天我没偷懒！练完再回去']
   },
 
   // 家居小物

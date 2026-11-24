@@ -174,24 +174,41 @@ function renderHistory(filterDate = '', preserveScroll = false) {
   }, 10);
 }
 
+function normalizeCardText(value) {
+  return String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
+}
+
+// 字卡可能被追加了一个 Emoji；统计旧消息时先把末尾 Emoji 去掉再比对。
+function stripTrailingEmoji(value) {
+  return normalizeCardText(value).replace(/\s*[\p{Extended_Pictographic}‍️\p{Emoji_Modifier}\p{Regional_Indicator}]+\s*$/u, '').trim();
+}
+
 function getCardStats(limit = 10) {
-  const textCards = contents.filter(c => c.type === 'text' && c.val);
+  const textCards = contents.filter(c => c && c.type === 'text' && c.val);
   if (textCards.length === 0) return [];
+
   const counts = new Map();
-  textCards.forEach(c => counts.set(c.id, { val: c.val, count: 0 }));
+  const byId = new Map();
+  const byText = new Map();
+  textCards.forEach(c => {
+    const item = { val: c.val, count: 0 };
+    counts.set(c.id, item);
+    byId.set(c.id, item);
+    const text = normalizeCardText(c.val);
+    if (text && !byText.has(text)) byText.set(text, item);
+  });
 
   chatHistory.forEach(msg => {
-    if (msg.role !== 'other' || msg.type !== 'text') return;
+    if (!msg || msg.role !== 'other' || msg.type !== 'text') return;
     const c = msg.content;
     const text = c && c.val !== undefined && c.val !== null ? String(c.val) : '';
     if (!text) return;
-    let best = null;
-    textCards.forEach(card => {
-      if (text.includes(card.val)) {
-        if (!best || card.val.length > best.val.length) best = card;
-      }
-    });
-    if (best) counts.get(best.id).count++;
+
+    // 新消息带 cardId 时直接按 id 统计，避免“好”“我”这类短卡误吞整句。
+    let item = c && c.cardId ? byId.get(c.cardId) : null;
+    if (!item) item = byText.get(normalizeCardText(text)) || null;
+    if (!item) item = byText.get(stripTrailingEmoji(text)) || null;
+    if (item) item.count++;
   });
 
   return Array.from(counts.values())
@@ -212,14 +229,15 @@ window.addEventListener('chat-data-ready', () => {
 function renderCardStats() {
   const list = document.getElementById('cardStatsList');
   if (!list) return;
-  const stats = getCardStats(10);
+  const allStats = getCardStats(Number.MAX_SAFE_INTEGER);
+  const stats = allStats.slice(0, 10);
 
   if (stats.length === 0) {
     list.innerHTML = '<div style="text-align:center; color:#999; padding:60px 20px; font-size:14px; line-height:1.6;">对方还没有发过字卡哦～<br>先去聊几句吧 💬</div>';
     return;
   }
 
-  const total = stats.reduce((s, x) => s + x.count, 0);
+  const total = allStats.reduce((s, x) => s + x.count, 0);
   const maxCount = stats[0].count || 1;
 
   let html = `<div style="text-align:center; background:var(--card-bg); border-radius:14px; padding:14px; margin-bottom:14px; box-shadow:var(--shadow-sm);">

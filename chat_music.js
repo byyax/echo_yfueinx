@@ -18,9 +18,9 @@ const MUSIC_LIBRARY = [
   { kind: 'song', title: "Don't Go Back Tonight", artist: 'TizzyT', src: "music/TizzyT - Don't Go Back Tonight.mp3", lrc: "music/TizzyT - Don't Go Back Tonight.lrc" },
 
   // —— 白噪音 ——
-  { kind: 'song', title: '白噪音_雨声', artist: '白噪音', src: 'music/白噪音_雨声.wav' },
-  { kind: 'song', title: '白噪音_壁炉', artist: '白噪音', src: 'music/白噪音_壁炉.wav' },
-  { kind: 'song', title: '白噪音_沸腾', artist: '白噪音', src: 'music/白噪音_沸腾.wav' },
+  { kind: 'song', title: '白噪音_雨声', artist: '白噪音', src: 'music/white_noise_rain.mp3' },
+  { kind: 'song', title: '白噪音_壁炉', artist: '白噪音', src: 'music/white_noise_fireplace.mp3' },
+  { kind: 'song', title: '白噪音_沸腾', artist: '白噪音', src: 'music/white_noise_boiling.mp3' },
 
   // —— music 文件夹里还没有音频文件的歌，放最后 ——
   { kind: 'song', title: '无意', artist: '加木 / Demxntia' },

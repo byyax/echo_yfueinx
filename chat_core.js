@@ -1049,7 +1049,7 @@ function sendRandomTextCardReply(opts) {
   if (emojis.length && Math.random() < 0.3) {
     text += ' ' + emojis[Math.floor(Math.random() * emojis.length)].val;
   }
-  sendMessage({ val: text, autoReply: options.autoReply === true }, 'text', false, quote);
+  sendMessage({ val: text, autoReply: options.autoReply === true, cardId: picked.id }, 'text', false, quote);
   return true;
 }
 
@@ -1207,7 +1207,7 @@ function randomReply() {
     replyText = replyText + ' ' + randomEmoji; 
   }
   
-  sendMessage(replyText, 'text', false, quote);
+  sendMessage({ val: replyText, cardId: pickedCard.id }, 'text', false, quote);
 }
 
 // 离线自动回复：80% 内置句，20% 抽字卡库；都带 [自动回复] 标记。
