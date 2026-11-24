@@ -19,7 +19,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20261124k">
     <!-- 启动画面：内联样式，保证脚本还没跑起来时就能先画出来 -->
     <style>
       #bootScreen {
@@ -1059,6 +1059,9 @@
       <div class="bubble-menu" id="bubbleMenu">
         <button id="bubbleQuoteBtn">💬 引用</button>
         <button id="bubbleCopyBtn">📋 复制</button>
+        <button id="bubbleCopySongBtn" style="display:none;">🎵 复制歌名</button>
+        <button id="bubbleCopyArtistBtn" style="display:none;">🎤 复制作者</button>
+        <button id="bubbleCopyLyricBtn" style="display:none;">📝 复制歌词</button>
         <button id="bubbleDeleteBtn" class="danger">🗑️ 删除</button>
       </div>
 
@@ -1082,11 +1085,12 @@
     
     <div id="toast" class="toast"></div>
 
-    <script src="data.js"></script>
+    <script src="data.js?v=20261124k"></script>
+    <script src="interact_result_replies.js?v=20261124k"></script>
     <script src="history_store.js"></script>
     <script src="chat_sound.js"></script>
-    <script src="chat_images.js"></script>
-    <script src="chat_core.js?v=20261124"></script>
+    <script src="chat_images.js?v=20261124k"></script>
+    <script src="chat_core.js?v=20261124k"></script>
     <script src="chat_stickers.js"></script>
     <script src="chat_tools.js"></script>
     <script src="chat_choice.js"></script>
@@ -1094,15 +1098,16 @@
     <script src="chat_money.js"></script>
     <script src="manage_cards.js"></script>
     <script src="manage_settings.js"></script>
-    <script src="manage_history.js?v=20261124"></script>
+    <script src="manage_history.js?v=20261124k"></script>
     <script src="manage_data.js"></script>
     <script src="music_lyrics.js"></script>
-    <script src="chat_music.js?v=20261124"></script>
+    <script src="share_songs.js?v=20261124k"></script>
+    <script src="chat_music.js?v=20261124k"></script>
     <script src="manage_music.js"></script>
     <script src="mood_pools.js"></script>
-    <script src="chat_mood.js"></script>
+    <script src="chat_mood.js?v=20261124k"></script>
     <script src="router.js"></script>
-    <script src="debug_tools.js"></script>
+    <script src="debug_tools.js?v=20261124k"></script>
     <script src="custom_icons.js"></script>
     <script src="pwa.js"></script>
     <script>

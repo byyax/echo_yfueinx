@@ -7,15 +7,18 @@ const IMAGE_SVG_COOLDOWN_MS = 8 * 60 * 1000; // 8 分钟内不再发内置 SVG�
 
 // 分类权重：食物/散步最多，天气和房间次之，桌宠最少
 const IMAGE_SVG_CATEGORY_WEIGHTS = {
-  weather: 0.16,
-  scenery: 0.19,
-  food: 0.18,
-  fruit: 0.06,
-  drink: 0.11,
-  room: 0.14,
-  home: 0.05,
-  desk: 0.07,
-  pet: 0.04
+  weather: 0.14,
+  scenery: 0.14,
+  food: 0.15,
+  fruit: 0.04,
+  drink: 0.08,
+  room: 0.10,
+  home: 0.03,
+  sport: 0.12,
+  dessert: 0.06,
+  fastfood: 0.06,
+  desk: 0.05,
+  pet: 0.03
 };
 
 // 月份 → 天气权重（北半球默认）。权重为 0 的天气不会出现。
@@ -284,6 +287,56 @@ const IMAGE_SVG_CATALOG = [
     times: { dawn: 0, morning: 0.1, noon: 0.6, afternoon: 0.4, evening: 1.2, night: 1.4, lateNight: 1.2 },
     captions: ['点了两份，才想起来你不在', '一个人吃，还是拿了两双筷子', '这家你肯定喜欢，下次带你来', '下次我们一起吃吧？', '什么时候能见面呢，我不想一个人吃饭了']
   },
+  {
+    file: 'food_diet_01.svg', category: 'food',
+    times: { dawn: 0, morning: 0.2, noon: 1.2, afternoon: 0.7, evening: 1, night: 0.3, lateNight: 0 },
+    captions: ['今天的减脂餐', '鸡胸肉和西兰花', '看着清淡，其实还行', '最近在控制饮食', '吃完还是有点饿']
+  },
+  // 甜品（放纵餐）
+  {
+    file: 'dessert_icecream_01.svg', category: 'dessert',
+    months: { 1: 0.2, 2: 0.2, 3: 0.4, 4: 0.7, 5: 1, 6: 1.5, 7: 1.8, 8: 1.8, 9: 1.2, 10: 0.7, 11: 0.3, 12: 0.2 },
+    times: { dawn: 0, morning: 0.1, noon: 0.8, afternoon: 1.4, evening: 1.2, night: 0.4, lateNight: 0 },
+    captions: ['今天吃了冰淇淋', '给你也带一支？', '夏天就想吃这个', '化得有点快', '吃完心情好多了']
+  },
+  {
+    file: 'dessert_popsicle_01.svg', category: 'dessert',
+    months: { 1: 0.2, 2: 0.2, 3: 0.4, 4: 0.7, 5: 1, 6: 1.5, 7: 1.8, 8: 1.8, 9: 1.2, 10: 0.7, 11: 0.3, 12: 0.2 },
+    times: { dawn: 0, morning: 0.1, noon: 0.8, afternoon: 1.4, evening: 1.1, night: 0.3, lateNight: 0 },
+    captions: ['买了两支雪糕', '你一支我一支', '今天有点热', '吃得太快有点冰牙', '下次买你喜欢的口味']
+  },
+  {
+    file: 'dessert_cake_01.svg', category: 'dessert',
+    weekday: 0.9, weekend: 1.4,
+    times: { dawn: 0, morning: 0.1, noon: 0.5, afternoon: 1.2, evening: 1.3, night: 0.5, lateNight: 0 },
+    captions: ['买了块小蛋糕', '今天想吃点甜的', '给你留一口', '练完奖励自己', '奶油有点多']
+  },
+  {
+    file: 'dessert_creampuff_01.svg', category: 'dessert',
+    weekday: 0.8, weekend: 1.4,
+    times: { dawn: 0, morning: 0.2, noon: 0.5, afternoon: 1.2, evening: 1.2, night: 0.4, lateNight: 0 },
+    captions: ['买了一盒泡芙', '一口一个', '奶油挤出来了', '这家朋友推荐的', '给你留了最后两个']
+  },
+  {
+    file: 'dessert_bread_01.svg', category: 'dessert',
+    weekday: 1, weekend: 1.2,
+    times: { dawn: 0.2, morning: 1.3, noon: 0.7, afternoon: 0.5, evening: 0.4, night: 0.2, lateNight: 0 },
+    captions: ['刚出炉的面包', '买了当早餐', '闻着很香', '明天热一下', '朋友说这家好吃']
+  },
+
+  // 放纵餐 / 快餐
+  {
+    file: 'fastfood_burger_01.svg', category: 'fastfood',
+    weekday: 0.7, weekend: 1.5,
+    times: { dawn: 0, morning: 0, noon: 0.6, afternoon: 0.5, evening: 1.4, night: 1.2, lateNight: 0.6 },
+    captions: ['今天放纵一下', '练完来吃汉堡', '薯条可乐都点了', '朋友说这家好吃', '吃完再练']
+  },
+  {
+    file: 'fastfood_friedchicken_01.svg', category: 'fastfood',
+    weekday: 0.7, weekend: 1.5,
+    times: { dawn: 0, morning: 0, noon: 0.4, afternoon: 0.4, evening: 1.5, night: 1.3, lateNight: 0.7 },
+    captions: ['炸鸡配可乐', '今天不想控制饮食', '和朋友一起吃', '刚练完就破功了', '太香了']
+  },
 
   // 水果
   {
@@ -347,10 +400,36 @@ const IMAGE_SVG_CATALOG = [
     times: { dawn: 0.3, morning: 0.05, noon: 0, afternoon: 0.5, evening: 0.8, night: 1.4, lateNight: 1.2 },
     captions: ['躺一会儿', '今天有点累', '床单刚换过', '一躺下就不想动', '被子有点暖']
   },
+  // 运动
   {
-    file: 'gym_02.svg', category: 'room',
-    times: { dawn: 0.1, morning: 0.7, noon: 0.8, afternoon: 1, evening: 1.3, night: 0.3, lateNight: 0 },
-    captions: ['来健身房了', '今天练一会儿', '今天人不多，不用抢器械', '今天人很多，光是等，就花了点时间', '今天没什么力气，但是还是练了一会', '今天我没偷懒！练完再回去']
+    file: 'gym_02.svg', category: 'sport',
+    weekday: 1.6, weekend: 0.5,
+    times: { dawn: 0.1, morning: 0.5, noon: 0.5, afternoon: 1.1, evening: 1.5, night: 0.3, lateNight: 0 },
+    captions: ['和朋友一起来健身房了', '今天练一会儿', '今天人不多，不用抢器械', '今天人很多，光是等，就花了点时间', '今天没什么力气，但是还是练了一会', '今天我没偷懒！练完再回去']
+  },
+  {
+    file: 'sport_swimming_01.svg', category: 'sport',
+    weekday: 0.7, weekend: 1.4,
+    times: { dawn: 0.1, morning: 0.3, noon: 0.6, afternoon: 1.2, evening: 1.5, night: 0.4, lateNight: 0 },
+    captions: ['今天和朋友来游泳了', '室内泳池人不多', '游完有点饿', '朋友非要拉我来的', '水温还行，就是有点累']
+  },
+  {
+    file: 'sport_climbing_01.svg', category: 'sport',
+    weekday: 0.4, weekend: 1.6,
+    times: { dawn: 0, morning: 0.2, noon: 0.5, afternoon: 1.3, evening: 1.5, night: 0.2, lateNight: 0 },
+    captions: ['和朋友来攀岩了', '今天爬得手都酸了', '我又进步了，怎么样？夸夸我嘛😁', '这条线有点难', '下来才发现手都磨红了']
+  },
+  {
+    file: 'sport_basketball_01.svg', category: 'sport',
+    weekday: 0.6, weekend: 1.5,
+    times: { dawn: 0, morning: 0.2, noon: 0.5, afternoon: 1.2, evening: 1.6, night: 0.3, lateNight: 0 },
+    captions: ['和朋友打了一会儿球', '今天手感不错', '打完一身汗', '朋友一直传球给我', '下次带你来看我打球']
+  },
+  {
+    file: 'sport_mountainbike_01.svg', category: 'sport',
+    weekday: 0.3, weekend: 1.7,
+    times: { dawn: 0.1, morning: 0.4, noon: 0.6, afternoon: 1.3, evening: 1.3, night: 0.1, lateNight: 0 },
+    captions: ['和朋友去骑山地车了', '山路有点颠', '今天骑得挺远', '朋友在前面等我', '回来腿都软了']
   },
 
   // 家居小物
@@ -416,14 +495,19 @@ function imageMonthWeight(entry, month) {
   return w == null ? 0 : Math.max(0, Number(w) || 0);
 }
 
+function imageDayWeight(entry, dayType) {
+  if (!entry || (entry.weekday == null && entry.weekend == null)) return 1;
+  return Math.max(0, Number(entry[dayType]) || 0);
+}
+
 function weatherMonthWeight(weather, month) {
   const m = Math.min(12, Math.max(1, Number(month) || (new Date().getMonth() + 1)));
   const weights = WEATHER_MONTH_WEIGHTS[m] || WEATHER_MONTH_WEIGHTS[1];
   return Math.max(0, Number(weights[weather]) || 0);
 }
 
-function imageWeightFor(entry, slot, month) {
-  let weight = imageTimeWeight(entry, slot) * imageMonthWeight(entry, month);
+function imageWeightFor(entry, slot, month, dayType) {
+  let weight = imageTimeWeight(entry, slot) * imageMonthWeight(entry, month) * imageDayWeight(entry, dayType);
   if (entry.category === 'weather') weight *= weatherMonthWeight(entry.weather, month);
   return weight;
 }
@@ -447,25 +531,25 @@ function pickWeightedImage(candidates) {
   return usable[usable.length - 1].entry;
 }
 
-function getImageCandidates(category, slot, month) {
+function getImageCandidates(category, slot, month, dayType) {
   return IMAGE_SVG_CATALOG
     .filter(item => item.category === category)
-    .map(entry => ({ entry, weight: imageWeightFor(entry, slot, month) }))
+    .map(entry => ({ entry, weight: imageWeightFor(entry, slot, month, dayType) }))
     .filter(item => item.weight > 0);
 }
 
-function pickCategoryImage(category, month, slot) {
-  return pickWeightedImage(getImageCandidates(category, slot, month));
+function pickCategoryImage(category, month, slot, dayType) {
+  return pickWeightedImage(getImageCandidates(category, slot, month, dayType));
 }
 
-function pickWeatherImage(month, slot) {
-  return pickCategoryImage('weather', month, slot);
+function pickWeatherImage(month, slot, dayType) {
+  return pickCategoryImage('weather', month, slot, dayType);
 }
 
-function getAvailableCategoryWeights(slot, month) {
+function getAvailableCategoryWeights(slot, month, dayType) {
   const weights = {};
   Object.keys(IMAGE_SVG_CATEGORY_WEIGHTS).forEach(category => {
-    if (getImageCandidates(category, slot, month).length) {
+    if (getImageCandidates(category, slot, month, dayType).length) {
       weights[category] = IMAGE_SVG_CATEGORY_WEIGHTS[category];
     }
   });
@@ -525,15 +609,19 @@ function sendRandomSvgImage(options) {
   const hour = ((Math.floor(Number.isFinite(rawHour) ? rawHour : date.getHours()) % 24) + 24) % 24;
   const slot = getImageTimeSlot(hour);
 
+  const rawDay = opts.day == null ? date.getDay() : Number(opts.day);
+  const day = ((Math.floor(Number.isFinite(rawDay) ? rawDay : date.getDay()) % 7) + 7) % 7;
+  const dayType = (day === 0 || day === 6) ? 'weekend' : 'weekday';
+
   if (forced) return sendSvgImageEntry(forced, { quote: opts.quote, caption: opts.caption });
 
-  const categoryWeights = getAvailableCategoryWeights(slot, month);
+  const categoryWeights = getAvailableCategoryWeights(slot, month, dayType);
   const category = pickWeightedKey(categoryWeights);
   if (!category) return false;
 
   const entry = category === 'weather'
-    ? pickWeatherImage(month, slot)
-    : pickCategoryImage(category, month, slot);
+    ? pickWeatherImage(month, slot, dayType)
+    : pickCategoryImage(category, month, slot, dayType);
   if (!entry || !entry.file) return false;
 
   return sendSvgImageEntry(entry, { quote: opts.quote, caption: opts.caption });

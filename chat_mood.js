@@ -254,6 +254,10 @@ function moodWeights() {
     w.anxious += 5 * pressure;
     w.jealous += 3 * pressure;
     w.calm = Math.max(10, w.calm - 4 * pressure);
+    if (card.type === 'interact') {
+      w.sad += 2.2 * pressure;
+      w.restrained += 1.2 * pressure;
+    }
   }
 
   // 我发出的互动、邀请或选择卡还没被回应：期待/不安轻微上升。
@@ -714,6 +718,15 @@ function moodAfterMessage(isMe, type, content) {
   else if (type === 'image' || type === 'audio') p = 0.2;
   if (type === 'text' && moodEmojiOnly(text)) p = 0.55;
   if (Math.random() < p) refreshMood(false);
+}
+
+function moodAfterInteractReject(content) {
+  const name = (content && content.name) || '互动';
+  const strong = /抱|贴|亲|吻|靠/.test(name);
+  pushMoodEvent('sad', strong ? ['失落', '被拒绝了'] : ['委屈', '不想理我'], 4 * 60000, 'interact');
+  boostMood('sad', strong ? 2.4 : 1.7, 8 * 60000);
+  boostMood('restrained', 1.3, 6 * 60000);
+  boostMood('waiting', 1.1, 5 * 60000);
 }
 
 // 拆红包 / 接受互动 / 接受一起听

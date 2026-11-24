@@ -140,6 +140,28 @@ function getGiftIcon(content) {
   return (content && content.custom) ? '🎀' : '🎁';
 }
 
+// 歌词卡片：在标点符号后换行，保留原标点。
+function formatLyricLines(text) {
+  const src = String(text == null ? '' : text);
+  const lines = [];
+  let buf = '';
+  const marks = '，。！？；：,.!?;';
+  for (const ch of src) {
+    if (ch === '\n' || ch === '\r') {
+      if (buf.trim()) lines.push(buf.trim());
+      buf = '';
+      continue;
+    }
+    buf += ch;
+    if (marks.includes(ch)) {
+      if (buf.trim()) lines.push(buf.trim());
+      buf = '';
+    }
+  }
+  if (buf.trim()) lines.push(buf.trim());
+  return lines;
+}
+
 // 气泡“复制”：文字消息复制原文，其他卡片复制可读的占位描述。
 function getCopyText(content, type) {
   if (!content) return '';
@@ -180,6 +202,13 @@ function showBubbleMenu(x, y, content, isMe, type, time, rowEl) {
   bubbleMenuCtx = { content, isMe, type, time, rowEl };
   const menu = document.getElementById('bubbleMenu');
   if (!menu) return;
+  const lyricCard = type === 'musicshare' && content && content.noPlay;
+  const songBtn = document.getElementById('bubbleCopySongBtn');
+  const artistBtn = document.getElementById('bubbleCopyArtistBtn');
+  const lyricBtn = document.getElementById('bubbleCopyLyricBtn');
+  if (songBtn) songBtn.style.display = lyricCard && content.name ? 'flex' : 'none';
+  if (artistBtn) artistBtn.style.display = lyricCard && content.artist ? 'flex' : 'none';
+  if (lyricBtn) lyricBtn.style.display = lyricCard && content.lyric ? 'flex' : 'none';
   menu.classList.add('show');
   const rect = menu.getBoundingClientRect();
   const menuW = rect.width || 140;
@@ -312,6 +341,11 @@ function openOtherCard(time, type) {
     mName.textContent = `对方想要${msg.content.name || '互动'}`;
     btn.textContent = '接受';
     btn.onclick = () => finishOpenCard(time, type);
+    closeBtn.textContent = '拒绝';
+    closeBtn.onclick = () => {
+      modal.classList.remove('show');
+      rejectOtherInteraction(msg);
+    };
   } else if (type === 'musicinvite') {
     mTitle.textContent = '🎧 一起听歌';
     mIcon.textContent = '🎧';
@@ -381,7 +415,54 @@ function finishOpenCard(time, type) {
       if (bottom) bottom.textContent = '已拆开';
     }
   }
+  if (type === 'interact') scheduleInteractionResultReply('accept', msg && msg.content);
   showToast('已收取');
+}
+
+function rejectOtherInteraction(msg) {
+  if (!msg || !msg.content) return;
+  msg.content.isOpened = true;
+  msg.content.isRejected = true;
+  saveAllData();
+  if (typeof moodAfterInteractReject === 'function') moodAfterInteractReject(msg.content);
+  else if (typeof refreshMood === 'function') refreshMood();
+  const bubble = document.querySelector(`.bubble[data-msg-time="${msg.time}"]`);
+  if (bubble) {
+    bubble.classList.add('opened');
+    const subtitle = bubble.querySelector('.card-info p');
+    const bottom = bubble.querySelector('.card-bottom');
+    if (subtitle) subtitle.textContent = '已拒绝';
+    if (bottom) bottom.textContent = '已拒绝';
+  }
+  scheduleInteractionResultReply('reject', msg.content);
+  showToast('已拒绝这次互动');
+}
+
+// kind = accept / reject；content.name 是他这次主动发起的动作名。
+// 接受：我允许他碰/抱/举之后，他的反应；拒绝：他被我拒绝后的反应。
+function scheduleInteractionResultReply(kind, content) {
+  const table = kind === 'reject' ? INTERACT_REJECT_REPLIES : INTERACT_ACCEPT_REPLIES;
+  const name = content && content.name ? String(content.name) : '';
+  const pool = (name && Array.isArray(table[name]) && table[name].length)
+    ? table[name]
+    : table.default;
+  const delay = 1000 + Math.random() * 1400;
+  setTimeout(() => {
+    const send = () => {
+      if (Math.random() < HYBRID_INTERACT_CARD_RATE &&
+          typeof sendRandomTextCardReply === 'function' &&
+          sendRandomTextCardReply({ quoteChance: 0.1 })) return;
+      const line = pool[Math.floor(Math.random() * pool.length)];
+      sendMessage(line, 'text', false);
+    };
+    if (typeof getOtherStatusMain === 'function' && getOtherStatusMain() === '离线' &&
+        typeof whenOtherOnline === 'function') {
+      whenOtherOnline(send);
+      return;
+    }
+    if (typeof enqueueOnlineReply === 'function') enqueueOnlineReply(send);
+    else send();
+  }, delay);
 }
 
 // 语音消息播放：同一条再点一次是暂停/继续，换一条才重新播放。
@@ -583,10 +664,10 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
         subTitle = content.isOpened ? '已收款' : '转账'; 
       }
       if(type === 'interact') {
-        icon = content.isOpened ? (content.icon || '💞') : (content.icon || '💞');
+        icon = content.icon || '💞';
         title = content.name || '互动';
         colorClass = content.isOpened ? 'grey' : 'interact';
-        subTitle = content.isOpened ? '已接受' : '互动请求';
+        subTitle = content.isRejected ? '已拒绝' : (content.isOpened ? '已接受' : '互动请求');
       }
       if(type === 'gift') {
         let gName = content.name || content.val || '神秘礼物';
@@ -603,7 +684,11 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
         icon = '🎵';
         title = content.name || '一首歌';
         colorClass = 'music';
-        subTitle = content.artist ? content.artist : '分享歌曲';
+        if (content.noPlay) {
+          subTitle = content.artist || '分享歌曲';
+        } else {
+          subTitle = content.artist ? content.artist : '分享歌曲';
+        }
       }
       if (type === 'musicinvite') {
         icon = '🎧';
@@ -626,13 +711,13 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
         const hasChoice = Array.isArray(content.chosen) && content.chosen.length > 0;
         bottomText = hasChoice ? '已选择 · 点击展开' : (isMe ? '等待对方选择 · 点击展开' : '点击展开');
       }
-      else if (type === 'musicshare') bottomText = content.isOpened ? '已播放' : '点击播放';
+      else if (type === 'musicshare') bottomText = content.noPlay ? '分享歌曲' : (content.isOpened ? '已播放' : '点击播放');
       else if (type === 'musicinvite') bottomText = content.isOpened ? '已接受' : (isMe ? '等待对方回应' : '点击接受');
       else if (type === 'transfer') bottomText = content.isOpened ? '已收款' : '未收款';
       else if (content.isOpened) {
         if (type === 'redpacket') bottomText = '已领取';
         else if (type === 'gift') bottomText = '已拆开';
-        else if (type === 'interact') bottomText = '已接受';
+        else if (type === 'interact') bottomText = content.isRejected ? '已拒绝' : '已接受';
       } else if (!isMe) {
         bottomText = type === 'interact' ? '点击接受' : '点击拆开';
       } else {
@@ -640,6 +725,20 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
       }
       
       bodyDiv.innerHTML = `<div class="card-top"><div class="card-icon ${colorClass}">${icon}</div><div class="card-info"><h4>${title}</h4><p>${subTitle}</p></div></div><div class="card-bottom">${bottomText}</div>`;
+
+      if (type === 'musicshare' && content.noPlay && content.lyric) {
+        const info = bodyDiv.querySelector('.card-info');
+        const lines = formatLyricLines(content.lyric);
+        if (info && lines.length) {
+          const lyricEl = document.createElement('div');
+          lyricEl.className = 'music-lyric';
+          lines.forEach((line, idx) => {
+            if (idx) lyricEl.appendChild(document.createElement('br'));
+            lyricEl.appendChild(document.createTextNode(line));
+          });
+          info.appendChild(lyricEl);
+        }
+      }
 
       // 推荐歌曲 / 红包 / 转账：卡片里带一句备注
       if ((type === 'musicshare' || type === 'redpacket' || type === 'transfer') && content.note) {
@@ -685,6 +784,10 @@ function addMessageDOM(content, isMe, type = 'text', time = Date.now()) {
 
       if (type === 'musicshare') {
         bodyDiv.onclick = () => {
+          if (content.noPlay) {
+            showToast('希望你喜欢这首歌，希望你喜欢这句词^^✨');
+            return;
+          }
           if (typeof playSongByTitle === 'function') playSongByTitle(content.name);
           if (!content.isOpened) {
             content.isOpened = true;
@@ -1073,9 +1176,31 @@ const RANDOM_PAT_CHANCE = 0.06;
 const RANDOM_MUSIC_CHANCE = 0.03;
 const RANDOM_MUSIC_INVITE_RATIO = 0.35; // 音乐事件中 35% 是邀请，约 1.05%
 const RANDOM_MONEY_CHANCE = 0.05;
-const RANDOM_IMAGE_CARD_CHANCE = 0.12; // 图片事件总概率；低于互动事件合计（拍一拍 6% + 音乐 3% + 礼物/红包 5%）
+const RANDOM_INTERACT_INVITE_CHANCE = 0.05; // 他主动发肢体互动请求
+const INCOMING_INTERACT_COOLDOWN = 5 * 60 * 1000;
+const RANDOM_IMAGE_CARD_CHANCE = 0.12; // 图片事件总概率；低于互动事件合计（拍一拍 6% + 音乐 3% + 礼物/红包 5% + 肢体互动 5%）
 const IMAGE_SVG_SHARE = 0.25; // 图片事件里约 25% 用内置 SVG，其余用本地上传的表情/图片
 const MUSIC_EVENT_COOLDOWN = 8 * 60 * 1000;
+let lastIncomingInteractAt = 0;
+
+function sendRandomInteractionInvite() {
+  if (typeof interactLibrary === 'undefined' || !Array.isArray(interactLibrary) || !interactLibrary.length) return false;
+  const now = Date.now();
+  if (now - lastIncomingInteractAt < INCOMING_INTERACT_COOLDOWN) return false;
+  const pending = chatHistory.slice(-12).some(m => m && m.role === 'other' && m.type === 'interact' && m.content && !m.content.isOpened);
+  if (pending) return false;
+  const it = interactLibrary[Math.floor(Math.random() * interactLibrary.length)];
+  if (!it || !it.name) return false;
+  lastIncomingInteractAt = now;
+  sendMessage({
+    name: it.name,
+    icon: it.icon || '💞',
+    val: '想要' + it.name,
+    isOpened: false,
+    interact: true
+  }, 'interact', false);
+  return true;
+}
 
 function hasRecentMusicEvent() {
   const cutoff = Date.now() - MUSIC_EVENT_COOLDOWN;
@@ -1083,6 +1208,8 @@ function hasRecentMusicEvent() {
     const m = chatHistory[i];
     if (!m || !m.time) continue;
     if (m.time < cutoff) break;
+    // 只分享歌词的卡片不占用可播放歌曲的冷却。
+    if (m.type === 'musicshare' && m.content && m.content.noPlay) continue;
     if (m.type === 'musicshare' || m.type === 'musicinvite') return true;
   }
   return false;
@@ -1119,24 +1246,38 @@ function randomReply() {
     return;
   }
 
-  // 偶尔分享一首歌，或者邀请你一起听；8 分钟内只出现一次音乐事件，避免连续听歌
-  if (Math.random() < RANDOM_MUSIC_CHANCE && !hasRecentMusicEvent() && typeof pickRandomSong === 'function') {
-    const song = pickRandomSong();
-    if (song) {
-      if (Math.random() >= RANDOM_MUSIC_INVITE_RATIO) {
-        const notes = ['这首好听，听听看', '今天的单曲循环', '歌词写得很像我们', '心情不好就听这个', '突然想到你，就发你了'];
-        sendMessage({
-          name: song.title,
-          artist: song.artist,
-          val: song.title,
-          note: notes[Math.floor(Math.random() * notes.length)]
-        }, 'musicshare', false);
-      } else {
-        // 有时候只是想和你一起听歌，不指定哪一首
-        const name = Math.random() < 0.5 ? song.title : '';
-        sendMessage({ name, artist: song.artist }, 'musicinvite', false);
-      }
+  // 偶尔分享一首歌，或者邀请你一起听；可播放音乐 8 分钟内只出现一次，纯歌词分享不受限。
+  if (Math.random() < RANDOM_MUSIC_CHANCE) {
+    const canPlayable = !hasRecentMusicEvent();
+    const shareOnly = typeof pickShareOnlySong === 'function' ? pickShareOnlySong() : null;
+    if (shareOnly && (!canPlayable || Math.random() < 0.45)) {
+      sendMessage({
+        name: shareOnly.title,
+        artist: shareOnly.artist,
+        lyric: shareOnly.lyric || '',
+        noPlay: true,
+        val: shareOnly.title
+      }, 'musicshare', false);
       return;
+    }
+    if (canPlayable && typeof pickRandomSong === 'function') {
+      const song = pickRandomSong();
+      if (song) {
+        if (Math.random() >= RANDOM_MUSIC_INVITE_RATIO) {
+          const notes = ['这首好听，听听看', '今天的单曲循环', '歌词写得很像我们', '心情不好就听这个', '突然想到你，就发你了'];
+          sendMessage({
+            name: song.title,
+            artist: song.artist,
+            val: song.title,
+            note: notes[Math.floor(Math.random() * notes.length)]
+          }, 'musicshare', false);
+        } else {
+          // 有时候只是想和你一起听歌，不指定哪一首
+          const name = Math.random() < 0.5 ? song.title : '';
+          sendMessage({ name, artist: song.artist }, 'musicinvite', false);
+        }
+        return;
+      }
     }
   }
 
@@ -1163,6 +1304,8 @@ function randomReply() {
     }
     return;
   }
+
+  if (Math.random() < RANDOM_INTERACT_INVITE_CHANCE && sendRandomInteractionInvite()) return;
 
   const textCards = contents.filter(item => item.type === 'text');
   const imageCards = contents.filter(item => item.type === 'image');
@@ -1470,6 +1613,22 @@ document.addEventListener('click', (e) => {
     });
     hideBubbleMenu();
   };
+
+  const bindMusicCopy = (id, getValue, label) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const ctx = bubbleMenuCtx;
+      if (!ctx || !ctx.content) return;
+      const value = String(getValue(ctx.content) || '');
+      copyTextToClipboard(value).then(() => showToast(label)).catch(() => showToast('复制失败'));
+      hideBubbleMenu();
+    };
+  };
+  bindMusicCopy('bubbleCopySongBtn', c => c.name, '已复制歌名');
+  bindMusicCopy('bubbleCopyArtistBtn', c => c.artist, '已复制作者');
+  bindMusicCopy('bubbleCopyLyricBtn', c => c.lyric, '已复制歌词');
 
   if (delBtn) delBtn.onclick = (e) => {
     e.stopPropagation();

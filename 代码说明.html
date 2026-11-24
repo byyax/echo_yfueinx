@@ -154,6 +154,7 @@
 <h3>8. 音乐引擎</h3>
 <ul>
 <li>内置歌在 <code>chat_music.js</code> → <code>MUSIC_LIBRARY</code>；</li>
+<li><code>share_songs.js</code> → <code>SHARE_ONLY_SONGS</code> 只用于聊天分享，不进入播放器；卡片带 <code>noPlay: true</code>，显示歌词但不播放；</li>
 <li>有 <code>src</code> 的走 <code>&lt;audio&gt;</code> 真播，没有 <code>src</code> 的走模拟计时；</li>
 <li>本地导入的 mp3 存在 IndexedDB，播放时生成临时 URL；</li>
 <li>歌词优先顺序：歌曲自带 <code>lines</code> → 自己导入的 <code>echo_lyric_歌名</code> → <code>music_lyrics.js</code> 的 <code>BUILTIN_LYRICS</code>。</li>
@@ -170,7 +171,7 @@
 </ol>
 <hr>
 <h2>三、文件结构</h2>
-<table><thead><tr><th>文件</th><th>负责</th></tr></thead><tbody><tr><td><code>index.html</code></td><td>页面骨架、弹窗、启动画面、脚本顺序</td></tr><tr><td><code>style.css</code></td><td>全部样式、35 套配色、动画</td></tr><tr><td><code>data.js</code></td><td>全局数据、默认设置、配色表、通用函数</td></tr><tr><td><code>history_store.js</code></td><td>聊天记录 IndexedDB 主存储、v13 迁移、启动就绪信号</td></tr><tr><td><code>chat_core.js</code></td><td>画气泡、发消息、随机回复、拍一拍、引用</td></tr><tr><td><code>chat_images.js</code></td><td>内置 SVG 图片目录、时段/月份权重、配文、随机图片卡</td></tr><tr><td><code>chat_stickers.js</code></td><td>表情面板</td></tr><tr><td><code>chat_tools.js</code></td><td>图片、拍照、位置、互动、录音</td></tr><tr><td><code>chat_call.js</code></td><td>语音通话、来电、小窗、通话心情</td></tr><tr><td><code>chat_money.js</code></td><td>红包、转账、支付密码、礼物商城</td></tr><tr><td><code>manage_cards.js</code></td><td>字卡库、标签、批量、查重、文字字卡导入</td></tr><tr><td><code>manage_settings.js</code></td><td>聊天设置、配色选择、头像裁剪</td></tr><tr><td><code>manage_history.js</code></td><td>聊天记录页、字卡统计</td></tr><tr><td><code>manage_data.js</code></td><td>导出、导入、清理</td></tr><tr><td><code>manage_music.js</code></td><td>音乐管理页</td></tr><tr><td><code>music_lyrics.js</code></td><td>内置歌词</td></tr><tr><td><code>chat_music.js</code></td><td>播放器、歌单、歌词同步、导入</td></tr><tr><td><code>mood_pools.js</code></td><td>16 档情绪数据、通用补充、基础权重、emoji、动画映射</td></tr><tr><td><code>chat_mood.js</code></td><td>情绪抽签、权重衰减、事件、渲染</td></tr><tr><td><code>router.js</code></td><td>页面切换、配色、状态栏、初始化</td></tr><tr><td><code>custom_icons.js</code></td><td>把 emoji 图标换成图片</td></tr><tr><td><code>pwa.js</code> / <code>sw.js</code></td><td>安装到桌面、手机通知</td></tr></tbody></table>
+<table><thead><tr><th>文件</th><th>负责</th></tr></thead><tbody><tr><td><code>index.html</code></td><td>页面骨架、弹窗、启动画面、脚本顺序</td></tr><tr><td><code>style.css</code></td><td>全部样式、35 套配色、动画</td></tr><tr><td><code>data.js</code></td><td>全局数据、默认设置、配色表、通用函数</td></tr><tr><td><code>interact_result_replies.js</code></td><td>六个肢体互动各自的接受/拒绝后续文案</td></tr><tr><td><code>history_store.js</code></td><td>聊天记录 IndexedDB 主存储、v13 迁移、启动就绪信号</td></tr><tr><td><code>chat_core.js</code></td><td>画气泡、发消息、随机回复、拍一拍、引用</td></tr><tr><td><code>chat_images.js</code></td><td>内置 SVG 图片目录、时段/月份权重、配文、随机图片卡</td></tr><tr><td><code>chat_stickers.js</code></td><td>表情面板</td></tr><tr><td><code>chat_tools.js</code></td><td>图片、拍照、位置、互动、录音</td></tr><tr><td><code>chat_call.js</code></td><td>语音通话、来电、小窗、通话心情</td></tr><tr><td><code>chat_money.js</code></td><td>红包、转账、支付密码、礼物商城</td></tr><tr><td><code>manage_cards.js</code></td><td>字卡库、标签、批量、查重、文字字卡导入</td></tr><tr><td><code>manage_settings.js</code></td><td>聊天设置、配色选择、头像裁剪</td></tr><tr><td><code>manage_history.js</code></td><td>聊天记录页、字卡统计</td></tr><tr><td><code>manage_data.js</code></td><td>导出、导入、清理</td></tr><tr><td><code>manage_music.js</code></td><td>音乐管理页</td></tr><tr><td><code>music_lyrics.js</code></td><td>内置歌词</td></tr><tr><td><code>chat_music.js</code></td><td>播放器、歌单、歌词同步、导入</td></tr><tr><td><code>share_songs.js</code></td><td>只分享、不进入播放器的歌单（歌名 / 歌手 / 一句歌词）</td></tr><tr><td><code>mood_pools.js</code></td><td>16 档情绪数据、通用补充、基础权重、emoji、动画映射</td></tr><tr><td><code>chat_mood.js</code></td><td>情绪抽签、权重衰减、事件、渲染</td></tr><tr><td><code>router.js</code></td><td>页面切换、配色、状态栏、初始化</td></tr><tr><td><code>custom_icons.js</code></td><td>把 emoji 图标换成图片</td></tr><tr><td><code>pwa.js</code> / <code>sw.js</code></td><td>安装到桌面、手机通知</td></tr></tbody></table>
 <hr>
 <h2>四、数据模型</h2>
 <h3>1. localStorage 键</h3>
@@ -273,6 +274,7 @@ if (!chatSettings.signature) chatSettings.signature = '我喜欢夏天和你淋�
 <p><strong>原理</strong>：</p>
 <ul>
 <li>互动：<code>sendInteract(it)</code> 发一张 <code>interact</code> 卡片，1.5–3 秒后回应；五成用 <code>it.replies</code> / <code>INTERACT_REPLIES[名字]</code>，五成用 <code>sendRandomTextCardReply()</code> 抽字卡；字卡库为空时必定用内置回复；</li>
+<li>他主动发来互动后，接受走 <code>interact_result_replies.js</code> 的 <code>INTERACT_ACCEPT_REPLIES</code>，拒绝走 <code>INTERACT_REJECT_REPLIES</code>；文件里按六个动作分别列出，每个动作 5 条，另有兜底；后续回复约 50% 用内置、50% 抽主字卡库，延迟约 1～2.4 秒；</li>
 <li>拍一拍：<code>triggerPat(isMe)</code> 直接往 <code>chatHistory</code> push 一条 <code>role: 'system'</code> 的消息，并画成居中的 <code>.sys</code> 灰字；</li>
 <li>他拍你：从 <code>pokeLibrary</code> 随机抽一条，<code>[我]</code> / <code>[他]</code> 替换成昵称。</li>
 </ul>
@@ -429,8 +431,9 @@ location.reload();</code></pre>
 <p><strong>位置</strong>：<code>chat_images.js</code> + <code>image_svg/</code>；图片消息的渲染在 <code>chat_core.js</code> 的 <code>addMessageDOM()</code>，图片卡样式在 <code>style.css</code> 的 <code>.img-card.has-caption</code> 和 <code>.img-caption</code>。</p>
 <p><strong>原理</strong>：</p>
 <ul>
-<li><code>IMAGE_SVG_CATALOG</code> 每项是一张图：<code>file</code>、<code>category</code>、可选的 <code>weather</code> / <code>months</code> / <code>times</code>、以及 <code>captions</code>；</li>
-<li><code>IMAGE_SVG_CATEGORY_WEIGHTS</code> 决定先抽哪一类；<code>WEATHER_MONTH_WEIGHTS</code> 决定不同月份各天气的权重；</li>
+<li><code>IMAGE_SVG_CATALOG</code> 每项是一张图：<code>file</code>、<code>category</code>、可选的 <code>weather</code> / <code>months</code> / <code>times</code> / <code>weekday</code> / <code>weekend</code>、以及 <code>captions</code>；</li>
+<li><code>IMAGE_SVG_CATEGORY_WEIGHTS</code> 决定先抽哪一类；<code>WEATHER_MONTH_WEIGHTS</code> 决定不同月份各天气的权重；分类目前有 <code>weather</code> / <code>scenery</code>（外出/风景）/ <code>food</code> / <code>fruit</code> / <code>drink</code> / <code>room</code> / <code>home</code> / <code>sport</code> / <code>dessert</code> / <code>fastfood</code> / <code>desk</code> / <code>pet</code>；</li>
+<li><code>weekday</code> / <code>weekend</code> 是星期权重，写了就只在对应日期类型里按该权重出现；运动图用它区分工作日健身房和周末户外/球类；</li>
 <li>天气图按季节分文件，共 26 张：<code>weather_spring_*</code>（3–5 月）、<code>weather_summer_*</code>（6–8 月）、<code>weather_autumn_*</code>（9–11 月）、<code>weather_winter_*</code>（12–2 月）；<code>months</code> 直接决定只在对应季节出现；</li>
 <li><code>times</code> 是时间段权重：<code>dawn</code> / <code>morning</code> / <code>noon</code> / <code>afternoon</code> / <code>evening</code> / <code>night</code> / <code>lateNight</code>。有 <code>times</code> 但没写某个时间段时，该时间段权重按 0，不会抽到；完全没写 <code>times</code> 才是全天可用；</li>
 <li>实际抽取时先按分类权重选分类，再在该分类里按「时间权重 × 月份/季节权重」（天气再乘天气月份权重）抽具体图片；会避开上一张刚刚发过的图片；</li>
@@ -445,7 +448,7 @@ location.reload();</code></pre>
 </ol>
 <pre><code class="language-js">{
   file: 'xxx.svg',
-  category: 'room', // weather / scenery / food / fruit / drink / room / home / desk / pet
+  category: 'room', // weather / scenery / food / fruit / drink / room / home / sport / dessert / fastfood / desk / pet
   times: { morning: 1, noon: 1, afternoon: 1, evening: 0.5, night: 0 },
   captions: ['文案一', '文案二', '文案三', '文案四', '文案五']
 }

@@ -11,13 +11,18 @@
       ['echoDebug.redpacket("52.00", "备注")', '对方发红包'],
       ['echoDebug.transfer("520.00", "备注")', '对方转账'],
       ['echoDebug.interact("抱抱")', '对方发互动请求'],
+      ['echoDebug.interactReply("accept", "抱抱")', '直接发一条接受后续内置文案'],
+      ['echoDebug.interactReply("reject", "抱抱")', '直接发一条拒绝后续内置文案'],
       ['echoDebug.location("在你身边(CR)")', '对方发位置'],
       ['echoDebug.musicShare("歌名")', '对方分享歌曲'],
+      ['echoDebug.sharePlayable("歌名")', '对方发一张可播放音乐卡'],
+      ['echoDebug.shareLyric("歌名")', '对方发一张只分享歌词的音乐卡'],
       ['echoDebug.musicInvite("歌名")', '对方邀请一起听'],
       ['echoDebug.choice("标题", ["A", "B"], 1)', '对方发选择卡'],
       ['echoDebug.pat()', '对方拍一拍你'],
       ['echoDebug.network("2G")', '切换网络：WiFi / 5G / 2G'],
       ['echoDebug.offline()', '切成离线，可传 sleep / work / phone_off'],
+      ['echoDebug.status("offline", "sleep")', '直接切换对方主状态'],
       ['echoDebug.online()', '切成在线'],
       ['echoDebug.offlineAuto()', '立即发一条离线自动回复'],
       ['echoDebug.offlineReturn()', '立即模拟离线回来'],
@@ -32,7 +37,10 @@
       ['echoDebug.randomSignature()', '从签名库随机换一条'],
       ['echoDebug.signatureList()', '查看签名库'],
       ['debugMoodSwitch("sad")', '切换情绪（旧命令）'],
-      ['debugMoodUpgrade()', '当前情绪升一档（旧命令）']
+      ['debugMoodUpgrade()', '当前情绪升一档（旧命令）'],
+      ['debugMoodSample("happy", 20)', '批量查看某档情绪文案'],
+      ['debugMoodWeights()', '查看当前情绪权重'],
+      ['debugLateNightMood()', '触发熬夜情绪']
     ];
     console.table(rows.map(([命令, 作用]) => ({ 命令, 作用 })));
     say('这些消息会真的写进聊天记录，测完可以长按删除。');
@@ -67,6 +75,19 @@
     return '已发送互动：' + it.name;
   };
 
+  E.interactReply = function (kind, name) {
+    const k = String(kind || 'accept').toLowerCase() === 'reject' ? 'reject' : 'accept';
+    if (typeof INTERACT_ACCEPT_REPLIES === 'undefined' || typeof INTERACT_REJECT_REPLIES === 'undefined') {
+      return '互动后续文案文件没有加载';
+    }
+    const table = k === 'reject' ? INTERACT_REJECT_REPLIES : INTERACT_ACCEPT_REPLIES;
+    const n = String(name || '抱抱');
+    const pool = (table[n] && table[n].length) ? table[n] : table.default;
+    const line = pool[Math.floor(Math.random() * pool.length)];
+    sendMessage(line, 'text', false);
+    return '已发送' + (k === 'reject' ? '拒绝' : '接受') + '后续：' + line;
+  };
+
   E.location = function (text) {
     sendMessage(String(text || '在你身边(CR)'), 'location', false);
     return '已发送位置';
@@ -81,6 +102,39 @@
     t = t || '测试歌曲';
     sendMessage({ name: t, artist: '测试', val: t, note: '测试分享' }, 'musicshare', false);
     return '已分享歌曲：' + t;
+  };
+
+  E.sharePlayable = function (title) {
+    const list = (typeof MUSIC_PLAYLIST !== 'undefined' && Array.isArray(MUSIC_PLAYLIST))
+      ? MUSIC_PLAYLIST.filter(s => s && s.kind !== 'book' && s.src)
+      : [];
+    let song = null;
+    const q = title == null ? '' : String(title).trim();
+    if (q) song = list.find(s => s.title === q) || list.find(s => s.title.includes(q));
+    if (!song && typeof pickRandomSong === 'function') song = pickRandomSong();
+    if (!song) return '没有可播放歌曲';
+    sendMessage({ name: song.title, artist: song.artist, val: song.title, note: '测试分享' }, 'musicshare', false);
+    return '已分享可播放音乐：' + song.title;
+  };
+
+  E.shareLyric = function (title) {
+    const list = (typeof SHARE_ONLY_SONGS !== 'undefined' && Array.isArray(SHARE_ONLY_SONGS))
+      ? SHARE_ONLY_SONGS
+      : [];
+    if (!list.length) return 'share_songs.js 还没有歌';
+    let song = null;
+    const q = title == null ? '' : String(title).trim();
+    if (q) song = list.find(s => s && s.title === q) || list.find(s => s && s.title.includes(q));
+    if (!song) song = list[Math.floor(Math.random() * list.length)];
+    if (!song) return '没有找到这首歌';
+    sendMessage({
+      name: song.title,
+      artist: song.artist || '分享',
+      lyric: song.lyric || '',
+      noPlay: true,
+      val: song.title
+    }, 'musicshare', false);
+    return '已分享歌词卡：' + song.title;
   };
 
   E.musicInvite = function (title) {
@@ -211,10 +265,10 @@
     return '随机回复函数不可用';
   };
 
-  E.image = function (hour, month) {
+  E.image = function (hour, month, day) {
     if (typeof sendRandomSvgImage !== 'function') return '内置图片函数不可用';
     const h = hour == null ? new Date().getHours() : Number(hour);
-    const ok = sendRandomSvgImage({ hour: h, month, ignoreCooldown: true });
+    const ok = sendRandomSvgImage({ hour: h, month, day, ignoreCooldown: true });
     if (!ok) return '没有符合这个时间的图片';
     const file = (typeof lastSvgImageFile !== 'undefined') ? lastSvgImageFile : '';
     return '已发送内置图片：' + file;
@@ -237,11 +291,15 @@
       const months = item.months
         ? Object.keys(item.months).filter(k => item.months[k] > 0).map(k => k + ':' + item.months[k]).join(' ')
         : '全年';
+      const week = (item.weekday != null || item.weekend != null)
+        ? `工作日:${item.weekday || 0} 周末:${item.weekend || 0}`
+        : '不限';
       return {
         文件: item.file,
         分类: item.category,
         天气: item.weather || '',
         月份权重: months,
+        星期权重: week,
         时段权重: times,
         配文数: (item.captions || []).length
       };

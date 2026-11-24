@@ -224,6 +224,8 @@ button:active, .icon-btn:active, .text-btn:active { transform: scale(0.92) !impo
 .bubble.special-card .card-icon.interact { background: linear-gradient(135deg, #fd79c8, #a29bfe); }
 .bubble.special-card .card-info h4 { font-size: 15px; color: var(--text-main); }
 .bubble.special-card .card-info p { font-size: 12px; color: #999; }
+.bubble.special-card .music-lyric { margin-top: 6px; font-size: 12px; line-height: 1.55; color: #777; word-break: break-word; }
+[data-theme="dark"] .bubble.special-card .music-lyric { color: #b7bcc4; }
 .bubble.special-card .card-bottom { padding: 6px 12px; background: var(--bg-color); font-size: 12px; color: #999; border-top: 1px solid var(--border-color); }
 
 @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-15px); } }

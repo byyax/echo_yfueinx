@@ -654,6 +654,10 @@ function pickRandomSong() {
   const list = pool.length ? pool : MUSIC_PLAYLIST;
   return list[Math.floor(Math.random() * list.length)];
 }
+function pickShareOnlySong() {
+  if (typeof SHARE_ONLY_SONGS === 'undefined' || !Array.isArray(SHARE_ONLY_SONGS) || !SHARE_ONLY_SONGS.length) return null;
+  return SHARE_ONLY_SONGS[Math.floor(Math.random() * SHARE_ONLY_SONGS.length)];
+}
 // 推荐歌曲之后，他的回应（像互动一样有固定词库，不是每次都抽字卡）
 const MUSIC_SHARE_REPLIES = [
   '《{title}》？我去听听。',
@@ -1115,6 +1119,7 @@ if (_origApplyChatSettings) {
 
 window.playSongByTitle = playSongByTitle;
 window.pickRandomSong = pickRandomSong;
+window.pickShareOnlySong = pickShareOnlySong;
 window.importMusicFiles = importMusicFiles;
 window.getMusicPlaylist = () => MUSIC_PLAYLIST;
 window.getMusicIndex = () => musicIndex;
