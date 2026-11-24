@@ -18,9 +18,9 @@ const MUSIC_LIBRARY = [
   { kind: 'song', title: "Don't Go Back Tonight", artist: 'TizzyT', src: "music/TizzyT - Don't Go Back Tonight.mp3", lrc: "music/TizzyT - Don't Go Back Tonight.lrc" },
 
   // —— 白噪音 ——
-  { kind: 'song', title: '白噪音_雨声', artist: '白噪音', src: 'music/white_noise_rain.mp3' },
-  { kind: 'song', title: '白噪音_壁炉', artist: '白噪音', src: 'music/white_noise_fireplace.mp3' },
-  { kind: 'song', title: '白噪音_沸腾', artist: '白噪音', src: 'music/white_noise_boiling.mp3' },
+  { kind: 'song', title: '白噪音_雨声', artist: '白噪音', src: 'music/white_noise_rain.mp3?v=20261124', fallbackSrc: 'music/白噪音_雨声.mp3?v=20261124' },
+  { kind: 'song', title: '白噪音_壁炉', artist: '白噪音', src: 'music/white_noise_fireplace.mp3?v=20261124', fallbackSrc: 'music/白噪音_壁炉.mp3?v=20261124' },
+  { kind: 'song', title: '白噪音_沸腾', artist: '白噪音', src: 'music/white_noise_boiling.mp3?v=20261124', fallbackSrc: 'music/白噪音_沸腾.mp3?v=20261124' },
 
   // —— music 文件夹里还没有音频文件的歌，放最后 ——
   { kind: 'song', title: '无意', artist: '加木 / Demxntia' },
@@ -599,8 +599,23 @@ musicAudio.addEventListener('error', () => {
   clearMusicLoadTimer();
   const song = currentSong();
   if (!song || !isLocalSong(song)) return;
-  if (musicAudio.getAttribute('src') !== song.src) return;
+  const currentSrc = musicAudio.getAttribute('src');
+  if (currentSrc !== song.src && currentSrc !== song.fallbackSrc) return;
   const code = musicAudio.error ? musicAudio.error.code : 0;
+
+  // 有些静态站对中文文件名或旧缓存不友好：主路径失败时再试一次备用路径。
+  if (code === 4 && song.fallbackSrc && currentSrc !== song.fallbackSrc) {
+    song.src = song.fallbackSrc;
+    musicError = '';
+    musicLoading = true;
+    updateMusicBarUI();
+    musicAudio.src = song.fallbackSrc;
+    try { musicAudio.load(); } catch (e) {}
+    const p = musicAudio.play();
+    if (p && p.catch) p.catch(() => {});
+    return;
+  }
+
   const reason = code === 4 ? '文件找不到或格式不支持'
     : code === 3 ? '解码失败'
     : code === 2 ? '网络错误'
