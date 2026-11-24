@@ -422,6 +422,7 @@
 <table>
 <tr><th>场景</th><th>内置回复</th><th>抽你的字卡</th></tr>
 <tr><td>互动（摸摸头、抱抱、贴贴等）</td><td>50%</td><td>50%</td></tr>
+<tr><td>接受 / 拒绝他的互动后的后续</td><td>70%</td><td>30%</td></tr>
 <tr><td>推荐歌曲给他</td><td>40%</td><td>60%</td></tr>
 <tr><td>通话后：未接来电、对方已挂断、已挂断</td><td>60%</td><td>40%</td></tr>
 <tr><td>通话后：通话结束、已取消</td><td>50%</td><td>50%</td></tr>
@@ -446,7 +447,7 @@
 </table>
 <p>音乐类事件（可播放分享和一起听）总共约 3%，并且 <strong>8 分钟内只出现一次</strong>，避免刚抽几张字卡就连续听歌。分享可能来自播放器里的歌，也可能来自 <code>share_songs.js</code> 的只分享歌单；只分享歌单的卡片会显示一句歌词，但点击不会播放，也 <strong>不占用</strong> 这 8 分钟冷却。</p>
 <p>图片事件里约 25% 会抽内置 SVG，其余抽上传图库；内置 SVG 还有 8 分钟冷却。内置图片会按本地时间、星期和月份选择，并随机配一句文案，详见「图片、拍照、位置」里的「他随机发来的图片卡」。</p>
-<p>内置文案的完整清单、每句在哪个文件里、怎么改概率，都放在《代码说明》第十六节。如需调整比例，请修改 <code>chat_core.js</code> 中的 <code>HYBRID_INTERACT_CARD_RATE</code>、<code>HYBRID_MUSIC_CARD_RATE</code>，以及 <code>chat_call.js</code> 中的 <code>CALL_REPLY_CARD_RATE</code>。</p>
+<p>内置文案的完整清单、每句在哪个文件里、怎么改概率，都放在《代码说明》第十六节。如需调整比例，请修改 <code>chat_core.js</code> 中的 <code>HYBRID_INTERACT_CARD_RATE</code>、<code>INTERACT_RESULT_CARD_RATE</code>、<code>HYBRID_MUSIC_CARD_RATE</code>，以及 <code>chat_call.js</code> 中的 <code>CALL_REPLY_CARD_RATE</code>。</p>
 <h2>十九、熬夜与离线</h2>
 <ul>
 <li>00:00～05:00 登录，或在深夜长时间停留在界面，会提高担心、不安、焦虑、生气的权重，并可能触发一次熬夜情绪；</li>

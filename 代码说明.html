@@ -274,7 +274,7 @@ if (!chatSettings.signature) chatSettings.signature = '我喜欢夏天和你淋�
 <p><strong>原理</strong>：</p>
 <ul>
 <li>互动：<code>sendInteract(it)</code> 发一张 <code>interact</code> 卡片，1.5–3 秒后回应；五成用 <code>it.replies</code> / <code>INTERACT_REPLIES[名字]</code>，五成用 <code>sendRandomTextCardReply()</code> 抽字卡；字卡库为空时必定用内置回复；</li>
-<li>他主动发来互动后，接受走 <code>interact_result_replies.js</code> 的 <code>INTERACT_ACCEPT_REPLIES</code>，拒绝走 <code>INTERACT_REJECT_REPLIES</code>；文件里按六个动作分别列出，每个动作 5 条，另有兜底；后续回复约 50% 用内置、50% 抽主字卡库，延迟约 1～2.4 秒；</li>
+<li>他主动发来互动后，接受走 <code>interact_result_replies.js</code> 的 <code>INTERACT_ACCEPT_REPLIES</code>，拒绝走 <code>INTERACT_REJECT_REPLIES</code>；文件里按六个动作分别列出，每个动作 5 条，另有兜底；后续回复约 70% 用内置、30% 抽主字卡库，延迟约 1～2.4 秒；</li>
 <li>拍一拍：<code>triggerPat(isMe)</code> 直接往 <code>chatHistory</code> push 一条 <code>role: 'system'</code> 的消息，并画成居中的 <code>.sys</code> 灰字；</li>
 <li>他拍你：从 <code>pokeLibrary</code> 随机抽一条，<code>[我]</code> / <code>[他]</code> 替换成昵称。</li>
 </ul>
@@ -931,7 +931,7 @@ applyPalette('aurora');</code></pre>
 <li><b>后台使用手册</b>：<code>index.html</code> 新增 <code>#pageManual</code>，<code>router.js</code> 绑定入口，样式在 <code>style.css</code> 的 <code>.manual-*</code>；右下角固定「返回后台」按钮，目录只滚动手册内部容器。</li>
 <li><b>微信 / 其他配色</b>：微信改为「我绿、对方白、灰底」；新增 social 分组：Telegram、QQ、LINE、WhatsApp、iMessage。</li>
 <li><b>像素爱心默认头像</b>：对方未上传头像时用 <code>icons/icon-heart-192.png</code>，<code>--icon-filter</code> 跟随配色。</li>
-<li><b>混合比例</b>：互动 <code>HYBRID_INTERACT_CARD_RATE</code> 0.5，推荐歌曲 <code>HYBRID_MUSIC_CARD_RATE</code> 0.6，通话后 <code>CALL_REPLY_CARD_RATE</code> 0.4/0.5。</li>
+<li><b>混合比例</b>：互动 <code>HYBRID_INTERACT_CARD_RATE</code> 0.5，接受/拒绝后的后续 <code>INTERACT_RESULT_CARD_RATE</code> 0.3（70% 内置），推荐歌曲 <code>HYBRID_MUSIC_CARD_RATE</code> 0.6，通话后 <code>CALL_REPLY_CARD_RATE</code> 0.4/0.5。</li>
 <li><b>通话记录图标与五种结果</b>：<code>chat_call.js</code> 的 <code>endCall()</code> 与 <code>chat_core.js</code> 的 <code>addMessageDOM()</code> 新增 <code>type: 'call'</code>。</li>
 <li><b>通话后的情绪与回复</b>：<code>moodAfterCall()</code> 调整事件和权重；<code>scheduleCallReply()</code> 按内置句子/字卡混合回复，内置句子可接 emoji。</li>
 <li><b>修复输入中情绪气泡位置</b>：自己发言后 <code>sendMessage()</code> 调用 <code>refreshMood(false)</code>，最后一条真实消息为「我」时立即收起普通情绪。</li>
@@ -960,12 +960,13 @@ applyPalette('aurora');</code></pre>
 <tr><th>场景</th><th>内置回复</th><th>抽字卡</th><th>说明</th></tr>
 <tr><td>2G 文字回复</td><td>55%</td><td>45%</td><td>只作用于文字分支；图片、拍一拍、音乐、礼物先按原概率判定</td></tr>
 <tr><td>互动（摸摸头、抱抱等）</td><td>50%</td><td>50%</td><td>字卡库为空时回到 100% 内置</td></tr>
+<tr><td>接受 / 拒绝他的互动后的后续</td><td>70%</td><td>30%</td><td>由 <code>INTERACT_RESULT_CARD_RATE</code> 控制；字卡库为空时回到 100% 内置</td></tr>
 <tr><td>推荐歌曲给他</td><td>40%</td><td>60%</td><td>字卡库为空时回到 100% 内置</td></tr>
 <tr><td>通话后：未接来电 / 对方已挂断 / 已挂断</td><td>60%</td><td>40%</td><td>字卡库为空时回到 100% 内置</td></tr>
 <tr><td>通话后：通话结束 / 已取消</td><td>50%</td><td>50%</td><td>字卡库为空时回到 100% 内置</td></tr>
 </table>
 <p>抽字卡逻辑统一在 <code>chat_core.js</code> 的 <code>sendRandomTextCardReply()</code>：从 <code>contents</code> 里 <code>type === 'text'</code> 的卡随机抽一张；20% 引用你最近 20 条文字消息（调用方可用 <code>quoteChance</code> 单独覆盖）；带“吃醋/亲密”标签会触发 <code>boostMoodFromCard()</code>；30% 在末尾追加 Emoji 库里的表情。</p>
-<p>改比例：互动改 <code>HYBRID_INTERACT_CARD_RATE</code>，推荐歌曲改 <code>HYBRID_MUSIC_CARD_RATE</code>，通话后回复改 <code>chat_call.js</code> 的 <code>CALL_REPLY_CARD_RATE</code>，2G 文字回复改 <code>chat_core.js</code> 的 <code>SLOW_NETWORK_BUILTIN_RATE</code>。<code>HYBRID_TEXT_CARD_RATE</code> 只是其他场景的通用兜底，不再被互动和推荐歌曲共用。</p>
+<p>改比例：互动改 <code>HYBRID_INTERACT_CARD_RATE</code>，接受/拒绝后的后续改 <code>INTERACT_RESULT_CARD_RATE</code>，推荐歌曲改 <code>HYBRID_MUSIC_CARD_RATE</code>，通话后回复改 <code>chat_call.js</code> 的 <code>CALL_REPLY_CARD_RATE</code>，2G 文字回复改 <code>chat_core.js</code> 的 <code>SLOW_NETWORK_BUILTIN_RATE</code>。<code>HYBRID_TEXT_CARD_RATE</code> 只是其他场景的通用兜底，不再被互动和推荐歌曲共用。</p>
 
 <h3>2. 互动内置回复（<code>data.js</code> 的 <code>INTERACT_REPLIES</code>）</h3>
 <table>
@@ -1067,7 +1068,7 @@ applyPalette('aurora');</code></pre>
 <p>普通情绪在最后一条 DOM 是 <code>.sys</code> 时隐藏，等下一次真实消息；对方状态为「离线」时也隐藏，恢复在线后由 <code>renderOtherStatus()</code> 触发重判。事件情绪仍显示，并通过 <code>pat-mode</code> 居中放在拍一拍下方。</p>
 
 <h3>5. 混合比例</h3>
-<p><code>HYBRID_TEXT_CARD_RATE = 0.7</code>；互动 <code>HYBRID_INTERACT_CARD_RATE = 0.5</code>；推荐歌曲 <code>HYBRID_MUSIC_CARD_RATE = 0.6</code>；通话后 <code>CALL_REPLY_CARD_RATE</code> 未接/挂断 <code>0.4</code>、通话结束/已取消 <code>0.5</code>。</p>
+<p><code>HYBRID_TEXT_CARD_RATE = 0.7</code>；互动 <code>HYBRID_INTERACT_CARD_RATE = 0.5</code>；接受/拒绝后的后续 <code>INTERACT_RESULT_CARD_RATE = 0.3</code>（70% 内置）；推荐歌曲 <code>HYBRID_MUSIC_CARD_RATE = 0.6</code>；通话后 <code>CALL_REPLY_CARD_RATE</code> 未接/挂断 <code>0.4</code>、通话结束/已取消 <code>0.5</code>。</p>
 
 <h3>6. 调试</h3>
 <pre><code>debugMoodSample('happy', 200)

@@ -19,7 +19,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20261124k">
+    <link rel="stylesheet" href="style.css?v=20261124l">
     <!-- 启动画面：内联样式，保证脚本还没跑起来时就能先画出来 -->
     <style>
       #bootScreen {
@@ -522,6 +522,7 @@
                 <tr><td>回复中的额外行为</td><td>约 6% 触发拍一拍；约 3% 分享或邀请一起听歌（其中邀请约 1.05%）；约 5% 发送礼物、红包或转账。</td></tr>
                 <tr><td>音乐事件冷却</td><td>分享歌曲或邀请一起听后，8 分钟内不会再次随机出现音乐事件，避免连续听歌。</td></tr>
                 <tr><td>互动回应</td><td>50% 使用该互动的内置回复，50% 抽取你的字卡；字卡库为空时使用内置回复；延迟约 1.5～3 秒。</td></tr>
+                <tr><td>接受 / 拒绝他的互动后的后续</td><td>70% 使用该动作的内置后续，30% 抽取你的字卡；字卡库为空时使用内置后续；延迟约 1～2.4 秒。</td></tr>
                 <tr><td>推荐歌曲的回应</td><td>40% 使用听歌专用回复，60% 抽取你的字卡；字卡库为空时使用内置回复；延迟约 1.5～3.5 秒。</td></tr>
                 <tr><td>通话后的回应</td><td>未接来电 / 对方已挂断 / 已挂断：60% 内置、40% 字卡；通话结束 / 已取消：50% / 50%。字卡库为空时使用内置句子；延迟约 1.4～3.6 秒；内置句子约 42% 末尾带 emoji。</td></tr>
                 <tr><td>一起听</td><td>约 1.6～3 秒后接受；同一首歌正在播放时不会重播。</td></tr>
@@ -1085,12 +1086,12 @@
     
     <div id="toast" class="toast"></div>
 
-    <script src="data.js?v=20261124k"></script>
-    <script src="interact_result_replies.js?v=20261124k"></script>
+    <script src="data.js?v=20261124l"></script>
+    <script src="interact_result_replies.js?v=20261124l"></script>
     <script src="history_store.js"></script>
     <script src="chat_sound.js"></script>
-    <script src="chat_images.js?v=20261124k"></script>
-    <script src="chat_core.js?v=20261124k"></script>
+    <script src="chat_images.js?v=20261124l"></script>
+    <script src="chat_core.js?v=20261124l"></script>
     <script src="chat_stickers.js"></script>
     <script src="chat_tools.js"></script>
     <script src="chat_choice.js"></script>
@@ -1098,16 +1099,16 @@
     <script src="chat_money.js"></script>
     <script src="manage_cards.js"></script>
     <script src="manage_settings.js"></script>
-    <script src="manage_history.js?v=20261124k"></script>
+    <script src="manage_history.js?v=20261124l"></script>
     <script src="manage_data.js"></script>
     <script src="music_lyrics.js"></script>
-    <script src="share_songs.js?v=20261124k"></script>
-    <script src="chat_music.js?v=20261124k"></script>
+    <script src="share_songs.js?v=20261124l"></script>
+    <script src="chat_music.js?v=20261124l"></script>
     <script src="manage_music.js"></script>
     <script src="mood_pools.js"></script>
-    <script src="chat_mood.js?v=20261124k"></script>
+    <script src="chat_mood.js?v=20261124l"></script>
     <script src="router.js"></script>
-    <script src="debug_tools.js?v=20261124k"></script>
+    <script src="debug_tools.js?v=20261124l"></script>
     <script src="custom_icons.js"></script>
     <script src="pwa.js"></script>
     <script>

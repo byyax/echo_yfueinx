@@ -449,7 +449,7 @@ function scheduleInteractionResultReply(kind, content) {
   const delay = 1000 + Math.random() * 1400;
   setTimeout(() => {
     const send = () => {
-      if (Math.random() < HYBRID_INTERACT_CARD_RATE &&
+      if (Math.random() < INTERACT_RESULT_CARD_RATE &&
           typeof sendRandomTextCardReply === 'function' &&
           sendRandomTextCardReply({ quoteChance: 0.1 })) return;
       const line = pool[Math.floor(Math.random() * pool.length)];
@@ -1098,8 +1098,10 @@ function hideTypingIndicator() {
 
 // 有内置回复的场景：抽字卡的比例
 const HYBRID_TEXT_CARD_RATE = 0.7;       // 通用兜底
-const HYBRID_INTERACT_CARD_RATE = 0.5;   // 互动：五五开
+const HYBRID_INTERACT_CARD_RATE = 0.5;   // 我发起的互动：五五开
 const HYBRID_MUSIC_CARD_RATE = 0.6;      // 推荐歌曲：字卡略多
+// 他主动发起、我接受/拒绝后的后续：70% 内置、30% 主字卡。
+const INTERACT_RESULT_CARD_RATE = 0.3;
 
 // 2G 网络：进入文字回复分支后，内置慢网短句与字卡库的混合比例。
 // 55% 说“卡死了”这类话，45% 正常抽字卡；拍一拍、音乐、礼物等事件仍按原概率触发。
