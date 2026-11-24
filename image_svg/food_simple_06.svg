@@ -141,14 +141,14 @@
     <ellipse cx="404" cy="305" rx="171" ry="63" fill="#F5EFE3"/>
     <ellipse cx="404" cy="310" rx="158" ry="53" fill="#D9CBB6"/>
     <ellipse cx="404" cy="313" rx="149" ry="46" fill="url(#broth)"/>
-    <path d="M258 320c16 74 66 120 146 120 80 0 130-46 146-120" fill="none" stroke="#F6F0E5" stroke-width="8" opacity=".45"/>
-    <path d="M245 349c24 58 70 94 138 98" fill="none" stroke="#B5A892" stroke-width="3" opacity=".5"/>
+    <path d="M258 343 c16 74 66 120 146 120 80 0 130-46 146-120" fill="none" stroke="#F6F0E5" stroke-width="8" opacity=".45"/>
+    <path d="M245 349 c24 58 70 94 138 110" fill="none" stroke="#B5A892" stroke-width="3" opacity=".5"/>
 
     <!-- 面条与鸡蛋限制在汤面范围内，不越过碗口 -->
     <g clip-path="url(#brothClip)">
     <g fill="none" stroke="#F2D58B" stroke-width="7" stroke-linecap="round">
       <path d="M292 314c50-22 94-22 137 0"/>
-      <path d="M286 333c55 18 101 18 148-1"/>
+      <path d="M286 333 c55 18 101 18 148-1"/>
       <path d="M306 353c43 14 82 14 119-2"/>
       <path d="M335 292c15 22 51 34 92 31"/>
       <path d="M366 369c15-21 41-31 70-29"/>
@@ -174,14 +174,14 @@
       <circle cx="491" cy="301" r="3"/><circle cx="313" cy="337" r="3"/>
     </g>
 
-    <!-- 筷子：右撇子，筷尖搭在右侧碗沿，筷柄落在桌面 -->
-    <path d="M572 362L706 462" fill="none" stroke="#120D0A" stroke-width="10" opacity=".16" stroke-linecap="round"/>
-    <path d="M586 349L720 449" fill="none" stroke="#120D0A" stroke-width="10" opacity=".13" stroke-linecap="round"/>
-    <g stroke-linecap="round">
-      <path d="M566 348L700 448" stroke="#B48859" stroke-width="7"/>
-      <path d="M580 335L714 435" stroke="#C69C6A" stroke-width="7"/>
-      <path d="M566 348L700 448" stroke="#E2C297" stroke-width="2.5" opacity=".55"/>
-      <path d="M580 335L714 435" stroke="#EED0A6" stroke-width="2.5" opacity=".55"/>
+   <g transform="translate(-100,-75)">
+      <!-- 筷：右撇子，筷尖搭在右侧碗沿，筷柄落在桌面 -->
+      <g stroke-linecap="round">
+        <path d="M570 305L690 460" stroke="#B48859" stroke-width="7"/>
+        <path d="M585 310L714 460" stroke="#C69C6A" stroke-width="7"/>
+        <path d="M570 305L690 460" stroke="#E2C297" stroke-width="2.5" opacity=".55"/>
+        <path d="M585 310L714 460" stroke="#EED0A6" stroke-width="2.5" opacity=".55"/>
+      </g>  
     </g>
   </g>
 

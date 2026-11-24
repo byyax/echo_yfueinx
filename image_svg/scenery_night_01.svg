@@ -70,16 +70,19 @@
     <path d="M0 356h31v-52h22v52h18v-91h40v91h24v-38h26v38h20v-72h35v72h25v-48h20v48h24v-104h39v104h22v-41h28v41h18v-64h34v64h31v-34h24v34h20v-78h36v78h22v-52h30v52h19v-96h34v96h24v-43h26v43h21v-67h37v67h22v-35h25v35h18v-82h33v82h26v-49h20v49h24v-70h31v70h24v-36h21v36z"/>
   </g>
   <g fill="#F4C878" opacity=".7">
-    <rect x="59" y="305" width="5" height="7"/><rect x="69" y="305" width="5" height="7"/><rect x="59" y="318" width="5" height="7"/>
-    <rect x="121" y="276" width="5" height="7"/><rect x="133" y="276" width="5" height="7"/><rect x="121" y="290" width="5" height="7"/>
-    <rect x="201" y="305" width="5" height="6"/><rect x="213" y="305" width="5" height="6"/><rect x="201" y="317" width="5" height="6"/>
-    <rect x="281" y="285" width="5" height="7"/><rect x="293" y="285" width="5" height="7"/><rect x="281" y="299" width="5" height="7"/>
-    <rect x="355" y="265" width="5" height="6"/><rect x="367" y="265" width="5" height="6"/><rect x="355" y="279" width="5" height="6"/>
-    <rect x="431" y="292" width="5" height="7"/><rect x="443" y="292" width="5" height="7"/><rect x="431" y="306" width="5" height="7"/>
-    <rect x="503" y="304" width="5" height="6"/><rect x="515" y="304" width="5" height="6"/><rect x="503" y="317" width="5" height="6"/>
+    <rect x="35" y="308" width="5" height="7"/><rect x="45" y="308" width="5" height="7"/><rect x="35" y="324" width="5" height="7"/>
+    <rect x="77" y="276" width="5" height="7"/><rect x="88.5" y="276" width="5" height="7"/><rect x="100" y="276" width="5" height="7"/><rect x="88.5" y="290" width="5" height="7"/>
+    <rect x="190" y="305" width="5" height="6"/><rect x="200" y="305" width="5" height="6"/><rect x="190" y="317" width="5" height="6"/><rect x="200" y="317" width="5" height="6"/>
+    <rect x="293" y="271" width="5" height="7"/><rect x="293" y="285" width="5" height="7"/><rect x="310" y="285" width="5" height="7"/><rect x="293" y="299" width="5" height="7"/><rect x="310" y="313" width="5" height="7"/>
+    <rect x="352" y="320" width="5" height="6"/><rect x="364" y="320" width="5" height="6"/><rect x="352" y="335" width="5" height="6"/>
+    <rect x="400" y="299" width="5" height="7"/><rect x="415" y="299" width="5" height="7"/><rect x="415" y="320" width="5" height="7"/>
+    <rect x="503" y="304" width="5" height="6"/><rect x="513" y="304" width="5" height="6"/><rect x="503" y="317" width="5" height="6"/><rect x="513" y="317" width="5" height="6"/>
+    <g transform="translate(17,25)">
+    <rect x="503" y="304" width="5" height="6"/><rect x="513" y="304" width="5" height="6"/><rect x="503" y="317" width="5" height="6"/><rect x="513" y="317" width="5" height="6"/>
+    </g>
     <rect x="566" y="319" width="5" height="7"/><rect x="578" y="319" width="5" height="7"/>
-    <rect x="641" y="334" width="5" height="6"/><rect x="653" y="334" width="5" height="6"/><rect x="641" y="346" width="5" height="6"/>
-    <rect x="711" y="320" width="5" height="7"/><rect x="723" y="320" width="5" height="7"/><rect x="711" y="334" width="5" height="7"/>
+    <rect x="620" y="334" width="5" height="6"/><rect x="630" y="334" width="5" height="6"/><rect x="630" y="346" width="5" height="6"/>
+    <rect x="720" y="320" width="5" height="7"/><rect x="730" y="320" width="5" height="7"/><rect x="720" y="334" width="5" height="7"/>
   </g>
 
   <!-- 城市灯光雾 -->
