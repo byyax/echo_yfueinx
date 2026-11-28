@@ -4,23 +4,25 @@
 
 const MUSIC_LIBRARY = [
   // —— 内置歌单（顺序按指定图）——
-  { kind: 'song', title: "글쎄 (I Don't Know)", artist: 'SEVENTEEN', src: 'music/SEVENTEEN - 글쎄.mp3', lrc: 'music/SEVENTEEN - 글쎄.lrc' },
-  { kind: 'song', title: '달빛 (月光)', artist: 'GOT7', src: 'music/GOT7 - 달빛.mp3', lrc: 'music/GOT7 - 달빛.lrc' },
-  { kind: 'song', title: 'ANSWER', artist: '극한데뷔 야생돌', src: 'music/극한데뷔 야생돌 - ANSWER.mp3', lrc: 'music/극한데뷔 야생돌 - ANSWER.lrc' },
-  { kind: 'song', title: 'I NEED U', artist: 'BTS (防弹少年团)', src: 'music/BTS (防弹少年团) - I NEED U.mp3', lrc: 'music/BTS (防弹少年团) - I NEED U.lrc' },
-  { kind: 'song', title: 'Mr. "Broken Heart"（"心碎"先生）', artist: '松下優也', src: 'music/松下優也 - Mr. Broken Heart.mp3', lrc: 'music/松下優也 - Mr. Broken Heart.lrc' },
-  { kind: 'song', title: '明知故犯', artist: 'Max李玄', src: 'music/Max李玄 - 明知故犯.mp3', lrc: 'music/Max李玄 - 明知故犯.lrc' },
-  { kind: 'song', title: 'My Lady (Chinese Ver.)', artist: 'EXO', src: 'music/EXO - My Lady (Chinese Ver.).mp3', lrc: 'music/EXO - My Lady (Chinese Ver.).lrc' },
-  { kind: 'song', title: '茉莉', artist: 'JBcob林泽贤 / 张泳浩', src: 'music/JBcob林泽贤,张泳浩 - 茉莉.mp3', lrc: 'music/JBcob林泽贤,张泳浩 - 茉莉.lrc' },
-  { kind: 'song', title: '雪化作泪滴 (Old Tape)', artist: 'Cheeze / Trazzy / 雾明', src: 'music/Cheeze,Trazzy,雾明 - 雪化作泪滴 (Old Tape).mp3', lrc: 'music/Cheeze,Trazzy,雾明 - 雪化作泪滴 (Old Tape).lrc' },
-  { kind: 'song', title: 'My Love', artist: 'Dok2 / 朴宰范', src: 'music/Dok2,朴宰范 - My Love.mp3', lrc: 'music/Dok2,朴宰范 - My Love.lrc' },
-  { kind: 'song', title: 'Boy In Luv', artist: 'BTS (防弹少年团)', src: 'music/BTS (防弹少年团) - Boy In Luv.mp3', lrc: 'music/BTS (防弹少年团) - Boy In Luv.lrc' },
-  { kind: 'song', title: "Don't Go Back Tonight", artist: 'TizzyT', src: "music/TizzyT - Don't Go Back Tonight.mp3", lrc: "music/TizzyT - Don't Go Back Tonight.lrc" },
+  // 实际播放 music/stream 里的 128kbps 压缩版，减少手机流量和缓冲卡顿。
+  // fallbackSrc 指向原始文件，压缩版缺失时仍能播放。
+  { kind: 'song', title: "글쎄 (I Don't Know)", artist: 'SEVENTEEN', src: 'music/stream/track01_seventeen.mp3?v=20261128', fallbackSrc: 'music/SEVENTEEN - 글쎄.mp3', lrc: 'music/SEVENTEEN - 글쎄.lrc' },
+  { kind: 'song', title: '달빛 (月光)', artist: 'GOT7', src: 'music/stream/track02_got7.mp3?v=20261128', fallbackSrc: 'music/GOT7 - 달빛.mp3', lrc: 'music/GOT7 - 달빛.lrc' },
+  { kind: 'song', title: 'ANSWER', artist: '극한데뷔 야생돌', src: 'music/stream/track03_answer.mp3?v=20261128', fallbackSrc: 'music/극한데뷔 야생돌 - ANSWER.mp3', lrc: 'music/극한데뷔 야생돌 - ANSWER.lrc' },
+  { kind: 'song', title: 'I NEED U', artist: 'BTS (防弹少年团)', src: 'music/stream/track04_bts_i_need_u.mp3?v=20261128', fallbackSrc: 'music/BTS (防弹少年团) - I NEED U.mp3', lrc: 'music/BTS (防弹少年团) - I NEED U.lrc' },
+  { kind: 'song', title: 'Mr. "Broken Heart"（"心碎"先生）', artist: '松下優也', src: 'music/stream/track05_matsuura.mp3?v=20261128', fallbackSrc: 'music/松下優也 - Mr. Broken Heart.mp3', lrc: 'music/松下優也 - Mr. Broken Heart.lrc' },
+  { kind: 'song', title: '明知故犯', artist: 'Max李玄', src: 'music/stream/track06_max.mp3?v=20261128', fallbackSrc: 'music/Max李玄 - 明知故犯.mp3', lrc: 'music/Max李玄 - 明知故犯.lrc' },
+  { kind: 'song', title: 'My Lady (Chinese Ver.)', artist: 'EXO', src: 'music/stream/track07_exo.mp3?v=20261128', fallbackSrc: 'music/EXO - My Lady (Chinese Ver.).mp3', lrc: 'music/EXO - My Lady (Chinese Ver.).lrc' },
+  { kind: 'song', title: '茉莉', artist: 'JBcob林泽贤 / 张泳浩', src: 'music/stream/track08_jasmine.mp3?v=20261128', fallbackSrc: 'music/JBcob林泽贤,张泳浩 - 茉莉.mp3', lrc: 'music/JBcob林泽贤,张泳浩 - 茉莉.lrc' },
+  { kind: 'song', title: '雪化作泪滴 (Old Tape)', artist: 'Cheeze / Trazzy / 雾明', src: 'music/stream/track09_snow.mp3?v=20261128', fallbackSrc: 'music/Cheeze,Trazzy,雾明 - 雪化作泪滴 (Old Tape).mp3', lrc: 'music/Cheeze,Trazzy,雾明 - 雪化作泪滴 (Old Tape).lrc' },
+  { kind: 'song', title: 'My Love', artist: 'Dok2 / 朴宰范', src: 'music/stream/track10_my_love.mp3?v=20261128', fallbackSrc: 'music/Dok2,朴宰范 - My Love.mp3', lrc: 'music/Dok2,朴宰范 - My Love.lrc' },
+  { kind: 'song', title: 'Boy In Luv', artist: 'BTS (防弹少年团)', src: 'music/stream/track11_bts_boy_in_luv.mp3?v=20261128', fallbackSrc: 'music/BTS (防弹少年团) - Boy In Luv.mp3', lrc: 'music/BTS (防弹少年团) - Boy In Luv.lrc' },
+  { kind: 'song', title: "Don't Go Back Tonight", artist: 'TizzyT', src: 'music/stream/track12_tizzyt.mp3?v=20261128', fallbackSrc: "music/TizzyT - Don't Go Back Tonight.mp3", lrc: "music/TizzyT - Don't Go Back Tonight.lrc" },
 
-  // —— 白噪音 ——
-  { kind: 'song', title: '白噪音_雨声', artist: '白噪音', src: 'music/white_noise_rain.mp3?v=20261124', fallbackSrc: 'music/白噪音_雨声.mp3?v=20261124' },
-  { kind: 'song', title: '白噪音_壁炉', artist: '白噪音', src: 'music/white_noise_fireplace.mp3?v=20261124', fallbackSrc: 'music/白噪音_壁炉.mp3?v=20261124' },
-  { kind: 'song', title: '白噪音_沸腾', artist: '白噪音', src: 'music/white_noise_boiling.mp3?v=20261124', fallbackSrc: 'music/白噪音_沸腾.mp3?v=20261124' },
+  // —— 白噪音（96kbps 压缩版，原始文件作兜底）——
+  { kind: 'song', title: '白噪音_雨声', artist: '白噪音', src: 'music/stream/white_noise_rain.mp3?v=20261128', fallbackSrc: 'music/white_noise_rain.mp3?v=20261124' },
+  { kind: 'song', title: '白噪音_壁炉', artist: '白噪音', src: 'music/stream/white_noise_fireplace.mp3?v=20261128', fallbackSrc: 'music/white_noise_fireplace.mp3?v=20261124' },
+  { kind: 'song', title: '白噪音_沸腾', artist: '白噪音', src: 'music/stream/white_noise_boiling.mp3?v=20261128', fallbackSrc: 'music/white_noise_boiling.mp3?v=20261124' },
 
   // —— music 文件夹里还没有音频文件的歌，放最后 ——
   { kind: 'song', title: '无意', artist: '加木 / Demxntia' },
