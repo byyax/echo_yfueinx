@@ -23,6 +23,7 @@
       ['echoDebug.network("2G")', '切换网络：WiFi / 5G / 2G'],
       ['echoDebug.offline()', '切成离线，可传 sleep / work / phone_off'],
       ['echoDebug.status("offline", "sleep")', '直接切换对方主状态'],
+      ['echoDebug.version()', '查看当前版本和上次更新日期'],
       ['echoDebug.online()', '切成在线'],
       ['echoDebug.offlineAuto()', '立即发一条离线自动回复'],
       ['echoDebug.offlineReturn()', '立即模拟离线回来'],
@@ -44,6 +45,14 @@
     ];
     console.table(rows.map(([命令, 作用]) => ({ 命令, 作用 })));
     say('这些消息会真的写进聊天记录，测完可以长按删除。');
+  };
+
+  E.version = function () {
+    const label = (typeof APP_VERSION_LABEL === 'string' && APP_VERSION_LABEL)
+      ? APP_VERSION_LABEL
+      : '未加载 version.js';
+    say('当前版本：' + label);
+    return label;
   };
 
   E.text = function (text) {

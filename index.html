@@ -496,6 +496,7 @@
             <section class="manual-section" id="manual-data">
               <h2>七、数据管理</h2>
               <ul>
+                <li><b>版本：</b>页面顶部显示上次更新日期和版本号，例如 <code>26.11.28 - 15.1</code>。</li>
                 <li><b>占用空间：</b>显示当前浏览器中聊天数据、字卡和图片/语音的大致体积。</li>
                 <li><b>导出：</b>可以导出全部数据、字卡与表情库、聊天记录或聊天设置。导出前可选择是否包含图片和语音。</li>
                 <li><b>导入：</b>选择之前导出的 JSON 文件，或粘贴导出的文本内容。导入会覆盖对应类别的现有数据，操作前建议先备份。</li>
@@ -573,6 +574,7 @@
         <div class="navbar"><button class="back" id="backFromData">‹</button><div class="title">数据管理</div></div>
         <div class="card-list" style="padding: 15px;">
           <div class="setting-group">
+            <div class="setting-row"><label>上次更新</label><span id="dataVersion">26.11.28 - 15.1</span></div>
             <div class="setting-row"><label>占用空间</label><span id="dataSize">0 KB</span></div>
             <div class="setting-row"><label>聊天记录存储</label><span id="dataStorageMode">IndexedDB</span></div>
             <div class="setting-row"><label>聊天消息条数</label><span id="dataMsgCount">0 条</span></div>
@@ -1087,6 +1089,7 @@
     <div id="toast" class="toast"></div>
 
     <script src="data.js?v=20261128a"></script>
+    <script src="version.js?v=20261128b"></script>
     <script src="interact_result_replies.js?v=20261128a"></script>
     <script src="history_store.js"></script>
     <script src="chat_sound.js"></script>
@@ -1100,7 +1103,7 @@
     <script src="manage_cards.js"></script>
     <script src="manage_settings.js"></script>
     <script src="manage_history.js?v=20261128a"></script>
-    <script src="manage_data.js"></script>
+    <script src="manage_data.js?v=20261128b"></script>
     <script src="music_lyrics.js"></script>
     <script src="share_songs.js?v=20261128a"></script>
     <script src="chat_music.js?v=20261128a"></script>
@@ -1108,7 +1111,7 @@
     <script src="mood_pools.js"></script>
     <script src="chat_mood.js?v=20261128a"></script>
     <script src="router.js"></script>
-    <script src="debug_tools.js?v=20261128a"></script>
+    <script src="debug_tools.js?v=20261128b"></script>
     <script src="custom_icons.js"></script>
     <script src="pwa.js"></script>
     <script>

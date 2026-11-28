@@ -14,6 +14,16 @@ function formatSize(bytes) {
   return Math.max(0, Math.round(bytes / 1024)) + ' KB';
 }
 
+// 版本号集中在 version.js，这里只负责显示。
+function renderAppVersion() {
+  const el = document.getElementById('dataVersion');
+  if (!el) return;
+  el.textContent = (typeof APP_VERSION_LABEL === 'string' && APP_VERSION_LABEL)
+    ? APP_VERSION_LABEL
+    : '—';
+}
+renderAppVersion();
+
 // 把图片/语音换成占位文字，其余字段原样保留
 function stripMedia(history) {
   return (history || []).map(m => {
@@ -62,6 +72,7 @@ function backupReminderOnEnter() {
 const menuData = document.getElementById('menuData');
 if(menuData) menuData.onclick = () => {
   switchPage('pageData');
+  renderAppVersion();
   let totalSize = 0;
   for (let key in localStorage) { if (localStorage.hasOwnProperty(key)) totalSize += (localStorage[key].length + key.length) * 2; }
   // 聊天记录已移到 IndexedDB，占用空间要把它另外算进去，不能只统计 localStorage。
